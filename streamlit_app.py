@@ -1,46 +1,48 @@
 import streamlit as st
-import yfinance as yf
 import pandas as pd
+import numpy as np
+import yfinance as yf
 import statsmodels.api as sm
-from datetime import date
-from dateutil.relativedelta import relativedelta
 
-st.title("Fama-French 6 Factor Regression (Robust HAC)")
+st.title("Fama-French 5 Factor Regression")
 
-ticker = st.text_input("Ticker", "AVGO")
+ticker = st.text_input("Enter Stock Ticker", "AVGO")
 
 if st.button("Run Regression"):
 
     try:
 
-        END_DATE = date.today()
-        START_DATE = END_DATE - relativedelta(years=10)
-
-        # ------------------------------------
         # Download stock data
-        # ------------------------------------
-        prices = yf.download(
+        stock = yf.download(
             ticker.upper(),
-            start=START_DATE,
-            end=END_DATE,
+            start="2015-01-01",
             auto_adjust=True,
             progress=False
         )
 
-        prices = prices["Close"]
+        if stock.empty:
+            st.error("No stock data found.")
+            st.stop()
 
-        if isinstance(prices, pd.Series):
-            prices = prices.to_frame(name="Stock")
-        else:
-            prices.columns = ["Stock"]
+        # Monthly returns
+        close = stock["Close"]
 
-        returns = prices.pct_change().dropna()
+        if isinstance(close, pd.DataFrame):
+            close = close.iloc[:, 0]
 
-        # ------------------------------------
-        # FF5 Daily Factors
-        # ------------------------------------
+        monthly_prices = close.resample("ME").last()
+
+        monthly_returns = monthly_prices.pct_change().dropna()
+
+        returns_df = pd.DataFrame({
+            "Return": monthly_returns
+        })
+
+        returns_df.index = returns_df.index.to_period("M")
+
+        # Load FF5 file
         ff = pd.read_csv(
-            "F-F_Research_Data_5_Factors_2x3_daily.csv",
+            "F-F_Research_Data_5_Factors_2x3.csv",
             skiprows=3
         )
 
@@ -55,120 +57,67 @@ if st.button("Run Regression"):
         ]
 
         ff = ff[
-            ff["Date"].astype(str).str.isnumeric()
-        ]
+            ff["Date"].astype(str).str.match(r"^\d{6}$")
+        ].copy()
 
         ff["Date"] = pd.to_datetime(
             ff["Date"],
-            format="%Y%m%d"
+            format="%Y%m"
         )
 
         ff.set_index("Date", inplace=True)
 
+        ff.index = ff.index.to_period("M")
+
         ff = ff / 100
 
-        ff = ff.loc[
-            str(START_DATE):
-            str(END_DATE)
-        ]
-
-        # ------------------------------------
-        # Momentum
-        # ------------------------------------
-        mom = pd.read_csv(
-            "F-F_Momentum_Factor_daily.csv",
-            skiprows=13
-        )
-
-        mom.columns = [
-            "Date",
-            "MOM"
-        ]
-
-        mom = mom[
-            mom["Date"].astype(str).str.isnumeric()
-        ]
-
-        mom["Date"] = pd.to_datetime(
-            mom["Date"],
-            format="%Y%m%d"
-        )
-
-        mom.set_index("Date", inplace=True)
-
-        mom = mom / 100
-
-        mom = mom.loc[
-            str(START_DATE):
-            str(END_DATE)
-        ]
-
-        # ------------------------------------
         # Merge
-        # ------------------------------------
-        data = returns.merge(
+        data = returns_df.join(
             ff,
-            left_index=True,
-            right_index=True,
             how="inner"
         )
 
-        data = data.merge(
-            mom,
-            left_index=True,
-            right_index=True,
-            how="inner"
+        if len(data) == 0:
+            st.error("No matching dates found.")
+            st.stop()
+
+        data["Excess_Return"] = (
+            data["Return"] - data["RF"]
         )
 
-        data["Excess_Stock"] = (
-            data["Stock"]
-            - data["RF"]
-        )
-
-        # ------------------------------------
-        # Regression
-        # ------------------------------------
         X = data[
-            [
-                "Mkt-RF",
-                "SMB",
-                "HML",
-                "RMW",
-                "CMA",
-                "MOM"
-            ]
+            ["Mkt-RF", "SMB", "HML", "RMW", "CMA"]
         ]
 
         X = sm.add_constant(X)
 
-        y = data["Excess_Stock"]
+        y = data["Excess_Return"]
 
+        # HAC robust regression
         model = sm.OLS(
             y,
             X
         ).fit(
             cov_type="HAC",
-            cov_kwds={"maxlags": 5}
+            cov_kwds={"maxlags": 3}
         )
 
-        # ------------------------------------
-        # Results
-        # ------------------------------------
         results = pd.DataFrame({
             "Factor": model.params.index,
             "Beta": model.params.values,
             "P-Value": model.pvalues.values
         })
 
-        alpha = results[
-            results["Factor"] == "const"
-        ]["Beta"].iloc[0]
+        alpha = results.loc[
+            results["Factor"] == "const",
+            "Beta"
+        ].iloc[0]
 
-        st.subheader("Alpha")
-        st.write(f"{alpha:.6f}")
+        st.subheader("Summary")
 
-        st.subheader("R²")
-        st.write(f"{model.rsquared:.4f}")
+        st.write(f"Alpha: {alpha:.4f}")
+        st.write(f"R²: {model.rsquared:.4f}")
+        st.write(f"Observations: {len(data)}")
 
         significant = results[
             (results["Factor"] != "const")
@@ -176,19 +125,15 @@ if st.button("Run Regression"):
             (results["P-Value"] < 0.05)
         ]
 
-        st.subheader(
-            "Significant Factors (p < 0.05)"
-        )
+        st.subheader("Significant Factors")
 
         if len(significant) == 0:
-            st.write(
-                "No significant factors found."
-            )
+            st.write("No significant factors found.")
         else:
             st.dataframe(
-                significant.sort_values(
-                    "P-Value"
-                )
+                significant[
+                    ["Factor", "Beta", "P-Value"]
+                ].sort_values("P-Value")
             )
 
     except Exception as e:
