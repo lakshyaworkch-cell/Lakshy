@@ -218,8 +218,10 @@ div[data-testid="stFileUploader"] {
 # ─────────────────────────────────────────────
 
 def sig_badge(p):
-    if p < 0.01:
+    if p < 0.001:
         return '<span class="sig-badge badge-001">★★★</span>'
+    elif p < 0.01:
+        return '<span class="sig-badge badge-01">★★★</span>'
     elif p < 0.05:
         return '<span class="sig-badge badge-05">★★</span>'
     elif p < 0.10:
@@ -315,7 +317,11 @@ if not run:
         '1. Enter a ticker in the sidebar<br>'
         '2. Upload your Fama-French CSV file<br>'
         '3. Adjust settings as needed<br>'
-        '4. Click <b>RUN REGRESSION</b>'
+        '4. Click <b>RUN REGRESSION</b><br><br>'
+        '<span style="font-size:11px;color:#374151;">'
+        'Download factor data from Ken French\'s data library:<br>'
+        'mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html'
+        '</span>'
         '</div>',
         unsafe_allow_html=True
     )
@@ -372,6 +378,14 @@ try:
     available = [c for c in ["Mkt-RF", "SMB", "HML", "RMW", "CMA", "Mom"] if c in ff.columns]
     has_rf    = "RF" in ff.columns
 
+    if not available:
+        st.markdown(
+            '<div class="error-box">No recognised factor columns found. '
+            'Expected columns: Mkt-RF, SMB, HML, RMW, CMA, Mom (at least one).</div>',
+            unsafe_allow_html=True
+        )
+        st.stop()
+
     ff[available] = ff[available].astype(float) / 100
     if has_rf:
         ff["RF"] = ff["RF"].astype(float) / 100
@@ -381,7 +395,9 @@ try:
 
     if len(data) < 24:
         st.markdown(
-            '<div class="error-box">Too few observations after merge. Check date range and file.</div>',
+            '<div class="error-box">Too few observations after merge ('
+            + str(len(data)) +
+            '). Check date range and file format.</div>',
             unsafe_allow_html=True
         )
         st.stop()
@@ -440,8 +456,11 @@ try:
     vif_data = {}
     for col in available:
         others = [c for c in available if c != col]
-        r2_vif = sm.OLS(X[col], sm.add_constant(X[others])).fit().rsquared
-        vif_data[col] = 1 / (1 - r2_vif) if r2_vif < 1 else np.inf
+        if others:
+            r2_vif = sm.OLS(X[col], sm.add_constant(X[others])).fit().rsquared
+            vif_data[col] = 1 / (1 - r2_vif) if r2_vif < 1 else np.inf
+        else:
+            vif_data[col] = 1.0
 
     # ─────────────────────────────────────────
     # DISPLAY
@@ -450,7 +469,6 @@ try:
     # ── Top Metrics ──────────────────────────
     c1, c2, c3, c4 = st.columns(4)
 
-    alpha_color = "green" if alpha_ann > 0 else "red"
     with c1:
         st.markdown(f"""
         <div class="metric-card {'green' if alpha_ann > 0 else 'red'}">
@@ -470,11 +488,17 @@ try:
         </div>""", unsafe_allow_html=True)
 
     with c3:
-        ir_color = "#4ade80" if not np.isnan(ir) and ir > 0.5 else "#fbbf24" if not np.isnan(ir) and ir > 0 else "#f87171"
+        ir_color = (
+            "#4ade80" if not np.isnan(ir) and ir > 0.5
+            else "#fbbf24" if not np.isnan(ir) and ir > 0
+            else "#f87171"
+        )
         st.markdown(f"""
         <div class="metric-card gold">
           <div class="metric-label">Information Ratio</div>
-          <div class="metric-value" style="color:{ir_color}">{ir:.3f}</div>
+          <div class="metric-value" style="color:{ir_color}">
+            {ir:.3f if not np.isnan(ir) else 'N/A'}
+          </div>
           <div class="metric-sub">Ann. TE: {te:.2%}</div>
         </div>""", unsafe_allow_html=True)
 
@@ -497,11 +521,11 @@ try:
     st.markdown(header, unsafe_allow_html=True)
 
     for name in ["const"] + available:
-        b   = model.params[name]
-        se  = model.bse[name]
-        t   = model.tvalues[name]
-        p   = model.pvalues[name]
-        rc  = row_class(name, p)
+        b     = model.params[name]
+        se    = model.bse[name]
+        t     = model.tvalues[name]
+        p     = model.pvalues[name]
+        rc    = row_class(name, p)
         label = FACTOR_NAMES.get(name, name)
 
         row = f"""
@@ -522,6 +546,37 @@ try:
         '</div>',
         unsafe_allow_html=True
     )
+
+    # ── Confidence Intervals ─────────────────
+    st.markdown('<div class="section-title">95% Confidence Intervals</div>', unsafe_allow_html=True)
+
+    ci = model.conf_int()
+    ci_html = '<div style="display:flex;gap:10px;flex-wrap:wrap;">'
+    for name in ["const"] + available:
+        lo = ci.loc[name, 0]
+        hi = ci.loc[name, 1]
+        b  = model.params[name]
+        spans_zero = lo < 0 < hi
+        bar_color  = "#4ade80" if b > 0 and not spans_zero else "#f87171" if b < 0 and not spans_zero else "#6b7280"
+        ci_html += f"""
+        <div style="background:#12121a;border:1px solid #1e1e2e;border-radius:4px;
+                    padding:12px 16px;min-width:160px;flex:1;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;
+                      color:#4b5563;margin-bottom:6px;">{FACTOR_NAMES.get(name, name)}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;
+                      font-weight:600;color:{bar_color};">{b:+.4f}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#374151;margin-top:3px;">
+            [{lo:+.4f}, {hi:+.4f}]
+          </div>
+          <div style="margin-top:8px;height:4px;background:#1e1e2e;border-radius:2px;position:relative;">
+            <div style="position:absolute;left:50%;top:0;width:1px;height:4px;background:#374151;"></div>
+          </div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#374151;margin-top:3px;">
+            {'spans zero' if spans_zero else 'excl. zero'}
+          </div>
+        </div>"""
+    ci_html += '</div>'
+    st.markdown(ci_html, unsafe_allow_html=True)
 
     # ── Diagnostics ───────────────────────────
     st.markdown('<div class="section-title">Regression Diagnostics</div>', unsafe_allow_html=True)
@@ -555,13 +610,16 @@ try:
     vif_html = '<div style="display:flex;gap:10px;flex-wrap:wrap;">'
     for col, v in vif_data.items():
         vif_color = "#4ade80" if v < 5 else "#fbbf24" if v < 10 else "#f87171"
+        vif_label = "OK" if v < 5 else "MODERATE" if v < 10 else "HIGH"
         vif_html += f"""
-        <div style="background:#12121a;border:1px solid #1e1e2e;border-radius:4px;padding:12px 16px;min-width:100px;">
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#4b5563;margin-bottom:4px;">{FACTOR_NAMES.get(col,col)}</div>
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:{vif_color}">{v:.2f}</div>
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#374151;margin-top:2px;">
-            {'OK' if v < 5 else 'MODERATE' if v < 10 else 'HIGH'}
-          </div>
+        <div style="background:#12121a;border:1px solid #1e1e2e;border-radius:4px;
+                    padding:12px 16px;min-width:100px;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;
+                      color:#4b5563;margin-bottom:4px;">{FACTOR_NAMES.get(col, col)}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;
+                      font-weight:600;color:{vif_color}">{v:.2f}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;
+                      color:#374151;margin-top:2px;">{vif_label}</div>
         </div>"""
     vif_html += '</div>'
     st.markdown(vif_html, unsafe_allow_html=True)
@@ -598,20 +656,78 @@ try:
     </div>
     """, unsafe_allow_html=True)
 
+    # ── Rolling Beta ─────────────────────────
+    if "Mkt-RF" in available and len(data) >= 36:
+        st.markdown('<div class="section-title">Rolling 24-Month Market Beta</div>', unsafe_allow_html=True)
+
+        window = 24
+        roll_betas = []
+        roll_dates = []
+        for i in range(window, len(data) + 1):
+            sub = data.iloc[i - window: i]
+            Xr  = sm.add_constant(sub[["Mkt-RF"]])
+            yr  = sub["Y"]
+            try:
+                rb = sm.OLS(yr, Xr).fit().params["Mkt-RF"]
+                roll_betas.append(rb)
+                roll_dates.append(str(data.index[i - 1]))
+            except Exception:
+                pass
+
+        if roll_betas:
+            roll_df = pd.DataFrame({"Period": roll_dates, "Beta": roll_betas})
+
+            # Build simple SVG sparkline
+            mn, mx = min(roll_betas), max(roll_betas)
+            rng = mx - mn if mx != mn else 1
+            W, H = 800, 120
+            pts = []
+            for i, b in enumerate(roll_betas):
+                x = int(i / (len(roll_betas) - 1) * W) if len(roll_betas) > 1 else W // 2
+                y = int(H - ((b - mn) / rng) * H)
+                pts.append(f"{x},{y}")
+            polyline = " ".join(pts)
+
+            svg = f"""
+            <svg viewBox="0 0 {W} {H+30}" xmlns="http://www.w3.org/2000/svg"
+                 style="background:#12121a;border:1px solid #1e1e2e;border-radius:4px;
+                        width:100%;margin-bottom:8px;">
+              <!-- zero line -->
+              <line x1="0" y1="{int(H - ((1.0 - mn)/rng)*H)}" x2="{W}"
+                    y2="{int(H - ((1.0 - mn)/rng)*H)}"
+                    stroke="#1e1e2e" stroke-width="1" stroke-dasharray="4,4"/>
+              <polyline points="{polyline}" fill="none" stroke="#60a5fa" stroke-width="2"/>
+              <text x="6" y="{H+20}" fill="#4b5563"
+                    font-family="IBM Plex Mono,monospace" font-size="10">
+                {roll_dates[0] if roll_dates else ''}
+              </text>
+              <text x="{W-6}" y="{H+20}" fill="#4b5563" text-anchor="end"
+                    font-family="IBM Plex Mono,monospace" font-size="10">
+                {roll_dates[-1] if roll_dates else ''}
+              </text>
+              <text x="{W//2}" y="14" fill="#6b7280" text-anchor="middle"
+                    font-family="IBM Plex Mono,monospace" font-size="10">
+                Current β = {roll_betas[-1]:.3f}
+              </text>
+            </svg>"""
+            st.markdown(svg, unsafe_allow_html=True)
+
     # ── Interpretation ───────────────────────
     st.markdown('<div class="section-title">Interpretation</div>', unsafe_allow_html=True)
 
-    sig_factors = [FACTOR_NAMES.get(f, f) for f in available if model.pvalues[f] < 0.05]
+    sig_factors   = [FACTOR_NAMES.get(f, f) for f in available if model.pvalues[f] < 0.05]
     insig_factors = [FACTOR_NAMES.get(f, f) for f in available if model.pvalues[f] >= 0.05]
-    alpha_sig = "statistically significant" if alpha_p < 0.05 else "not statistically significant"
-    alpha_interp = "outperforms" if alpha_ann > 0 else "underperforms"
+    alpha_sig     = "statistically significant" if alpha_p < 0.05 else "not statistically significant"
+    alpha_interp  = "outperforms" if alpha_ann > 0 else "underperforms"
 
     interp = f"""
     <div class="interpret-box">
     <b>{ticker}</b> — {y_label}<br><br>
-    The model explains <b>{r2:.1%}</b> of return variation (Adj R² = {r2_adj:.1%}) over {n} monthly observations.<br><br>
-    The annualized alpha of <b>{alpha_ann:+.2%}</b> is {alpha_sig} (t = {alpha_t:.3f}, p = {alpha_p:.4f}),
-    suggesting the stock <b>{alpha_interp}</b> what factor exposures alone would predict.<br><br>
+    The model explains <b>{r2:.1%}</b> of return variation (Adj R² = {r2_adj:.1%})
+    over <b>{n}</b> monthly observations.<br><br>
+    The annualized alpha of <b>{alpha_ann:+.2%}</b> is {alpha_sig}
+    (t = {alpha_t:.3f}, p = {alpha_p:.4f}), suggesting the stock
+    <b>{alpha_interp}</b> what factor exposures alone would predict.<br><br>
     """
 
     if sig_factors:
@@ -621,18 +737,37 @@ try:
 
     mkt_b = model.params.get("Mkt-RF", None)
     if mkt_b is not None:
-        interp += f"<br>Market beta of <b>{mkt_b:.4f}</b> implies the stock is "
-        interp += "more volatile than the market." if mkt_b > 1 else "less volatile than the market."
+        interp += (
+            f"<br>Market beta of <b>{mkt_b:.4f}</b> implies the stock is "
+            + ("more volatile than the market." if mkt_b > 1 else "less volatile than the market.")
+        )
 
     if dw_status != "pass":
-        interp += f"<br><br>⚠ Durbin-Watson ({dw:.3f}) suggests possible autocorrelation in residuals. HAC correction applied."
+        interp += (
+            f"<br><br>⚠ Durbin-Watson ({dw:.3f}) suggests possible autocorrelation "
+            "in residuals. HAC correction applied."
+        )
     if bp_status != "pass":
-        interp += f"<br>⚠ Breusch-Pagan test (p={bp_p:.4f}) indicates heteroscedasticity. HAC robust SEs account for this."
+        interp += (
+            f"<br>⚠ Breusch-Pagan test (p={bp_p:.4f}) indicates heteroscedasticity. "
+            "HAC robust SEs account for this."
+        )
+    if jb_status != "pass":
+        interp += (
+            f"<br>⚠ Jarque-Bera test (p={jb_p:.4f}) suggests residuals are non-normal. "
+            "Inference may be less reliable in small samples."
+        )
+    if cn_status != "pass":
+        interp += (
+            f"<br>⚠ Condition number ({cond:.1f}) indicates "
+            + ("moderate" if cn_status == "warn" else "severe")
+            + " multicollinearity among factors."
+        )
 
     interp += "</div>"
     st.markdown(interp, unsafe_allow_html=True)
 
-    # ── Raw Summary ───────────────────────────
+    # ── Full OLS Summary ─────────────────────
     with st.expander("Full OLS Summary (statsmodels)"):
         st.text(model.summary().as_text())
 
@@ -649,12 +784,26 @@ try:
         "CI_Upper": model.conf_int()[1].values,
     })
 
-    st.download_button(
-        "⬇  Download Results CSV",
-        export_df.to_csv(index=False),
-        file_name=f"{ticker}_factor_regression.csv",
-        mime="text/csv"
-    )
+    col_a, col_b = st.columns(2)
+    with col_a:
+        st.download_button(
+            "⬇  Download Results CSV",
+            export_df.to_csv(index=False),
+            file_name=f"{ticker}_factor_regression.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
+    with col_b:
+        # Raw data export
+        data_export = data.copy()
+        data_export.index = data_export.index.astype(str)
+        st.download_button(
+            "⬇  Download Merged Data CSV",
+            data_export.to_csv(),
+            file_name=f"{ticker}_merged_data.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
 
 except Exception as e:
     st.markdown(
