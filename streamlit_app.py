@@ -1,141 +1,33 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
-import yfinance as yf
-import statsmodels.api as sm
+I am building a Streamlit website that performs a Fama-French factor regression.
 
-st.set_page_config(page_title="Factor Analyzer", layout="wide")
+Current status:
 
-st.title("Fama-French Factor Analyzer")
+* I have a GitHub repository connected to Streamlit Community Cloud.
+* My app file is named `streamlit_app.py`.
+* I have successfully deployed a basic Streamlit app.
+* I have uploaded the file `F-F_Research_Data_5_Factors_2x3.csv` to my GitHub repository.
+* I want users to enter a stock ticker (e.g. AVGO, NVDA, META).
+* The app should download historical stock prices using yfinance.
+* Calculate monthly log returns.
+* Merge them with my Fama-French factor data.
+* Run an OLS regression using statsmodels.
+* Display:
 
-ticker = st.text_input(
-"Enter Ticker",
-value="AVGO"
-)
+  * Alpha
+  * Market Beta (Mkt-RF)
+  * SMB
+  * HML
+  * RMW
+  * CMA
+  * R²
+  * Full regression summary
 
-if st.button("Analyze"):
+Important:
 
-```
-try:
+* I am a beginner with Streamlit and GitHub.
+* Explain exactly where to paste code and which files to create/edit.
+* If there is an error, help me debug it step-by-step.
+* Assume my factor file may only contain the standard Fama-French 5 factors plus RF.
+* Ask me for any error messages before changing the code.
 
-    ff = pd.read_csv(
-        "F-F_Research_Data_5_Factors_2x3.csv"
-    )
-
-    ff.rename(
-        columns={ff.columns[0]: "Date"},
-        inplace=True
-    )
-
-    ff = ff[
-        ff["Date"]
-        .astype(str)
-        .str.match(r"^\d{6}$")
-    ]
-
-    ff["Date"] = pd.to_datetime(
-        ff["Date"].astype(str),
-        format="%Y%m"
-    )
-
-    ff.set_index(
-        "Date",
-        inplace=True
-    )
-
-    for col in ff.columns:
-        ff[col] = pd.to_numeric(
-            ff[col],
-            errors="coerce"
-        ) / 100
-
-    stock = yf.download(
-        ticker,
-        start=ff.index.min(),
-        auto_adjust=True,
-        progress=False
-    )
-
-    monthly_prices = (
-        stock["Close"]
-        .resample("ME")
-        .last()
-    )
-
-    monthly_log_returns = np.log(
-        monthly_prices /
-        monthly_prices.shift(1)
-    )
-
-    returns = pd.DataFrame({
-        "Return": monthly_log_returns
-    })
-
-    returns.index = (
-        returns.index
-        .to_period("M")
-        .to_timestamp()
-    )
-
-    data = returns.merge(
-        ff,
-        left_index=True,
-        right_index=True,
-        how="inner"
-    )
-
-    data["Excess_Return"] = (
-        data["Return"] -
-        data["RF"]
-    )
-
-    X = data[
-        [
-            "Mkt-RF",
-            "SMB",
-            "HML",
-            "RMW",
-            "CMA"
-        ]
-    ]
-
-    X = sm.add_constant(X)
-
-    y = data["Excess_Return"]
-
-    model = sm.OLS(
-        y,
-        X,
-        missing="drop"
-    ).fit()
-
-    st.subheader(
-        f"{ticker.upper()} Factor Exposures"
-    )
-
-    results = pd.DataFrame({
-        "Factor": model.params.index,
-        "Beta": model.params.values
-    })
-
-    st.dataframe(
-        results,
-        use_container_width=True
-    )
-
-    st.metric(
-        "R²",
-        round(model.rsquared, 4)
-    )
-
-    st.subheader(
-        "Regression Summary"
-    )
-
-    st.text(
-        model.summary()
-    )
-
-except Exception as e:
-    st.error(str(e))
-```
+Please continue from this point and help me get the regression working on my live Streamlit website.
