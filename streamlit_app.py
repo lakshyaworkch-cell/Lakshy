@@ -12,28 +12,33 @@ if st.button("Run Regression"):
 
     try:
 
-        # -----------------------------
+        # ----------------------------
         # Download stock data
-        # -----------------------------
+        # ----------------------------
         stock = yf.download(
-            ticker,
+            ticker.strip().upper(),
             start="2015-01-01",
-            auto_adjust=True,
-            progress=False
+            progress=False,
+            auto_adjust=True
         )
 
+        st.subheader("Downloaded Stock Data")
+        st.write(stock.head())
+
         if stock.empty:
-            st.error("No stock data found.")
+            st.error(
+                f"No stock data returned for ticker '{ticker}'. "
+                "Try AAPL, MSFT, NVDA, META, AVGO."
+            )
             st.stop()
 
-        # -----------------------------
+        # ----------------------------
         # Monthly returns
-        # -----------------------------
-        monthly_prices = stock["Close"].resample("M").last()
+        # ----------------------------
+        monthly_prices = stock["Close"].resample("ME").last()
 
         monthly_returns = np.log(
-            monthly_prices /
-            monthly_prices.shift(1)
+            monthly_prices / monthly_prices.shift(1)
         )
 
         monthly_returns = monthly_returns.dropna()
@@ -43,24 +48,24 @@ if st.button("Run Regression"):
 
         returns_df.index = returns_df.index.to_period("M")
 
-        # -----------------------------
-        # Load FF factor file
-        # -----------------------------
+        # ----------------------------
+        # Load Fama-French CSV
+        # ----------------------------
         ff = pd.read_csv(
             "F-F_Research_Data_5_Factors_2x3.csv"
         )
 
-        st.write("Factor file preview")
-        st.dataframe(ff.head())
+        st.subheader("Raw Factor File")
+        st.write(ff.head(10))
 
-        # -----------------------------
-        # Convert date column
-        # -----------------------------
+        # ----------------------------
+        # Clean FF file
+        # ----------------------------
         ff.iloc[:, 0] = ff.iloc[:, 0].astype(str)
 
         ff = ff[
-            ff.iloc[:, 0].str.len() == 6
-        ]
+            ff.iloc[:, 0].str.match(r"^\d{6}$")
+        ].copy()
 
         ff["Date"] = pd.to_datetime(
             ff.iloc[:, 0],
@@ -69,16 +74,11 @@ if st.button("Run Regression"):
 
         ff.index = ff["Date"].dt.to_period("M")
 
-        # -----------------------------
-        # Rename columns if needed
-        # -----------------------------
         ff.columns = [
-            c.strip() for c in ff.columns
+            str(c).strip()
+            for c in ff.columns
         ]
 
-        # -----------------------------
-        # Convert percentages to decimals
-        # -----------------------------
         factor_cols = [
             "Mkt-RF",
             "SMB",
@@ -94,23 +94,32 @@ if st.button("Run Regression"):
             / 100
         )
 
-        # -----------------------------
-        # Merge
-        # -----------------------------
+        # ----------------------------
+        # Merge returns with factors
+        # ----------------------------
         merged = returns_df.join(
             ff[factor_cols],
             how="inner"
         )
 
+        st.subheader("Merged Dataset")
+        st.write(merged.head())
+
+        if merged.empty:
+            st.error(
+                "Merged dataset is empty. "
+                "Check factor file dates."
+            )
+            st.stop()
+
+        # ----------------------------
         # Excess Return
+        # ----------------------------
         merged["Excess_Return"] = (
             merged["Return"]
             - merged["RF"]
         )
 
-        # -----------------------------
-        # Regression
-        # -----------------------------
         X = merged[
             ["Mkt-RF", "SMB", "HML", "RMW", "CMA"]
         ]
@@ -119,11 +128,11 @@ if st.button("Run Regression"):
 
         y = merged["Excess_Return"]
 
+        # ----------------------------
+        # Regression
+        # ----------------------------
         model = sm.OLS(y, X).fit()
 
-        # -----------------------------
-        # Output
-        # -----------------------------
         st.subheader("Factor Loadings")
 
         st.write(
@@ -159,4 +168,4 @@ if st.button("Run Regression"):
         st.text(model.summary())
 
     except Exception as e:
-        st.error(str(e))
+        st.error(f"ERROR: {str(e)}")
