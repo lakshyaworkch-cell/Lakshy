@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Factor Forecasting</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #111827;
+            color: white;
+            max-width: 900px;
+            margin: auto;
+            padding: 40px;
+        }
+
+        .card {
+            background: #1f2937;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        h1 {
+            color: #60a5fa;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="card">
+    <h1>Factor Forecasting Dashboard</h1>
+
+    <p>
+        Welcome to my website about the Fama-French 6 Factor Model.
+    </p>
+
+    <ul>
+        <li>Market</li>
+        <li>Size (SMB)</li>
+        <li>Value (HML)</li>
+        <li>Profitability (RMW)</li>
+        <li>Investment (CMA)</li>
+        <li>Momentum (MOM)</li>
+    </ul>
+
+    <button onclick="showForecast()">
+        Generate Forecast
+    </button>
+
+    <p id="forecast"></p>
+</div>
+
+<script>
+function showForecast() {
+    document.getElementById("forecast").innerHTML =
+        "Current regime suggests Momentum and Profitability may outperform.";
+}
+</script>
+
+</body>
+</html>
