@@ -1,33 +1,162 @@
-I am building a Streamlit website that performs a Fama-French factor regression.
+import streamlit as st
+import pandas as pd
+import numpy as np
+import yfinance as yf
+import statsmodels.api as sm
 
-Current status:
+st.title("Fama-French 5 Factor Regression")
 
-* I have a GitHub repository connected to Streamlit Community Cloud.
-* My app file is named `streamlit_app.py`.
-* I have successfully deployed a basic Streamlit app.
-* I have uploaded the file `F-F_Research_Data_5_Factors_2x3.csv` to my GitHub repository.
-* I want users to enter a stock ticker (e.g. AVGO, NVDA, META).
-* The app should download historical stock prices using yfinance.
-* Calculate monthly log returns.
-* Merge them with my Fama-French factor data.
-* Run an OLS regression using statsmodels.
-* Display:
+ticker = st.text_input("Enter Stock Ticker", "AVGO")
 
-  * Alpha
-  * Market Beta (Mkt-RF)
-  * SMB
-  * HML
-  * RMW
-  * CMA
-  * R²
-  * Full regression summary
+if st.button("Run Regression"):
 
-Important:
+    try:
 
-* I am a beginner with Streamlit and GitHub.
-* Explain exactly where to paste code and which files to create/edit.
-* If there is an error, help me debug it step-by-step.
-* Assume my factor file may only contain the standard Fama-French 5 factors plus RF.
-* Ask me for any error messages before changing the code.
+        # -----------------------------
+        # Download stock data
+        # -----------------------------
+        stock = yf.download(
+            ticker,
+            start="2015-01-01",
+            auto_adjust=True,
+            progress=False
+        )
 
-Please continue from this point and help me get the regression working on my live Streamlit website.
+        if stock.empty:
+            st.error("No stock data found.")
+            st.stop()
+
+        # -----------------------------
+        # Monthly returns
+        # -----------------------------
+        monthly_prices = stock["Close"].resample("M").last()
+
+        monthly_returns = np.log(
+            monthly_prices /
+            monthly_prices.shift(1)
+        )
+
+        monthly_returns = monthly_returns.dropna()
+
+        returns_df = pd.DataFrame(monthly_returns)
+        returns_df.columns = ["Return"]
+
+        returns_df.index = returns_df.index.to_period("M")
+
+        # -----------------------------
+        # Load FF factor file
+        # -----------------------------
+        ff = pd.read_csv(
+            "F-F_Research_Data_5_Factors_2x3.csv"
+        )
+
+        st.write("Factor file preview")
+        st.dataframe(ff.head())
+
+        # -----------------------------
+        # Convert date column
+        # -----------------------------
+        ff.iloc[:, 0] = ff.iloc[:, 0].astype(str)
+
+        ff = ff[
+            ff.iloc[:, 0].str.len() == 6
+        ]
+
+        ff["Date"] = pd.to_datetime(
+            ff.iloc[:, 0],
+            format="%Y%m"
+        )
+
+        ff.index = ff["Date"].dt.to_period("M")
+
+        # -----------------------------
+        # Rename columns if needed
+        # -----------------------------
+        ff.columns = [
+            c.strip() for c in ff.columns
+        ]
+
+        # -----------------------------
+        # Convert percentages to decimals
+        # -----------------------------
+        factor_cols = [
+            "Mkt-RF",
+            "SMB",
+            "HML",
+            "RMW",
+            "CMA",
+            "RF"
+        ]
+
+        ff[factor_cols] = (
+            ff[factor_cols]
+            .astype(float)
+            / 100
+        )
+
+        # -----------------------------
+        # Merge
+        # -----------------------------
+        merged = returns_df.join(
+            ff[factor_cols],
+            how="inner"
+        )
+
+        # Excess Return
+        merged["Excess_Return"] = (
+            merged["Return"]
+            - merged["RF"]
+        )
+
+        # -----------------------------
+        # Regression
+        # -----------------------------
+        X = merged[
+            ["Mkt-RF", "SMB", "HML", "RMW", "CMA"]
+        ]
+
+        X = sm.add_constant(X)
+
+        y = merged["Excess_Return"]
+
+        model = sm.OLS(y, X).fit()
+
+        # -----------------------------
+        # Output
+        # -----------------------------
+        st.subheader("Factor Loadings")
+
+        st.write(
+            f"Alpha: {model.params['const']:.4f}"
+        )
+
+        st.write(
+            f"Market Beta: {model.params['Mkt-RF']:.4f}"
+        )
+
+        st.write(
+            f"SMB: {model.params['SMB']:.4f}"
+        )
+
+        st.write(
+            f"HML: {model.params['HML']:.4f}"
+        )
+
+        st.write(
+            f"RMW: {model.params['RMW']:.4f}"
+        )
+
+        st.write(
+            f"CMA: {model.params['CMA']:.4f}"
+        )
+
+        st.write(
+            f"R²: {model.rsquared:.4f}"
+        )
+
+        st.subheader("Regression Summary")
+
+        st.text(model.summary())
+
+    except Exception as e:
+        st.error(str(e))
