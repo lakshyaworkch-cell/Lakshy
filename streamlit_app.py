@@ -1,6 +1,3 @@
-bash
-
-cat > /mnt/user-data/outputs/factor_regression.py << 'ENDOFFILE'
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -14,212 +11,74 @@ warnings.filterwarnings("ignore")
 
 FF_URL = "https://raw.githubusercontent.com/lakshyaworkch-cell/Lakshy/main/F-F_Research_Data_5_Factors_2x3.csv"
 
-# ─────────────────────────────────────────────
-# PAGE CONFIG
-# ─────────────────────────────────────────────
 st.set_page_config(page_title="Factor Regression", page_icon="📈", layout="wide")
 
-# ─────────────────────────────────────────────
-# STYLING
-# ─────────────────────────────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
-
-html, body, [class*="css"] {
-    font-family: 'Inter', sans-serif;
-}
-
+html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 .stApp {
     background: #0f1623;
     background-image: radial-gradient(ellipse at 20% 0%, rgba(56,189,248,0.04) 0%, transparent 60%),
                       radial-gradient(ellipse at 80% 100%, rgba(99,102,241,0.04) 0%, transparent 60%);
     color: #e2e8f0;
 }
-
-h1, h2, h3 {
-    font-family: 'JetBrains Mono', monospace !important;
-    letter-spacing: -0.5px;
-}
-
+h1, h2, h3 { font-family: 'JetBrains Mono', monospace !important; letter-spacing: -0.5px; }
 .metric-card {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-left: 2px solid #34d399;
-    border-radius: 12px;
-    padding: 16px 18px;
-    margin-bottom: 12px;
-    backdrop-filter: blur(8px);
-    transition: border-color 0.2s;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-left: 2px solid #34d399; border-radius: 12px; padding: 16px 18px;
+    margin-bottom: 12px; backdrop-filter: blur(8px); transition: border-color 0.2s;
 }
 .metric-card:hover { border-color: rgba(255,255,255,0.14); }
 .metric-card.red  { border-left-color: #f87171; }
 .metric-card.blue { border-left-color: #60a5fa; }
 .metric-card.gold { border-left-color: #fbbf24; }
 .metric-card.gray { border-left-color: #6b7280; }
-
-.metric-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 2px;
-    color: #475569;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-}
-.metric-value {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 24px;
-    font-weight: 600;
-    color: #e2e8f0;
-}
-.metric-sub {
-    font-size: 11px;
-    color: #334155;
-    margin-top: 4px;
-    font-family: 'JetBrains Mono', monospace;
-}
-
+.metric-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 2px; color: #475569; text-transform: uppercase; margin-bottom: 4px; }
+.metric-value { font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 600; color: #e2e8f0; }
+.metric-sub { font-size: 11px; color: #334155; margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
 .factor-row {
-    display: grid;
-    grid-template-columns: 140px 90px 90px 90px 80px 1fr;
-    gap: 8px;
-    align-items: center;
-    padding: 10px 14px;
-    border-radius: 8px;
-    margin-bottom: 4px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    background: rgba(255,255,255,0.025);
-    border: 1px solid rgba(255,255,255,0.06);
-    transition: background 0.15s;
+    display: grid; grid-template-columns: 140px 90px 90px 90px 80px 1fr;
+    gap: 8px; align-items: center; padding: 10px 14px; border-radius: 8px;
+    margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.06); transition: background 0.15s;
 }
 .factor-row:hover { background: rgba(255,255,255,0.04); }
-.factor-row.header {
-    background: transparent;
-    border-color: transparent;
-    font-size: 10px;
-    letter-spacing: 1.5px;
-    color: #334155;
-    text-transform: uppercase;
-}
+.factor-row.header { background: transparent; border-color: transparent; font-size: 10px; letter-spacing: 1.5px; color: #334155; text-transform: uppercase; }
 .factor-row.sig   { border-left: 2px solid #34d399; }
 .factor-row.marg  { border-left: 2px solid #fbbf24; }
 .factor-row.insig { border-left: 2px solid rgba(255,255,255,0.08); }
 .factor-row.alpha { border-left: 2px solid #a78bfa; }
-
-.sig-badge {
-    display: inline-block;
-    padding: 2px 7px;
-    border-radius: 4px;
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 1px;
-}
+.sig-badge { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 500; letter-spacing: 1px; }
 .badge-001 { background: rgba(52,211,153,0.12); color: #34d399; }
 .badge-01  { background: rgba(52,211,153,0.08); color: #6ee7b7; }
 .badge-05  { background: rgba(251,191,36,0.1);  color: #fbbf24; }
 .badge-10  { background: rgba(255,255,255,0.05); color: #6b7280; }
 .badge-ns  { background: rgba(255,255,255,0.03); color: #334155; }
-
 .section-title {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 2.5px;
-    text-transform: uppercase;
-    color: #334155;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-    padding-bottom: 8px;
-    margin: 28px 0 16px 0;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 2.5px;
+    text-transform: uppercase; color: #334155; border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding-bottom: 8px; margin: 28px 0 16px 0;
 }
-
 .diag-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.diag-item {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 10px;
-    padding: 14px 16px;
-}
+.diag-item { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 14px 16px; }
 .diag-name { font-size: 11px; color: #475569; font-family: 'JetBrains Mono', monospace; margin-bottom: 4px; }
 .diag-val  { font-size: 16px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
-.diag-pass { color: #34d399; }
-.diag-fail { color: #f87171; }
-.diag-warn { color: #fbbf24; }
+.diag-pass { color: #34d399; } .diag-fail { color: #f87171; } .diag-warn { color: #fbbf24; }
 .diag-sub  { font-size: 10px; color: #1e293b; font-family: 'JetBrains Mono', monospace; margin-top: 3px; }
-
-.interpret-box {
-    background: rgba(255,255,255,0.025);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 12px;
-    padding: 20px 24px;
-    font-size: 13px;
-    line-height: 1.8;
-    color: #94a3b8;
-}
+.interpret-box { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 20px 24px; font-size: 13px; line-height: 1.8; color: #94a3b8; }
 .interpret-box b { color: #e2e8f0; }
-
-.ai-box {
-    background: rgba(167,139,250,0.04);
-    border: 1px solid rgba(167,139,250,0.15);
-    border-radius: 12px;
-    padding: 20px 24px;
-    font-size: 13px;
-    line-height: 1.9;
-    color: #c4b5fd;
-}
+.ai-box { background: rgba(167,139,250,0.04); border: 1px solid rgba(167,139,250,0.15); border-radius: 12px; padding: 20px 24px; font-size: 13px; line-height: 1.9; color: #c4b5fd; }
 .ai-box b { color: #e2e8f0; }
-.ai-box h4 {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: #7c3aed;
-    margin-bottom: 12px;
-}
-
-.stTextInput > div > div > input {
-    background: rgba(255,255,255,0.04) !important;
-    border: 1px solid rgba(255,255,255,0.1) !important;
-    color: #e2e8f0 !important;
-    font-family: 'JetBrains Mono', monospace !important;
-    border-radius: 8px !important;
-}
-.stTextInput > div > div > input:focus {
-    border-color: rgba(96,165,250,0.4) !important;
-    box-shadow: 0 0 0 3px rgba(96,165,250,0.08) !important;
-}
-
-.stButton > button {
-    background: rgba(255,255,255,0.06) !important;
-    color: #e2e8f0 !important;
-    font-family: 'JetBrains Mono', monospace !important;
-    font-weight: 500 !important;
-    letter-spacing: 1px !important;
-    border: 1px solid rgba(255,255,255,0.12) !important;
-    border-radius: 8px !important;
-    padding: 10px 28px !important;
-    transition: all 0.2s !important;
-}
-.stButton > button:hover {
-    background: rgba(52,211,153,0.1) !important;
-    border-color: rgba(52,211,153,0.3) !important;
-    color: #34d399 !important;
-}
-
-.error-box {
-    background: rgba(248,113,113,0.06);
-    border: 1px solid rgba(248,113,113,0.2);
-    border-radius: 8px;
-    padding: 12px 16px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    color: #f87171;
-}
+.ai-box h4 { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #7c3aed; margin-bottom: 12px; }
+.stTextInput > div > div > input { background: rgba(255,255,255,0.04) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #e2e8f0 !important; font-family: 'JetBrains Mono', monospace !important; border-radius: 8px !important; }
+.stTextInput > div > div > input:focus { border-color: rgba(96,165,250,0.4) !important; box-shadow: 0 0 0 3px rgba(96,165,250,0.08) !important; }
+.stButton > button { background: rgba(255,255,255,0.06) !important; color: #e2e8f0 !important; font-family: 'JetBrains Mono', monospace !important; font-weight: 500 !important; letter-spacing: 1px !important; border: 1px solid rgba(255,255,255,0.12) !important; border-radius: 8px !important; padding: 10px 28px !important; transition: all 0.2s !important; }
+.stButton > button:hover { background: rgba(52,211,153,0.1) !important; border-color: rgba(52,211,153,0.3) !important; color: #34d399 !important; }
+.error-box { background: rgba(248,113,113,0.06); border: 1px solid rgba(248,113,113,0.2); border-radius: 8px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #f87171; }
 </style>
 """, unsafe_allow_html=True)
 
-# ─────────────────────────────────────────────
-# HELPERS
-# ─────────────────────────────────────────────
 def sig_badge(p):
     if p < 0.001: return '<span class="sig-badge badge-001">★★★</span>'
     elif p < 0.01: return '<span class="sig-badge badge-01">★★★</span>'
@@ -267,9 +126,6 @@ FACTOR_DESCRIPTIONS = {
     "Mom":    "Momentum factor (past winners vs past losers)",
 }
 
-# ─────────────────────────────────────────────
-# LOAD FACTOR DATA FROM GITHUB (cached)
-# ─────────────────────────────────────────────
 @st.cache_data(show_spinner=False)
 def load_factors():
     ff = pd.read_csv(FF_URL, index_col=0)
@@ -280,9 +136,6 @@ def load_factors():
     ff.index = pd.to_datetime(ff.index, format="%Y%m").to_period("M")
     return ff
 
-# ─────────────────────────────────────────────
-# AI MACRO INSIGHT
-# ─────────────────────────────────────────────
 def build_ai_prompt(ticker, model_result, available, alpha_ann, alpha_p, r2, n, start_date, end_date):
     lines = []
     lines.append(f"Ticker: {ticker}")
@@ -308,12 +161,11 @@ def build_ai_prompt(ticker, model_result, available, alpha_ann, alpha_p, r2, n, 
 
 Based on these Fama-French factor regression results, please provide a concise macro-economic narrative (around 200-250 words) covering:
 
-1. **What the significant factor exposures reveal** about how this stock behaves relative to the broader economy — e.g. does it behave like a large-cap growth stock, a cyclical, a defensive, etc.
-2. **What the current macroeconomic environment means for these exposures** — e.g. if the stock has high market beta, what does that mean in a rising/falling rate environment; if it loads on profitability, what does that say about its resilience.
-3. **A brief forward-looking note** on whether these factor exposures are favorable or risky given current economic conditions (late 2024 / early 2025 context: sticky inflation, higher-for-longer rates, AI-driven tech rally, slowing global growth).
+1. **What the significant factor exposures reveal** about how this stock behaves relative to the broader economy.
+2. **What the current macroeconomic environment means for these exposures**.
+3. **A brief forward-looking note** on whether these factor exposures are favorable or risky given current economic conditions.
 
-Write in clear, professional but accessible language. Use **bold** for key terms. Do not repeat the raw numbers — the user can already see them. Focus on economic intuition and real-world implications."""
-
+Write in clear, professional but accessible language. Use **bold** for key terms. Do not repeat the raw numbers."""
     return prompt
 
 def get_ai_insight(ticker, model_result, available, alpha_ann, alpha_p, r2, n, start_date, end_date):
@@ -332,9 +184,6 @@ def get_ai_insight(ticker, model_result, available, alpha_ann, alpha_p, r2, n, s
     except Exception as e:
         return None, str(e)
 
-# ─────────────────────────────────────────────
-# HEADER
-# ─────────────────────────────────────────────
 st.markdown("# Factor Regression")
 st.markdown(
     '<p style="font-family:\'JetBrains Mono\',monospace;color:#334155;font-size:12px;letter-spacing:1px;">'
@@ -342,9 +191,6 @@ st.markdown(
     '</p>', unsafe_allow_html=True)
 st.markdown("---")
 
-# ─────────────────────────────────────────────
-# SESSION STATE INIT
-# ─────────────────────────────────────────────
 if "run" not in st.session_state:
     st.session_state["run"] = False
 if "ai_insight" not in st.session_state:
@@ -352,9 +198,6 @@ if "ai_insight" not in st.session_state:
 if "ai_error" not in st.session_state:
     st.session_state["ai_error"] = None
 
-# ─────────────────────────────────────────────
-# SIDEBAR
-# ─────────────────────────────────────────────
 with st.sidebar:
     st.markdown("### Configuration")
     ticker = st.text_input("Stock Ticker", "AVGO").upper().strip()
@@ -372,7 +215,6 @@ with st.sidebar:
         st.session_state["end_ran"]    = end_date
         st.session_state["hac_ran"]    = hac_lags
         st.session_state["ann_ran"]    = annualize
-        # clear any previous AI insight when re-running
         st.session_state["ai_insight"] = None
         st.session_state["ai_error"]   = None
 
@@ -383,9 +225,6 @@ with st.sidebar:
         '<span style="color:#475569;">github.com/lakshyaworkch-cell/Lakshy</span>'
         '</div>', unsafe_allow_html=True)
 
-# ─────────────────────────────────────────────
-# IDLE STATE
-# ─────────────────────────────────────────────
 if not st.session_state["run"]:
     st.markdown(
         '<div class="interpret-box" style="margin-top:40px;text-align:center;">'
@@ -398,20 +237,13 @@ if not st.session_state["run"]:
         '</div>', unsafe_allow_html=True)
     st.stop()
 
-# ─────────────────────────────────────────────
-# USE STORED INPUTS (survives button reruns)
-# ─────────────────────────────────────────────
 ticker     = st.session_state.get("ticker_ran", ticker)
 start_date = st.session_state.get("start_ran", start_date)
 end_date   = st.session_state.get("end_ran", end_date)
 hac_lags   = st.session_state.get("hac_ran", hac_lags)
 annualize  = st.session_state.get("ann_ran", annualize)
 
-# ─────────────────────────────────────────────
-# RUN
-# ─────────────────────────────────────────────
 try:
-    # ── Load factor data ─────────────────────
     with st.spinner("Loading factor data from GitHub..."):
         try:
             ff_raw = load_factors()
@@ -431,7 +263,6 @@ try:
     if has_rf:
         ff["RF"] = ff["RF"].astype(float) / 100
 
-    # ── Stock data ───────────────────────────
     with st.spinner(f"Downloading {ticker} from Yahoo Finance..."):
         raw = yf.download(ticker, start=str(start_date), end=str(end_date), auto_adjust=True, progress=False)
 
@@ -447,7 +278,6 @@ try:
     returns = monthly.pct_change().dropna()
     returns.index = returns.index.to_period("M")
 
-    # ── Merge ────────────────────────────────
     data = pd.DataFrame({"Stock": returns}).join(ff[available + (["RF"] if has_rf else [])], how="inner")
 
     if len(data) < 24:
@@ -461,12 +291,10 @@ try:
         data["Y"] = data["Stock"]
         y_label = "Raw Return (no RF in file)"
 
-    # ── Regression ───────────────────────────
     X = sm.add_constant(data[available])
     y = data["Y"]
     model = sm.OLS(y, X).fit(cov_type="HAC", cov_kwds={"maxlags": hac_lags})
 
-    # ── Stats ────────────────────────────────
     alpha     = model.params["const"]
     alpha_ann = (1 + alpha) ** annualize - 1
     alpha_t   = model.tvalues["const"]
@@ -482,7 +310,6 @@ try:
     te        = resid.std() * np.sqrt(annualize)
     ir        = alpha_ann / te if te > 0 else np.nan
 
-    # ── Diagnostics ──────────────────────────
     bp_stat, bp_p, _, _ = sm.stats.diagnostic.het_breuschpagan(resid, X)
     dw = sm.stats.stattools.durbin_watson(resid)
     jb_stat, jb_p = stats.jarque_bera(resid)[:2]
@@ -506,11 +333,6 @@ try:
         cls = {"pass": "diag-pass", "fail": "diag-fail", "warn": "diag-warn"}.get(status, "diag-pass")
         return f'<div class="diag-item"><div class="diag-name">{name}</div><div class="diag-val {cls}">{val}</div><div class="diag-sub">{sub}</div></div>'
 
-    # ─────────────────────────────────────────
-    # DISPLAY
-    # ─────────────────────────────────────────
-
-    # ── Top metrics ──────────────────────────
     c1, c2, c3, c4 = st.columns(4)
     with c1:
         st.markdown(f"""
@@ -543,7 +365,6 @@ try:
           <div class="metric-sub">p={f_p:.4f} · N={n}</div>
         </div>""", unsafe_allow_html=True)
 
-    # ── Factor Loadings ───────────────────────
     st.markdown('<div class="section-title">Factor Loadings</div>', unsafe_allow_html=True)
     st.markdown("""
     <div class="factor-row header">
@@ -568,7 +389,6 @@ try:
         f'★★★ p&lt;0.01 · ★★ p&lt;0.05 · ★ p&lt;0.10 · n.s. not significant'
         f' | HAC Newey-West SE, maxlags={hac_lags}</div>', unsafe_allow_html=True)
 
-    # ── Interpretation ────────────────────────
     st.markdown('<div class="section-title">Interpretation</div>', unsafe_allow_html=True)
     sig_factors   = [FACTOR_NAMES.get(f, f) for f in available if model.pvalues[f] < 0.05]
     insig_factors = [FACTOR_NAMES.get(f, f) for f in available if model.pvalues[f] >= 0.05]
@@ -598,7 +418,6 @@ try:
     interp += "</div>"
     st.markdown(interp, unsafe_allow_html=True)
 
-    # ── AI Macro Insight ──────────────────────
     st.markdown('<div class="section-title">AI Macro Insight</div>', unsafe_allow_html=True)
     st.markdown(
         '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#475569;margin-bottom:12px;">'
@@ -613,7 +432,6 @@ try:
         st.session_state["ai_insight"] = insight
         st.session_state["ai_error"]   = error
 
-    # render whatever is stored — persists across reruns
     if st.session_state["ai_error"]:
         st.markdown(f'<div class="error-box">AI Error: {st.session_state["ai_error"]}</div>', unsafe_allow_html=True)
     elif st.session_state["ai_insight"]:
@@ -623,11 +441,8 @@ try:
             f'<div class="ai-box">'
             f'<h4>✦ Claude · Macro Analysis · {ticker}</h4>'
             f'{insight_html}'
-            f'</div>',
-            unsafe_allow_html=True
-        )
+            f'</div>', unsafe_allow_html=True)
 
-    # ── TABS ──────────────────────────────────
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "95% Confidence Intervals",
         "Regression Diagnostics",
@@ -728,11 +543,9 @@ try:
                 'Need at least 36 months of data and the Mkt-RF factor to display rolling beta.</div>',
                 unsafe_allow_html=True)
 
-    # ── Full OLS Summary ──────────────────────
     with st.expander("Full OLS Summary (statsmodels)"):
         st.text(model.summary().as_text())
 
-    # ── Export ────────────────────────────────
     st.markdown('<div class="section-title">Export Results</div>', unsafe_allow_html=True)
     export_df = pd.DataFrame({
         "Factor":   [FACTOR_NAMES.get(n, n) for n in model.params.index],
@@ -756,6 +569,3 @@ try:
 except Exception as e:
     st.markdown(f'<div class="error-box">Error: {str(e)}</div>', unsafe_allow_html=True)
     raise e
-ENDOFFILE
-echo "Done"
-
