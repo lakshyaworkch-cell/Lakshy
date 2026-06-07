@@ -19,45 +19,177 @@ st.set_page_config(page_title="Factor Regression", page_icon="📈", layout="wid
 # ─────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap');
-html, body, [class*="css"] { font-family: 'IBM Plex Sans', sans-serif; }
-.stApp { background-color: #0a0a0f; color: #e8e8f0; }
-h1, h2, h3 { font-family: 'IBM Plex Mono', monospace !important; letter-spacing: -0.5px; }
-.metric-card { background: #12121a; border: 1px solid #1e1e2e; border-left: 3px solid #4ade80; border-radius: 4px; padding: 18px 20px; margin-bottom: 12px; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif;
+}
+
+.stApp {
+    background: #0f1623;
+    background-image: radial-gradient(ellipse at 20% 0%, rgba(56,189,248,0.04) 0%, transparent 60%),
+                      radial-gradient(ellipse at 80% 100%, rgba(99,102,241,0.04) 0%, transparent 60%);
+    color: #e2e8f0;
+}
+
+h1, h2, h3 {
+    font-family: 'JetBrains Mono', monospace !important;
+    letter-spacing: -0.5px;
+}
+
+.metric-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-left: 2px solid #34d399;
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+    backdrop-filter: blur(8px);
+    transition: border-color 0.2s;
+}
+.metric-card:hover { border-color: rgba(255,255,255,0.14); }
 .metric-card.red  { border-left-color: #f87171; }
 .metric-card.blue { border-left-color: #60a5fa; }
 .metric-card.gold { border-left-color: #fbbf24; }
 .metric-card.gray { border-left-color: #6b7280; }
-.metric-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 2px; color: #6b7280; text-transform: uppercase; margin-bottom: 4px; }
-.metric-value { font-family: 'IBM Plex Mono', monospace; font-size: 26px; font-weight: 600; color: #e8e8f0; }
-.metric-sub { font-size: 11px; color: #4b5563; margin-top: 4px; font-family: 'IBM Plex Mono', monospace; }
-.factor-row { display: grid; grid-template-columns: 140px 90px 90px 90px 80px 1fr; gap: 8px; align-items: center; padding: 10px 14px; border-radius: 3px; margin-bottom: 4px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; background: #12121a; border: 1px solid #1a1a28; }
-.factor-row.header { background: #0a0a0f; border-color: #1e1e2e; font-size: 10px; letter-spacing: 1.5px; color: #4b5563; text-transform: uppercase; }
-.factor-row.sig   { border-left: 3px solid #4ade80; }
-.factor-row.marg  { border-left: 3px solid #fbbf24; }
-.factor-row.insig { border-left: 3px solid #374151; }
-.factor-row.alpha { border-left: 3px solid #a78bfa; }
-.sig-badge { display: inline-block; padding: 2px 7px; border-radius: 2px; font-size: 10px; font-weight: 600; letter-spacing: 1px; }
-.badge-001 { background: #14532d; color: #4ade80; }
-.badge-01  { background: #1a3a1a; color: #86efac; }
-.badge-05  { background: #2a2a14; color: #fbbf24; }
-.badge-10  { background: #1c1c1c; color: #9ca3af; }
-.badge-ns  { background: #111118; color: #4b5563; }
-.section-title { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #4b5563; border-bottom: 1px solid #1e1e2e; padding-bottom: 8px; margin: 28px 0 16px 0; }
+
+.metric-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: #475569;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+.metric-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 24px;
+    font-weight: 600;
+    color: #e2e8f0;
+}
+.metric-sub {
+    font-size: 11px;
+    color: #334155;
+    margin-top: 4px;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.factor-row {
+    display: grid;
+    grid-template-columns: 140px 90px 90px 90px 80px 1fr;
+    gap: 8px;
+    align-items: center;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.06);
+    transition: background 0.15s;
+}
+.factor-row:hover { background: rgba(255,255,255,0.04); }
+.factor-row.header {
+    background: transparent;
+    border-color: transparent;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: #334155;
+    text-transform: uppercase;
+}
+.factor-row.sig   { border-left: 2px solid #34d399; }
+.factor-row.marg  { border-left: 2px solid #fbbf24; }
+.factor-row.insig { border-left: 2px solid rgba(255,255,255,0.08); }
+.factor-row.alpha { border-left: 2px solid #a78bfa; }
+
+.sig-badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 1px;
+}
+.badge-001 { background: rgba(52,211,153,0.12); color: #34d399; }
+.badge-01  { background: rgba(52,211,153,0.08); color: #6ee7b7; }
+.badge-05  { background: rgba(251,191,36,0.1);  color: #fbbf24; }
+.badge-10  { background: rgba(255,255,255,0.05); color: #6b7280; }
+.badge-ns  { background: rgba(255,255,255,0.03); color: #334155; }
+
+.section-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: #334155;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding-bottom: 8px;
+    margin: 28px 0 16px 0;
+}
+
 .diag-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.diag-item { background: #12121a; border: 1px solid #1e1e2e; border-radius: 4px; padding: 14px 16px; }
-.diag-name { font-size: 11px; color: #6b7280; font-family: 'IBM Plex Mono', monospace; margin-bottom: 4px; }
-.diag-val  { font-size: 16px; font-weight: 600; font-family: 'IBM Plex Mono', monospace; }
-.diag-pass { color: #4ade80; }
+.diag-item {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+    padding: 14px 16px;
+}
+.diag-name { font-size: 11px; color: #475569; font-family: 'JetBrains Mono', monospace; margin-bottom: 4px; }
+.diag-val  { font-size: 16px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+.diag-pass { color: #34d399; }
 .diag-fail { color: #f87171; }
 .diag-warn { color: #fbbf24; }
-.diag-sub  { font-size: 10px; color: #374151; font-family: 'IBM Plex Mono', monospace; margin-top: 3px; }
-.interpret-box { background: #0d0d15; border: 1px solid #1e1e2e; border-radius: 4px; padding: 16px 20px; font-size: 13px; line-height: 1.7; color: #9ca3af; }
-.interpret-box b { color: #e8e8f0; }
-.stTextInput > div > div > input { background: #12121a !important; border: 1px solid #1e1e2e !important; color: #e8e8f0 !important; font-family: 'IBM Plex Mono', monospace !important; border-radius: 4px !important; }
-.stButton > button { background: #e8e8f0 !important; color: #0a0a0f !important; font-family: 'IBM Plex Mono', monospace !important; font-weight: 600 !important; letter-spacing: 1px !important; border: none !important; border-radius: 3px !important; padding: 10px 28px !important; }
-.stButton > button:hover { background: #4ade80 !important; }
-.error-box { background: #1a0000; border: 1px solid #f87171; border-radius: 4px; padding: 12px 16px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #f87171; }
+.diag-sub  { font-size: 10px; color: #1e293b; font-family: 'JetBrains Mono', monospace; margin-top: 3px; }
+
+.interpret-box {
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 12px;
+    padding: 20px 24px;
+    font-size: 13px;
+    line-height: 1.8;
+    color: #94a3b8;
+}
+.interpret-box b { color: #e2e8f0; }
+
+.stTextInput > div > div > input {
+    background: rgba(255,255,255,0.04) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    color: #e2e8f0 !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    border-radius: 8px !important;
+}
+.stTextInput > div > div > input:focus {
+    border-color: rgba(96,165,250,0.4) !important;
+    box-shadow: 0 0 0 3px rgba(96,165,250,0.08) !important;
+}
+
+.stButton > button {
+    background: rgba(255,255,255,0.06) !important;
+    color: #e2e8f0 !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-weight: 500 !important;
+    letter-spacing: 1px !important;
+    border: 1px solid rgba(255,255,255,0.12) !important;
+    border-radius: 8px !important;
+    padding: 10px 28px !important;
+    transition: all 0.2s !important;
+}
+.stButton > button:hover {
+    background: rgba(52,211,153,0.1) !important;
+    border-color: rgba(52,211,153,0.3) !important;
+    color: #34d399 !important;
+}
+
+.error-box {
+    background: rgba(248,113,113,0.06);
+    border: 1px solid rgba(248,113,113,0.2);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #f87171;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -78,18 +210,18 @@ def row_class(name, p):
     return "factor-row insig"
 
 def fmt_beta(v):
-    color = "#4ade80" if v > 0 else "#f87171"
+    color = "#34d399" if v > 0 else "#f87171"
     return f'<span style="color:{color};font-weight:600">{v:+.4f}</span>'
 
 def fmt_pval(p):
-    if p < 0.001: color = "#4ade80"
-    elif p < 0.05: color = "#86efac"
+    if p < 0.001: color = "#34d399"
+    elif p < 0.05: color = "#6ee7b7"
     elif p < 0.10: color = "#fbbf24"
-    else: color = "#6b7280"
+    else: color = "#475569"
     return f'<span style="color:{color}">{p:.4f}</span>'
 
 def fmt_tstat(t):
-    color = "#4ade80" if abs(t) > 1.96 else "#6b7280"
+    color = "#34d399" if abs(t) > 1.96 else "#475569"
     return f'<span style="color:{color}">{t:+.3f}</span>'
 
 FACTOR_NAMES = {
@@ -120,7 +252,7 @@ def load_factors():
 # ─────────────────────────────────────────────
 st.markdown("# Factor Regression")
 st.markdown(
-    '<p style="font-family:\'IBM Plex Mono\',monospace;color:#4b5563;font-size:12px;letter-spacing:1px;">'
+    '<p style="font-family:\'JetBrains Mono\',monospace;color:#334155;font-size:12px;letter-spacing:1px;">'
     'FF5 + MOMENTUM · HAC ROBUST STANDARD ERRORS · DATA AUTO-LOADED FROM GITHUB'
     '</p>', unsafe_allow_html=True)
 st.markdown("---")
@@ -140,9 +272,9 @@ with st.sidebar:
     run = st.button("▶  RUN REGRESSION", use_container_width=True)
     st.markdown("---")
     st.markdown(
-        '<div style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:#374151;">'
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:#334155;">'
         'Factor data auto-loaded from:<br>'
-        '<span style="color:#4b5563;">github.com/lakshyaworkch-cell/Lakshy</span>'
+        '<span style="color:#475569;">github.com/lakshyaworkch-cell/Lakshy</span>'
         '</div>', unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
@@ -156,7 +288,7 @@ if not run:
         '2. Choose your date range<br>'
         '3. Adjust HAC lags &amp; annualization if needed<br>'
         '4. Click <b>RUN REGRESSION</b><br><br>'
-        '<span style="color:#374151;font-size:11px;">Factor data (FF5) is loaded automatically — no file upload needed.</span>'
+        '<span style="color:#334155;font-size:11px;">Factor data (FF5) is loaded automatically — no file upload needed.</span>'
         '</div>', unsafe_allow_html=True)
     st.stop()
 
@@ -250,6 +382,15 @@ try:
         else:
             vif_data[col] = 1.0
 
+    dw_status = "pass" if 1.5 < dw < 2.5 else "warn" if 1.2 < dw < 2.8 else "fail"
+    bp_status = "pass" if bp_p > 0.05 else "warn" if bp_p > 0.01 else "fail"
+    jb_status = "pass" if jb_p > 0.05 else "warn" if jb_p > 0.01 else "fail"
+    cn_status = "pass" if cond < 30 else "warn" if cond < 100 else "fail"
+
+    def diag_card(name, val, sub, status):
+        cls = {"pass": "diag-pass", "fail": "diag-fail", "warn": "diag-warn"}.get(status, "diag-pass")
+        return f'<div class="diag-item"><div class="diag-name">{name}</div><div class="diag-val {cls}">{val}</div><div class="diag-sub">{sub}</div></div>'
+
     # ─────────────────────────────────────────
     # DISPLAY
     # ─────────────────────────────────────────
@@ -260,7 +401,7 @@ try:
         st.markdown(f"""
         <div class="metric-card {'green' if alpha_ann > 0 else 'red'}">
           <div class="metric-label">Annual Alpha</div>
-          <div class="metric-value" style="color:{'#4ade80' if alpha_ann>0 else '#f87171'}">{alpha_ann:+.2%}</div>
+          <div class="metric-value" style="color:{'#34d399' if alpha_ann>0 else '#f87171'}">{alpha_ann:+.2%}</div>
           <div class="metric-sub">Monthly: {alpha:+.4f} · p={alpha_p:.4f}</div>
         </div>""", unsafe_allow_html=True)
     with c2:
@@ -271,7 +412,7 @@ try:
           <div class="metric-sub">Adj: {r2_adj:.4f}</div>
         </div>""", unsafe_allow_html=True)
     with c3:
-        ir_color = "#4ade80" if not np.isnan(ir) and ir > 0.5 else "#fbbf24" if not np.isnan(ir) and ir > 0 else "#f87171"
+        ir_color = "#34d399" if not np.isnan(ir) and ir > 0.5 else "#fbbf24" if not np.isnan(ir) and ir > 0 else "#f87171"
         ir_str = f"{ir:.3f}" if not np.isnan(ir) else "N/A"
         st.markdown(f"""
         <div class="metric-card gold">
@@ -287,7 +428,7 @@ try:
           <div class="metric-sub">p={f_p:.4f} · N={n}</div>
         </div>""", unsafe_allow_html=True)
 
-# ── Factor Loadings ───────────────────────
+    # ── Factor Loadings ───────────────────────
     st.markdown('<div class="section-title">Factor Loadings</div>', unsafe_allow_html=True)
     st.markdown("""
     <div class="factor-row header">
@@ -301,7 +442,7 @@ try:
         <div class="{row_class(name, p)}">
           <div style="color:#e2e8f0;font-weight:500">{FACTOR_NAMES.get(name, name)}</div>
           <div>{fmt_beta(b)}</div>
-          <div style="color:#6b7280">{se:.4f}</div>
+          <div style="color:#475569">{se:.4f}</div>
           <div>{fmt_tstat(t)}</div>
           <div>{fmt_pval(p)}</div>
           <div>{sig_badge(p)}</div>
