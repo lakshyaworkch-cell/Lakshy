@@ -4,6 +4,7 @@ import numpy as np
 import yfinance as yf
 import statsmodels.api as sm
 from scipy import stats
+import anthropic
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -152,6 +153,25 @@ h1, h2, h3 {
 }
 .interpret-box b { color: #e2e8f0; }
 
+.ai-box {
+    background: rgba(167,139,250,0.04);
+    border: 1px solid rgba(167,139,250,0.15);
+    border-radius: 12px;
+    padding: 20px 24px;
+    font-size: 13px;
+    line-height: 1.9;
+    color: #c4b5fd;
+}
+.ai-box b { color: #e2e8f0; }
+.ai-box h4 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #7c3aed;
+    margin-bottom: 12px;
+}
+
 .stTextInput > div > div > input {
     background: rgba(255,255,255,0.04) !important;
     border: 1px solid rgba(255,255,255,0.1) !important;
@@ -234,6 +254,15 @@ FACTOR_NAMES = {
     "Mom":    "Momentum",
 }
 
+FACTOR_DESCRIPTIONS = {
+    "Mkt-RF": "Market risk premium (excess return of market over risk-free rate)",
+    "SMB":    "Size factor — Small Minus Big (small-cap vs large-cap premium)",
+    "HML":    "Value factor — High Minus Low (value vs growth premium)",
+    "RMW":    "Profitability factor — Robust Minus Weak (profitable vs unprofitable firms)",
+    "CMA":    "Investment factor — Conservative Minus Aggressive (low vs high investment firms)",
+    "Mom":    "Momentum factor (past winners vs past losers)",
+}
+
 # ─────────────────────────────────────────────
 # LOAD FACTOR DATA FROM GITHUB (cached)
 # ─────────────────────────────────────────────
@@ -246,6 +275,66 @@ def load_factors():
     ff = ff[ff.index.str.match(r"^\d{6}$")].copy()
     ff.index = pd.to_datetime(ff.index, format="%Y%m").to_period("M")
     return ff
+
+# ─────────────────────────────────────────────
+# AI MACRO INSIGHT
+# ─────────────────────────────────────────────
+def build_ai_prompt(ticker, model_result, available, alpha_ann, alpha_p, r2, n, start_date, end_date):
+    lines = []
+    lines.append(f"Ticker: {ticker}")
+    lines.append(f"Date range: {start_date} to {end_date} ({n} monthly observations)")
+    lines.append(f"Annualized Alpha: {alpha_ann:+.2%} (p={alpha_p:.4f}, {'significant' if alpha_p < 0.05 else 'not significant'})")
+    lines.append(f"R²: {r2:.4f}")
+    lines.append("")
+    lines.append("Factor loadings (only statistically significant at p<0.10 shown):")
+    for f in available:
+        p = model_result.pvalues[f]
+        b = model_result.params[f]
+        if p < 0.10:
+            direction = "positive" if b > 0 else "negative"
+            lines.append(f"  - {FACTOR_NAMES.get(f, f)} ({f}): beta={b:+.4f}, p={p:.4f} — {FACTOR_DESCRIPTIONS.get(f, '')}")
+    lines.append("")
+    lines.append("All factor betas for context:")
+    for f in available:
+        b = model_result.params[f]
+        p = model_result.pvalues[f]
+        lines.append(f"  - {f}: {b:+.4f} (p={p:.4f})")
+
+    prompt = "\n".join(lines)
+    prompt += """
+
+Based on these Fama-French factor regression results, please provide a concise macro-economic narrative (around 200-250 words) covering:
+
+1. **What the significant factor exposures reveal** about how this stock behaves relative to the broader economy — e.g. does it behave like a large-cap growth stock, a cyclical, a defensive, etc.
+2. **What the current macroeconomic environment means for these exposures** — e.g. if the stock has high market beta, what does that mean in a rising/falling rate environment; if it loads on profitability, what does that say about its resilience.
+3. **A brief forward-looking note** on whether these factor exposures are favorable or risky given current economic conditions (late 2024 / early 2025 context: sticky inflation, higher-for-longer rates, AI-driven tech rally, slowing global growth).
+
+Write in clear, professional but accessible language. Use **bold** for key terms. Do not repeat the raw numbers — the user can already see them. Focus on economic intuition and real-world implications."""
+
+    return prompt
+
+def get_ai_insight(ticker, model_result, available, alpha_ann, alpha_p, r2, n, start_date, end_date):
+    api_key = st.secrets.get("ANTHROPIC_API_KEY", None)
+    if not api_key:
+        return None, "No API key found. Add `ANTHROPIC_API_KEY` to your `.streamlit/secrets.toml` file."
+
+    prompt = build_ai_prompt(ticker, model_result, available, alpha_ann, alpha_p, r2, n, start_date, end_date)
+
+    try:
+        client = anthropic.Anthropic(api_key=api_key)
+        message = client.messages.create(
+            model="claude-opus-4-5",
+            max_tokens=600,
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ]
+        )
+        return message.content[0].text, None
+    except Exception as e:
+        return None, str(e)
 
 # ─────────────────────────────────────────────
 # HEADER
@@ -453,7 +542,7 @@ try:
         f'★★★ p&lt;0.01 · ★★ p&lt;0.05 · ★ p&lt;0.10 · n.s. not significant'
         f' | HAC Newey-West SE, maxlags={hac_lags}</div>', unsafe_allow_html=True)
 
-    # ── Interpretation (always visible) ───────
+    # ── Interpretation ────────────────────────
     st.markdown('<div class="section-title">Interpretation</div>', unsafe_allow_html=True)
     sig_factors   = [FACTOR_NAMES.get(f, f) for f in available if model.pvalues[f] < 0.05]
     insig_factors = [FACTOR_NAMES.get(f, f) for f in available if model.pvalues[f] >= 0.05]
@@ -482,6 +571,33 @@ try:
         interp += f"<br>⚠ Condition number ({cond:.1f}) indicates {'moderate' if cn_status=='warn' else 'severe'} multicollinearity."
     interp += "</div>"
     st.markdown(interp, unsafe_allow_html=True)
+
+    # ── AI Macro Insight ──────────────────────
+    st.markdown('<div class="section-title">AI Macro Insight</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#475569;margin-bottom:12px;">'
+        'Claude interprets your significant factor exposures in the context of the current macro environment.'
+        '</div>', unsafe_allow_html=True)
+
+    if st.button("✦  Generate AI Macro Insight", use_container_width=False):
+        with st.spinner("Thinking..."):
+            insight, error = get_ai_insight(
+                ticker, model, available, alpha_ann, alpha_p, r2, n, start_date, end_date
+            )
+        if error:
+            st.markdown(f'<div class="error-box">AI Error: {error}</div>', unsafe_allow_html=True)
+        else:
+            # convert **bold** markdown to html bold for the ai-box
+            import re
+            insight_html = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', insight)
+            insight_html = insight_html.replace('\n\n', '<br><br>').replace('\n', '<br>')
+            st.markdown(
+                f'<div class="ai-box">'
+                f'<h4>✦ Claude · Macro Analysis · {ticker}</h4>'
+                f'{insight_html}'
+                f'</div>',
+                unsafe_allow_html=True
+            )
 
     # ── TABS ──────────────────────────────────
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
