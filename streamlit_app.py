@@ -4,7 +4,7 @@ import numpy as np
 import yfinance as yf
 import statsmodels.api as sm
 from scipy import stats
-import anthropic
+import google.generativeai as genai
 import re
 import warnings
 warnings.filterwarnings("ignore")
@@ -169,18 +169,15 @@ Write in clear, professional but accessible language. Use **bold** for key terms
     return prompt
 
 def get_ai_insight(ticker, model_result, available, alpha_ann, alpha_p, r2, n, start_date, end_date):
-    api_key = st.secrets.get("ANTHROPIC_API_KEY", None)
+    api_key = st.secrets.get("GEMINI_API_KEY", None)
     if not api_key:
-        return None, "No API key found. Add `ANTHROPIC_API_KEY` to your `.streamlit/secrets.toml` file."
+        return None, "No API key found. Add `GEMINI_API_KEY` to your `.streamlit/secrets.toml` file."
     prompt = build_ai_prompt(ticker, model_result, available, alpha_ann, alpha_p, r2, n, start_date, end_date)
     try:
-        client = anthropic.Anthropic(api_key=api_key)
-        message = client.messages.create(
-            model="claude-opus-4-5",
-            max_tokens=600,
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return message.content[0].text, None
+        genai.configure(api_key=api_key)
+        model_gemini = genai.GenerativeModel("gemini-1.5-flash")
+        response = model_gemini.generate_content(prompt)
+        return response.text, None
     except Exception as e:
         return None, str(e)
 
@@ -421,7 +418,7 @@ try:
     st.markdown('<div class="section-title">AI Macro Insight</div>', unsafe_allow_html=True)
     st.markdown(
         '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#475569;margin-bottom:12px;">'
-        'Claude interprets your significant factor exposures in the context of the current macro environment.'
+        'Gemini interprets your significant factor exposures in the context of the current macro environment.'
         '</div>', unsafe_allow_html=True)
 
     if st.button("✦  Generate AI Macro Insight", use_container_width=False):
@@ -439,7 +436,7 @@ try:
         insight_html = insight_html.replace('\n\n', '<br><br>').replace('\n', '<br>')
         st.markdown(
             f'<div class="ai-box">'
-            f'<h4>✦ Claude · Macro Analysis · {ticker}</h4>'
+            f'<h4>✦ Gemini · Macro Analysis · {ticker}</h4>'
             f'{insight_html}'
             f'</div>', unsafe_allow_html=True)
 
