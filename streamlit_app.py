@@ -1,3 +1,6 @@
+bash
+
+cat > /mnt/user-data/outputs/factor_regression.py << 'ENDOFFILE'
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -5,6 +8,7 @@ import yfinance as yf
 import statsmodels.api as sm
 from scipy import stats
 import anthropic
+import re
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -286,12 +290,11 @@ def build_ai_prompt(ticker, model_result, available, alpha_ann, alpha_p, r2, n, 
     lines.append(f"Annualized Alpha: {alpha_ann:+.2%} (p={alpha_p:.4f}, {'significant' if alpha_p < 0.05 else 'not significant'})")
     lines.append(f"R²: {r2:.4f}")
     lines.append("")
-    lines.append("Factor loadings (only statistically significant at p<0.10 shown):")
+    lines.append("Factor loadings (statistically significant at p<0.10):")
     for f in available:
         p = model_result.pvalues[f]
         b = model_result.params[f]
         if p < 0.10:
-            direction = "positive" if b > 0 else "negative"
             lines.append(f"  - {FACTOR_NAMES.get(f, f)} ({f}): beta={b:+.4f}, p={p:.4f} — {FACTOR_DESCRIPTIONS.get(f, '')}")
     lines.append("")
     lines.append("All factor betas for context:")
@@ -317,20 +320,13 @@ def get_ai_insight(ticker, model_result, available, alpha_ann, alpha_p, r2, n, s
     api_key = st.secrets.get("ANTHROPIC_API_KEY", None)
     if not api_key:
         return None, "No API key found. Add `ANTHROPIC_API_KEY` to your `.streamlit/secrets.toml` file."
-
     prompt = build_ai_prompt(ticker, model_result, available, alpha_ann, alpha_p, r2, n, start_date, end_date)
-
     try:
         client = anthropic.Anthropic(api_key=api_key)
         message = client.messages.create(
             model="claude-opus-4-5",
             max_tokens=600,
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ]
+            messages=[{"role": "user", "content": prompt}]
         )
         return message.content[0].text, None
     except Exception as e:
@@ -347,6 +343,16 @@ st.markdown(
 st.markdown("---")
 
 # ─────────────────────────────────────────────
+# SESSION STATE INIT
+# ─────────────────────────────────────────────
+if "run" not in st.session_state:
+    st.session_state["run"] = False
+if "ai_insight" not in st.session_state:
+    st.session_state["ai_insight"] = None
+if "ai_error" not in st.session_state:
+    st.session_state["ai_error"] = None
+
+# ─────────────────────────────────────────────
 # SIDEBAR
 # ─────────────────────────────────────────────
 with st.sidebar:
@@ -358,7 +364,18 @@ with st.sidebar:
     st.markdown("**Regression Settings**")
     hac_lags  = st.slider("HAC Max Lags", 1, 12, 3, help="Newey-West lags for HAC robust SE")
     annualize = st.selectbox("Annualization", [12, 52, 252], help="12=monthly, 52=weekly, 252=daily")
-    run = st.button("▶  RUN REGRESSION", use_container_width=True)
+
+    if st.button("▶  RUN REGRESSION", use_container_width=True):
+        st.session_state["run"]        = True
+        st.session_state["ticker_ran"] = ticker
+        st.session_state["start_ran"]  = start_date
+        st.session_state["end_ran"]    = end_date
+        st.session_state["hac_ran"]    = hac_lags
+        st.session_state["ann_ran"]    = annualize
+        # clear any previous AI insight when re-running
+        st.session_state["ai_insight"] = None
+        st.session_state["ai_error"]   = None
+
     st.markdown("---")
     st.markdown(
         '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:#334155;">'
@@ -369,7 +386,7 @@ with st.sidebar:
 # ─────────────────────────────────────────────
 # IDLE STATE
 # ─────────────────────────────────────────────
-if not run:
+if not st.session_state["run"]:
     st.markdown(
         '<div class="interpret-box" style="margin-top:40px;text-align:center;">'
         '<b>How to use</b><br><br>'
@@ -380,6 +397,15 @@ if not run:
         '<span style="color:#334155;font-size:11px;">Factor data (FF5) is loaded automatically — no file upload needed.</span>'
         '</div>', unsafe_allow_html=True)
     st.stop()
+
+# ─────────────────────────────────────────────
+# USE STORED INPUTS (survives button reruns)
+# ─────────────────────────────────────────────
+ticker     = st.session_state.get("ticker_ran", ticker)
+start_date = st.session_state.get("start_ran", start_date)
+end_date   = st.session_state.get("end_ran", end_date)
+hac_lags   = st.session_state.get("hac_ran", hac_lags)
+annualize  = st.session_state.get("ann_ran", annualize)
 
 # ─────────────────────────────────────────────
 # RUN
@@ -584,20 +610,22 @@ try:
             insight, error = get_ai_insight(
                 ticker, model, available, alpha_ann, alpha_p, r2, n, start_date, end_date
             )
-        if error:
-            st.markdown(f'<div class="error-box">AI Error: {error}</div>', unsafe_allow_html=True)
-        else:
-            # convert **bold** markdown to html bold for the ai-box
-            import re
-            insight_html = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', insight)
-            insight_html = insight_html.replace('\n\n', '<br><br>').replace('\n', '<br>')
-            st.markdown(
-                f'<div class="ai-box">'
-                f'<h4>✦ Claude · Macro Analysis · {ticker}</h4>'
-                f'{insight_html}'
-                f'</div>',
-                unsafe_allow_html=True
-            )
+        st.session_state["ai_insight"] = insight
+        st.session_state["ai_error"]   = error
+
+    # render whatever is stored — persists across reruns
+    if st.session_state["ai_error"]:
+        st.markdown(f'<div class="error-box">AI Error: {st.session_state["ai_error"]}</div>', unsafe_allow_html=True)
+    elif st.session_state["ai_insight"]:
+        insight_html = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', st.session_state["ai_insight"])
+        insight_html = insight_html.replace('\n\n', '<br><br>').replace('\n', '<br>')
+        st.markdown(
+            f'<div class="ai-box">'
+            f'<h4>✦ Claude · Macro Analysis · {ticker}</h4>'
+            f'{insight_html}'
+            f'</div>',
+            unsafe_allow_html=True
+        )
 
     # ── TABS ──────────────────────────────────
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
@@ -728,3 +756,6 @@ try:
 except Exception as e:
     st.markdown(f'<div class="error-box">Error: {str(e)}</div>', unsafe_allow_html=True)
     raise e
+ENDOFFILE
+echo "Done"
+
