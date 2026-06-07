@@ -4,7 +4,7 @@ import numpy as np
 import yfinance as yf
 import statsmodels.api as sm
 from scipy import stats
-import google.generativeai as genai
+from google import genai
 import re
 import warnings
 warnings.filterwarnings("ignore")
@@ -174,9 +174,11 @@ def get_ai_insight(ticker, model_result, available, alpha_ann, alpha_p, r2, n, s
         return None, "No API key found. Add `GEMINI_API_KEY` to your `.streamlit/secrets.toml` file."
     prompt = build_ai_prompt(ticker, model_result, available, alpha_ann, alpha_p, r2, n, start_date, end_date)
     try:
-        genai.configure(api_key=api_key)
-        model_gemini = genai.GenerativeModel("gemini-1.5-flash")
-        response = model_gemini.generate_content(prompt)
+        client = genai.Client(api_key=api_key)
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt,
+        )
         return response.text, None
     except Exception as e:
         return None, str(e)
