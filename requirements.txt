@@ -4,4 +4,4 @@ numpy
 yfinance
 statsmodels
 scipy
-anthropic
+google-genai
