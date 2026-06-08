@@ -215,58 +215,81 @@ def load_factors():
 
 
 # ─────────────────────────────────────────────
-#  NEW: Enhanced AI prompt — requests JSON output
-#  with per-factor deep analysis + news awareness
+#  AI: one small focused call per factor + summary
+#  Uses response_format json_object to guarantee
+#  valid JSON and avoids truncation/escape issues
 # ─────────────────────────────────────────────
 
-def build_ai_prompt(ticker, model_result, available, alpha_ann, alpha_p, r2, n, start_date, end_date):
-    factor_lines = []
-    for f in available:
-        b = model_result.params[f]
-        p = model_result.pvalues[f]
-        sig = "significant" if p < 0.05 else "marginal" if p < 0.10 else "not significant"
-        factor_lines.append(
-            f'  - {f} ({FACTOR_NAMES.get(f, f)}): beta={b:+.4f}, p={p:.4f}, {sig} | {FACTOR_DESCRIPTIONS.get(f, "")}'
-        )
+def _call_groq(client, system_msg, user_msg, max_tokens=600):
+    """Single Groq call with json_object mode and robust cleaning."""
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {"role": "system", "content": system_msg},
+            {"role": "user",   "content": user_msg},
+        ],
+        max_tokens=max_tokens,
+        temperature=0.3,
+        response_format={"type": "json_object"},   # ← guaranteed valid JSON
+    )
+    raw = response.choices[0].message.content.strip()
+    # Belt-and-suspenders: strip fences in case model ignores json_object mode
+    raw = re.sub(r"^```json\s*", "", raw)
+    raw = re.sub(r"\s*```$",     "", raw)
+    return json.loads(raw)
 
-    prompt = f"""You are an expert quantitative analyst and macroeconomist with access to current financial news and market conditions as of mid-2025.
 
-STOCK: {ticker}
-DATE RANGE: {start_date} to {end_date} ({n} monthly observations)
-ANNUALIZED ALPHA: {alpha_ann:+.2%} (p={alpha_p:.4f}, {'SIGNIFICANT' if alpha_p < 0.05 else 'not significant'})
-R²: {r2:.4f}
+def _factor_prompt(ticker, factor_code, factor_name, beta, p_value, significant, description):
+    system = (
+        "You are a senior quantitative analyst. "
+        "You MUST respond with a single valid JSON object and nothing else. "
+        "No markdown, no prose outside the JSON."
+    )
+    sig_word = "statistically significant" if significant else "not statistically significant"
+    user = f"""Analyze the {factor_name} ({factor_code}) loading for stock {ticker}.
 
-ALL FACTOR LOADINGS:
-{chr(10).join(factor_lines)}
+Factor details:
+- Beta: {beta:+.4f}
+- P-value: {p_value:.4f} ({sig_word})
+- Factor definition: {description}
 
-YOUR TASK:
-Produce a detailed, news-aware factor analysis. You MUST return a valid JSON object with EXACTLY this structure (no markdown fences, no extra text before or after):
-
+Return EXACTLY this JSON (fill in every field, 1-3 sentences each, no line breaks inside strings):
 {{
-  "factors": [
-    {{
-      "code": "<factor code, e.g. Mkt-RF>",
-      "name": "<human name>",
-      "beta": <number>,
-      "significant": <true/false>,
-      "outlook": "<one of: bullish | bearish | neutral | mixed>",
-      "what_it_means": "<2-3 sentences: what does this specific beta value tell us about how {ticker} behaves? Be specific to the stock and magnitude of the beta>",
-      "current_macro_context": "<3-4 sentences: what is happening RIGHT NOW in mid-2025 that affects this factor? Reference real macroeconomic conditions: Fed policy, inflation trajectory, credit conditions, earnings trends, sector rotations, geopolitical events, AI boom, etc. Be specific and current>",
-      "forward_forecast": "<2-3 sentences: given the current macro environment and this stock's exposure, what is the likely near-term impact on returns from this factor? Is the exposure a tailwind or headwind? Why?>",
-      "key_risks": "<1-2 sentences: the main risk to this factor outlook>"
-    }}
-  ],
-  "alpha_analysis": "<3-4 sentences: deep dive on the alpha — is it persistent or episodic? What might explain it for {ticker} specifically — superior earnings quality, pricing power, competitive moat, re-rating potential? What are the risks to alpha persistence?>",
-  "portfolio_verdict": "<3-4 sentences: overall verdict — combining all factor exposures, is {ticker} well-positioned or vulnerable in the current macro regime? What type of macro scenario would be best/worst for this stock? Conclude with a concise risk-adjusted view.>"
-}}
+  "code": "{factor_code}",
+  "name": "{factor_name}",
+  "beta": {beta},
+  "significant": {"true" if significant else "false"},
+  "outlook": "<bullish|bearish|neutral|mixed>",
+  "what_it_means": "<What this beta magnitude reveals about {ticker} behaviour. Be specific.>",
+  "current_macro_context": "<Mid-2025 macro conditions relevant to this factor: Fed policy, inflation, AI capex cycle, tariffs, credit spreads, sector rotation. Be concrete.>",
+  "forward_forecast": "<Near-term tailwind or headwind for {ticker} from this factor given current macro. State direction and reason.>",
+  "key_risks": "<One main risk that could flip this outlook.>"
+}}"""
+    return system, user
 
-CRITICAL REQUIREMENTS:
-- Reference REAL current events: Fed rate decisions, tariff/trade war developments, AI infrastructure spending cycle, semiconductor demand, credit spreads, yield curve shape, consumer spending trends, China macro, energy prices — whichever are relevant to {ticker}'s factor exposures.
-- Be SPECIFIC to {ticker}'s industry and business model when possible.
-- The "outlook" field must honestly reflect whether the current macro regime favors or hurts that factor exposure for this specific stock.
-- Return ONLY the JSON. No preamble, no explanation, no markdown code fences.
-"""
-    return prompt
+
+def _summary_prompt(ticker, alpha_ann, alpha_p, r2, factor_summaries):
+    system = (
+        "You are a senior portfolio strategist. "
+        "Respond with a single valid JSON object only. No markdown."
+    )
+    sig_word = "significant" if alpha_p < 0.05 else "not significant"
+    lines = "\n".join(
+        f"- {f['name']}: beta={f['beta']:+.4f}, outlook={f.get('outlook','?')}"
+        for f in factor_summaries
+    )
+    user = f"""Stock: {ticker}
+Annualized alpha: {alpha_ann:+.2%} (p={alpha_p:.4f}, {sig_word})
+R²: {r2:.4f}
+Factor outlooks:
+{lines}
+
+Return EXACTLY this JSON (2-4 sentences per field, no line breaks inside strings):
+{{
+  "alpha_analysis": "<Is this alpha persistent or episodic? What drives it for {ticker} — moat, pricing power, earnings quality? What threatens persistence?>",
+  "portfolio_verdict": "<Overall: is {ticker} well-positioned or vulnerable in mid-2025 macro regime? Best-case and worst-case macro scenario. Concise risk-adjusted conclusion.>"
+}}"""
+    return system, user
 
 
 def get_ai_insight(ticker, model_result, available, alpha_ann, alpha_p, r2, n, start_date, end_date):
@@ -274,23 +297,52 @@ def get_ai_insight(ticker, model_result, available, alpha_ann, alpha_p, r2, n, s
     if not api_key:
         return None, "No API key found. Add `GROQ_API_KEY` to your `.streamlit/secrets.toml` file."
 
-    prompt = build_ai_prompt(ticker, model_result, available, alpha_ann, alpha_p, r2, n, start_date, end_date)
     try:
         client = Groq(api_key=api_key)
-        response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=3000,   # ← much larger for detailed output
-            temperature=0.4,   # ← slightly creative but grounded
-        )
-        raw = response.choices[0].message.content.strip()
-        # Strip markdown fences if the model wraps anyway
-        raw = re.sub(r'^```json\s*', '', raw)
-        raw = re.sub(r'\s*```$', '', raw)
-        parsed = json.loads(raw)
-        return parsed, None
-    except json.JSONDecodeError as e:
-        return None, f"JSON parse error: {e}. Raw response may be malformed."
+        factors_out = []
+        errors = []
+
+        # ── One call per factor (small, never truncated) ──
+        for f in available:
+            beta = float(model_result.params[f])
+            pval = float(model_result.pvalues[f])
+            sig  = pval < 0.05
+            sys_msg, usr_msg = _factor_prompt(
+                ticker, f, FACTOR_NAMES.get(f, f), beta, pval, sig,
+                FACTOR_DESCRIPTIONS.get(f, f)
+            )
+            try:
+                result = _call_groq(client, sys_msg, usr_msg, max_tokens=550)
+                # Ensure numeric beta comes from our data, not the model
+                result["beta"] = beta
+                result["significant"] = sig
+                factors_out.append(result)
+            except Exception as e:
+                # Gracefully degrade: include a placeholder so rendering still works
+                factors_out.append({
+                    "code": f, "name": FACTOR_NAMES.get(f, f),
+                    "beta": beta, "significant": sig, "outlook": "neutral",
+                    "what_it_means": "Analysis unavailable.",
+                    "current_macro_context": f"Error: {e}",
+                    "forward_forecast": "", "key_risks": "",
+                })
+                errors.append(f"{f}: {e}")
+
+        # ── Single summary call ──
+        sys_msg, usr_msg = _summary_prompt(ticker, alpha_ann, alpha_p, r2, factors_out)
+        try:
+            summary = _call_groq(client, sys_msg, usr_msg, max_tokens=500)
+        except Exception as e:
+            summary = {
+                "alpha_analysis": f"Summary unavailable: {e}",
+                "portfolio_verdict": "",
+            }
+            errors.append(f"summary: {e}")
+
+        result = {"factors": factors_out, **summary}
+        err_msg = "; ".join(errors) if errors else None
+        return result, err_msg
+
     except Exception as e:
         return None, str(e)
 
