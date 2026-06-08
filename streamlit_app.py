@@ -309,7 +309,7 @@ def get_live_price(ticker_symbol):
     raise ValueError("All price-fetch layers failed")
 
 
-def _call_groq(client, system_msg, user_msg, max_tokens=600):
+def _call_groq(client, system_msg, user_msg, max_tokens=800):
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[
@@ -317,7 +317,7 @@ def _call_groq(client, system_msg, user_msg, max_tokens=600):
             {"role": "user",   "content": user_msg},
         ],
         max_tokens=max_tokens,
-        temperature=0.3,
+        temperature=0.2,
         response_format={"type": "json_object"},
     )
     raw = response.choices[0].message.content.strip()
@@ -326,58 +326,175 @@ def _call_groq(client, system_msg, user_msg, max_tokens=600):
     return json.loads(raw)
 
 
-def _factor_prompt(ticker, factor_code, factor_name, beta, p_value, significant, description):
+def _get_stock_context(ticker):
+    """Fetch enriched fundamentals for a ticker to inject into prompts."""
+    ctx = {}
+    try:
+        t_obj = yf.Ticker(ticker)
+        info = t_obj.info
+        ctx["current_price"]   = info.get("currentPrice") or info.get("regularMarketPrice")
+        ctx["market_cap"]      = info.get("marketCap")
+        ctx["sector"]          = info.get("sector", "Unknown")
+        ctx["industry"]        = info.get("industry", "Unknown")
+        ctx["pe_ratio"]        = info.get("trailingPE")
+        ctx["pb_ratio"]        = info.get("priceToBook")
+        ctx["ps_ratio"]        = info.get("priceToSalesTrailing12Months")
+        ctx["revenue_growth"]  = info.get("revenueGrowth")
+        ctx["earnings_growth"] = info.get("earningsGrowth")
+        ctx["profit_margin"]   = info.get("profitMargins")
+        ctx["gross_margin"]    = info.get("grossMargins")
+        ctx["roe"]             = info.get("returnOnEquity")
+        ctx["debt_to_equity"]  = info.get("debtToEquity")
+        ctx["free_cashflow"]   = info.get("freeCashflow")
+        ctx["dividend_yield"]  = info.get("dividendYield")
+        ctx["beta_1y"]         = info.get("beta")
+        ctx["52w_high"]        = info.get("fiftyTwoWeekHigh")
+        ctx["52w_low"]         = info.get("fiftyTwoWeekLow")
+        ctx["short_ratio"]     = info.get("shortRatio")
+        ctx["short_pct_float"] = info.get("shortPercentOfFloat")
+        ctx["analyst_target"]  = info.get("targetMeanPrice")
+        ctx["rec_mean"]        = info.get("recommendationMean")  # 1=strong buy, 5=sell
+        ctx["num_analysts"]    = info.get("numberOfAnalystOpinions")
+        ctx["forward_pe"]      = info.get("forwardPE")
+        ctx["peg_ratio"]       = info.get("pegRatio")
+        ctx["enterprise_ev_ebitda"] = info.get("enterpriseToEbitda")
+        ctx["held_pct_inst"]   = info.get("heldPercentInstitutions")
+        ctx["company_name"]    = info.get("longName", ticker)
+        # YTD return
+        hist = t_obj.history(period="ytd")
+        if not hist.empty and len(hist) >= 2:
+            ctx["ytd_return"] = (hist["Close"].iloc[-1] / hist["Close"].iloc[0]) - 1
+        # 1-month return
+        hist_1m = t_obj.history(period="1mo")
+        if not hist_1m.empty and len(hist_1m) >= 2:
+            ctx["return_1m"] = (hist_1m["Close"].iloc[-1] / hist_1m["Close"].iloc[0]) - 1
+        # 3-month return
+        hist_3m = t_obj.history(period="3mo")
+        if not hist_3m.empty and len(hist_3m) >= 2:
+            ctx["return_3m"] = (hist_3m["Close"].iloc[-1] / hist_3m["Close"].iloc[0]) - 1
+    except Exception:
+        pass
+    return ctx
+
+
+def _fmt_ctx(ctx):
+    """Format context dict into a readable string for prompt injection."""
+    lines = []
+    if ctx.get("company_name"):    lines.append(f"Company: {ctx['company_name']}")
+    if ctx.get("sector"):          lines.append(f"Sector: {ctx['sector']} | Industry: {ctx.get('industry','?')}")
+    if ctx.get("current_price"):   lines.append(f"Price: ${ctx['current_price']:.2f}")
+    if ctx.get("market_cap"):      lines.append(f"Market Cap: ${ctx['market_cap']/1e9:.1f}B")
+    if ctx.get("ytd_return") is not None: lines.append(f"YTD Return: {ctx['ytd_return']:+.1%}")
+    if ctx.get("return_1m") is not None:  lines.append(f"1-Month Return: {ctx['return_1m']:+.1%}")
+    if ctx.get("return_3m") is not None:  lines.append(f"3-Month Return: {ctx['return_3m']:+.1%}")
+    if ctx.get("52w_high") and ctx.get("52w_low"):
+        lines.append(f"52-Week Range: ${ctx['52w_low']:.2f} – ${ctx['52w_high']:.2f}")
+    if ctx.get("pe_ratio"):        lines.append(f"P/E (TTM): {ctx['pe_ratio']:.1f}")
+    if ctx.get("forward_pe"):      lines.append(f"Forward P/E: {ctx['forward_pe']:.1f}")
+    if ctx.get("pb_ratio"):        lines.append(f"P/B: {ctx['pb_ratio']:.2f}")
+    if ctx.get("peg_ratio"):       lines.append(f"PEG: {ctx['peg_ratio']:.2f}")
+    if ctx.get("enterprise_ev_ebitda"): lines.append(f"EV/EBITDA: {ctx['enterprise_ev_ebitda']:.1f}")
+    if ctx.get("revenue_growth") is not None:  lines.append(f"Revenue Growth (YoY): {ctx['revenue_growth']:+.1%}")
+    if ctx.get("earnings_growth") is not None: lines.append(f"Earnings Growth (YoY): {ctx['earnings_growth']:+.1%}")
+    if ctx.get("profit_margin") is not None:   lines.append(f"Net Margin: {ctx['profit_margin']:.1%}")
+    if ctx.get("gross_margin") is not None:    lines.append(f"Gross Margin: {ctx['gross_margin']:.1%}")
+    if ctx.get("roe") is not None:             lines.append(f"ROE: {ctx['roe']:.1%}")
+    if ctx.get("debt_to_equity") is not None:  lines.append(f"Debt/Equity: {ctx['debt_to_equity']:.2f}")
+    if ctx.get("beta_1y"):         lines.append(f"1Y Beta (Yahoo): {ctx['beta_1y']:.2f}")
+    if ctx.get("dividend_yield"):  lines.append(f"Dividend Yield: {ctx['dividend_yield']:.2%}")
+    if ctx.get("short_pct_float") is not None: lines.append(f"Short % of Float: {ctx['short_pct_float']:.1%}")
+    if ctx.get("short_ratio"):     lines.append(f"Short Ratio (days): {ctx['short_ratio']:.1f}")
+    if ctx.get("analyst_target"):  lines.append(f"Analyst Mean PT: ${ctx['analyst_target']:.2f} ({ctx.get('num_analysts','?')} analysts)")
+    if ctx.get("rec_mean"):
+        rec_map = {1:"Strong Buy", 2:"Buy", 3:"Hold", 4:"Underperform", 5:"Sell"}
+        rec_label = rec_map.get(round(ctx['rec_mean']), f"{ctx['rec_mean']:.1f}")
+        lines.append(f"Consensus Rating: {rec_label} ({ctx['rec_mean']:.2f}/5)")
+    if ctx.get("held_pct_inst") is not None: lines.append(f"Institutional Ownership: {ctx['held_pct_inst']:.1%}")
+    return "\n".join(lines)
+
+
+def _factor_prompt(ticker, factor_code, factor_name, beta, p_value, significant,
+                   description, ctx_str):
     today = date.today().strftime("%B %d, %Y")
     system = (
-        "You are a senior quantitative analyst. "
+        "You are a senior quantitative analyst at a top-tier hedge fund. "
+        "You have been given LIVE fundamental and price data for the stock. Use it. "
+        "Your analysis must be SPECIFIC to this exact ticker — reference its actual numbers. "
+        "Never write generic statements like 'interest rates affect valuations'. "
+        "For macro context, use your knowledge of the current environment as of your training data "
+        "(Fed funds rate, 10Y yield, CPI, VIX, sector performance). "
+        "Be concrete: cite actual figures (e.g. 'P/B of 3.2x vs HML threshold ~1x means growth tilt', "
+        "'net margin of 22% supports RMW', '52-week momentum of +47% drives high Mom beta'). "
         "You MUST respond with a single valid JSON object and nothing else. "
         "No markdown, no prose outside the JSON."
     )
-    sig_word = "statistically significant" if significant else "not statistically significant"
-    user = f"""Today's date is {today}. Analyze the {factor_name} ({factor_code}) loading for stock {ticker}.
+    sig_word = "statistically significant (p<0.05)" if significant else f"not statistically significant (p={p_value:.3f})"
 
-Factor details:
-- Beta: {beta:+.4f}
-- P-value: {p_value:.4f} ({sig_word})
-- Factor definition: {description}
+    user = f"""Today is {today}. Analyze the {factor_name} ({factor_code}) loading for {ticker}.
 
-Return EXACTLY this JSON (fill in every field, 1-3 sentences each, no line breaks inside strings):
+=== LIVE STOCK DATA ===
+{ctx_str}
+
+=== REGRESSION RESULT ===
+Factor: {factor_name} ({factor_code})
+Definition: {description}
+Beta: {beta:+.4f}
+P-value: {p_value:.4f} ({sig_word})
+
+=== YOUR TASK ===
+Use the live data above to give a SPECIFIC, NUMBER-DRIVEN analysis.
+Cross-reference the actual fundamentals with what this beta implies.
+For example:
+- For SMB: compare actual market cap to small/large-cap thresholds
+- For HML: compare actual P/B ratio to value thresholds
+- For RMW: use actual margin/ROE data to explain the loading
+- For Momentum: use actual 1M/3M/YTD returns to explain the loading
+- For Market: compare regression beta to Yahoo's 1Y beta
+
+Return EXACTLY this JSON (fill every field, no line breaks inside strings):
 {{
   "code": "{factor_code}",
   "name": "{factor_name}",
   "beta": {beta},
   "significant": {"true" if significant else "false"},
   "outlook": "<bullish|bearish|neutral|mixed>",
-  "what_it_means": "<What this beta magnitude reveals about {ticker} behaviour. Be specific.>",
-  "current_macro_context": "<As of {today}: current Fed policy, inflation, AI capex, tariffs, credit spreads, sector rotation relevant to this factor. Be concrete and current.>",
-  "forward_forecast": "<Near-term tailwind or headwind for {ticker} from this factor given the current macro environment as of {today}. State direction and reason.>",
-  "key_risks": "<One main risk that could flip this outlook.>"
+  "what_it_means": "<2-3 sentences using ACTUAL numbers from the data above. E.g. 'With a P/B of X and forward P/E of Y, {ticker} sits firmly in growth territory, explaining the HML beta of {beta:+.2f}. Its gross margin of Z% and ROE of W% further confirm...' Be specific, not generic.>",
+  "current_macro_context": "<2-3 sentences on the current macro environment relevant to THIS factor. Include specific figures: current Fed funds rate, 10Y Treasury yield, relevant sector YTD performance, factor-specific spread environment. Connect these directly to how {factor_code} is performing right now.>",
+  "recent_stock_news": "<2-3 sentences on the most recent material developments for {ticker}: latest earnings beat/miss (with EPS figures if available), guidance, analyst upgrades/downgrades, or major news that shifts this factor exposure. If analyst target is ${ctx_str[:20]}... compare it to current price.>",
+  "forward_forecast": "<2 sentences: near-term directional call for {ticker} on this factor. Reference a specific upcoming catalyst or macro release. Use probability language: 'likely tailwind', 'probable headwind'. Connect to the actual beta magnitude of {beta:+.4f}.>",
+  "key_risks": "<1-2 sentences: the single most specific risk that could flip this outlook. Make it quantifiable and ticker-specific — e.g. if margin compression, state the margin level that would flip RMW; if rates, state the yield level that would flip HML. Not generic market risk.>"
 }}"""
     return system, user
 
 
-def _summary_prompt(ticker, alpha_ann, alpha_p, r2, factor_summaries):
+def _summary_prompt(ticker, alpha_ann, alpha_p, r2, factor_summaries, ctx_str):
     today = date.today().strftime("%B %d, %Y")
     system = (
-        "You are a senior portfolio strategist. "
+        "You are a senior portfolio strategist at a multi-billion dollar fund. "
+        "You have been given live fundamental data. Use specific numbers in your analysis. "
         "Respond with a single valid JSON object only. No markdown."
     )
-    sig_word = "significant" if alpha_p < 0.05 else "not significant"
+    sig_word = "statistically significant" if alpha_p < 0.05 else "not statistically significant"
     lines = "\n".join(
-        f"- {f['name']}: beta={f['beta']:+.4f}, outlook={f.get('outlook','?')}"
+        f"- {f['name']}: beta={f['beta']:+.4f}, outlook={f.get('outlook','?')}, "
+        f"sig={'yes' if f.get('significant') else 'no'}"
         for f in factor_summaries
     )
-    user = f"""Today's date is {today}.
-Stock: {ticker}
+
+    user = f"""Today: {today}. Stock: {ticker}
 Annualized alpha: {alpha_ann:+.2%} (p={alpha_p:.4f}, {sig_word})
 R²: {r2:.4f}
-Factor outlooks:
+Factor loadings:
 {lines}
 
-Return EXACTLY this JSON (2-4 sentences per field, no line breaks inside strings):
+=== LIVE STOCK DATA ===
+{ctx_str}
+
+Return EXACTLY this JSON (2-4 sentences per field, use specific numbers from the data):
 {{
-  "alpha_analysis": "<Is this alpha persistent or episodic? What drives it for {ticker} — moat, pricing power, earnings quality? What threatens persistence? Use current market context as of {today}.>",
-  "portfolio_verdict": "<Overall: is {ticker} well-positioned or vulnerable in the current macro regime as of {today}? Best-case and worst-case macro scenario. Concise risk-adjusted conclusion.>"
+  "alpha_analysis": "<Is alpha={alpha_ann:+.2%} meaningful for {ticker}? Compare to its sector. What specific operational advantage — margins, revenue growth, pricing power, balance sheet strength — explains it? Reference actual numbers from the data (e.g. revenue growth of X%, gross margin of Y%). What threatens persistence — mean reversion, multiple compression, factor crowding? Be specific.>",
+  "positioning_context": "<Based on the live data: analyst consensus (mean PT vs current price — implied upside/downside %), institutional ownership trend, short interest as squeeze risk or conviction signal, and how the factor profile aligns or conflicts with consensus positioning. Cite actual numbers.>",
+  "portfolio_verdict": "<Risk-adjusted verdict as of {today}. Identify the single biggest factor risk in the current macro regime. Best-case scenario with specific trigger (e.g. 'if Fed cuts in September AND earnings beat by >10%...'). Worst-case scenario with specific trigger. One-line bottom line: buy/hold/avoid with quantified risk-reward based on analyst PT vs current price.>"
 }}"""
     return system, user
 
@@ -386,20 +503,27 @@ def get_ai_insight(ticker, model_result, available, alpha_ann, alpha_p, r2, n, s
     api_key = st.secrets.get("GROQ_API_KEY", None)
     if not api_key:
         return None, "No API key found. Add `GROQ_API_KEY` to your `.streamlit/secrets.toml` file."
+
+    # Fetch enriched context upfront — injected into every prompt
+    ctx = _get_stock_context(ticker)
+    ctx_str = _fmt_ctx(ctx)
+
     try:
         client = Groq(api_key=api_key)
         factors_out = []
         errors = []
+
         for f in available:
             beta = float(model_result.params[f])
             pval = float(model_result.pvalues[f])
             sig  = pval < 0.05
             sys_msg, usr_msg = _factor_prompt(
                 ticker, f, FACTOR_NAMES.get(f, f), beta, pval, sig,
-                FACTOR_DESCRIPTIONS.get(f, f)
+                FACTOR_DESCRIPTIONS.get(f, f),
+                ctx_str=ctx_str,
             )
             try:
-                result = _call_groq(client, sys_msg, usr_msg, max_tokens=550)
+                result = _call_groq(client, sys_msg, usr_msg, max_tokens=900)
                 result["beta"] = beta
                 result["significant"] = sig
                 factors_out.append(result)
@@ -409,15 +533,22 @@ def get_ai_insight(ticker, model_result, available, alpha_ann, alpha_p, r2, n, s
                     "beta": beta, "significant": sig, "outlook": "neutral",
                     "what_it_means": "Analysis unavailable.",
                     "current_macro_context": f"Error: {e}",
+                    "recent_stock_news": "",
                     "forward_forecast": "", "key_risks": "",
                 })
                 errors.append(f"{f}: {e}")
-        sys_msg, usr_msg = _summary_prompt(ticker, alpha_ann, alpha_p, r2, factors_out)
+
+        sys_msg, usr_msg = _summary_prompt(ticker, alpha_ann, alpha_p, r2, factors_out, ctx_str)
         try:
-            summary = _call_groq(client, sys_msg, usr_msg, max_tokens=500)
+            summary = _call_groq(client, sys_msg, usr_msg, max_tokens=700)
         except Exception as e:
-            summary = {"alpha_analysis": f"Summary unavailable: {e}", "portfolio_verdict": ""}
+            summary = {
+                "alpha_analysis": f"Summary unavailable: {e}",
+                "positioning_context": "",
+                "portfolio_verdict": "",
+            }
             errors.append(f"summary: {e}")
+
         result = {"factors": factors_out, **summary}
         err_msg = "; ".join(errors) if errors else None
         return result, err_msg
@@ -427,8 +558,9 @@ def get_ai_insight(ticker, model_result, available, alpha_ann, alpha_p, r2, n, s
 
 def render_ai_insight(ticker, insight_data):
     factors = insight_data.get("factors", [])
-    alpha_analysis = insight_data.get("alpha_analysis", "")
-    portfolio_verdict = insight_data.get("portfolio_verdict", "")
+    alpha_analysis      = insight_data.get("alpha_analysis", "")
+    positioning_context = insight_data.get("positioning_context", "")
+    portfolio_verdict   = insight_data.get("portfolio_verdict", "")
 
     def bold(text):
         return re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', str(text))
@@ -453,6 +585,7 @@ def render_ai_insight(ticker, insight_data):
         sig_label = "SIGNIFICANT" if sig else "INSIGNIFICANT"
         what     = bold(fac.get("what_it_means", ""))
         macro    = bold(fac.get("current_macro_context", ""))
+        news     = bold(fac.get("recent_stock_news", ""))
         forecast = bold(fac.get("forward_forecast", ""))
         risks    = bold(fac.get("key_risks", ""))
         st.markdown(f"""
@@ -472,6 +605,10 @@ def render_ai_insight(ticker, insight_data):
               <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#475569;">CURRENT MACRO CONTEXT</span>
               <div style="margin-top:4px;">{macro}</div>
             </div>
+            {"" if not news else f'''<div style="margin-bottom:8px;">
+              <span style="font-family:JetBrains Mono,monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#475569;">RECENT NEWS &amp; CATALYSTS</span>
+              <div style="margin-top:4px;">{news}</div>
+            </div>'''}
             <div style="margin-bottom:8px;">
               <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#475569;">FORWARD FORECAST</span>
               <div style="margin-top:4px;">{forecast}</div>
@@ -489,6 +626,14 @@ def render_ai_insight(ticker, insight_data):
           <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#3b82f6;margin-bottom:8px;">ALPHA PERSISTENCE ANALYSIS</div>
           {bold(alpha_analysis)}
         </div>""", unsafe_allow_html=True)
+
+    if positioning_context:
+        st.markdown(f"""
+        <div class="ai-summary-box" style="border-color:rgba(52,211,153,0.15);color:#6ee7b7;background:rgba(52,211,153,0.03);">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#059669;margin-bottom:8px;">POSITIONING & SENTIMENT</div>
+          {bold(positioning_context)}
+        </div>""", unsafe_allow_html=True)
+
     if portfolio_verdict:
         st.markdown(f"""
         <div class="ai-summary-box" style="border-color:rgba(167,139,250,0.15);color:#c4b5fd;background:rgba(167,139,250,0.04);">
@@ -556,20 +701,6 @@ def run_single_regression(ticker_sym, start_str, end_str, hac_lags, ff_key):
         return None, str(e)
 
 
-def make_bar_html(beta, max_abs):
-    """Create a mini horizontal bar for a beta value."""
-    pct = min(abs(beta) / max_abs * 100, 100) if max_abs > 0 else 0
-    color_cls = "port-bar-pos" if beta >= 0 else "port-bar-neg"
-    val_color = "#34d399" if beta >= 0 else "#f87171"
-    return (
-        f'<div class="port-factor-bar-container">'
-        f'<div style="width:60px;font-family:JetBrains Mono,monospace;font-size:10px;'
-        f'color:{val_color};text-align:right;">{beta:+.3f}</div>'
-        f'<div class="port-bar-wrap"><div class="{color_cls}" style="width:{pct:.1f}%"></div></div>'
-        f'</div>'
-    )
-
-
 def render_portfolio_attribution(port_results, weights, available_factors):
     """Render the full portfolio attribution section."""
     tickers = list(port_results.keys())
@@ -630,15 +761,13 @@ def render_portfolio_attribution(port_results, weights, available_factors):
     grid_html += '</div>'
     st.markdown(grid_html, unsafe_allow_html=True)
 
-    # ── Stacked bar chart (SVG) for factor comparison across stocks
+    # ── Factor comparison table
     st.markdown(
         '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:2px;'
         'text-transform:uppercase;color:#475569;margin:20px 0 10px 0;">FACTOR LOADING COMPARISON</div>',
         unsafe_allow_html=True
     )
 
-    # Build comparison table
-    col_labels = ["TICKER", "WEIGHT"] + [FACTOR_NAMES.get(f, f) for f in available_factors] + ["ANN α", "R²"]
     all_betas_flat = []
     for tkr in tickers:
         for f in available_factors:
@@ -711,12 +840,10 @@ def render_portfolio_attribution(port_results, weights, available_factors):
         'text-transform:uppercase;color:#475569;margin:20px 0 10px 0;">FACTOR CONCENTRATION RISK</div>',
         unsafe_allow_html=True
     )
-    # Dispersion of factor betas across holdings
     risk_html = '<div style="display:flex;gap:10px;flex-wrap:wrap;">'
     for f in available_factors:
         vals = [port_results[t]["params"].get(f, 0) for t in tickers]
         dispersion = np.std(vals)
-        port_b = port_betas.get(f, 0)
         risk_color = "#f87171" if dispersion > 0.5 else "#fbbf24" if dispersion > 0.2 else "#34d399"
         risk_label = "HIGH" if dispersion > 0.5 else "MODERATE" if dispersion > 0.2 else "LOW"
         risk_html += f"""
@@ -760,15 +887,8 @@ def render_portfolio_attribution(port_results, weights, available_factors):
 
 
 # ════════════════════════════════════════════
-#  MAIN UI
+#  SESSION STATE INIT
 # ════════════════════════════════════════════
-
-st.markdown("# Factor Regression")
-st.markdown(
-    '<p style="font-family:\'JetBrains Mono\',monospace;color:#334155;font-size:12px;letter-spacing:1px;">'
-    'FF5 + MOMENTUM · HAC ROBUST STANDARD ERRORS · DATA AUTO-LOADED FROM GITHUB'
-    '</p>', unsafe_allow_html=True)
-st.markdown("---")
 
 if "run" not in st.session_state:
     st.session_state["run"] = False
@@ -780,16 +900,43 @@ if "port_run" not in st.session_state:
     st.session_state["port_run"] = False
 if "port_results" not in st.session_state:
     st.session_state["port_results"] = None
+# Track the active mode so switching clears the main area immediately
+if "active_mode" not in st.session_state:
+    st.session_state["active_mode"] = "Single Stock"
+
+
+# ════════════════════════════════════════════
+#  SIDEBAR
+# ════════════════════════════════════════════
+
+st.markdown("# Factor Regression")
+st.markdown(
+    '<p style="font-family:\'JetBrains Mono\',monospace;color:#334155;font-size:12px;letter-spacing:1px;">'
+    'FF5 + MOMENTUM · HAC ROBUST STANDARD ERRORS · DATA AUTO-LOADED FROM GITHUB'
+    '</p>', unsafe_allow_html=True)
+st.markdown("---")
 
 with st.sidebar:
     st.markdown("### Configuration")
 
-    # ── Mode toggle
+    # ── Mode toggle — switching mode immediately resets the main area
     mode = st.radio(
         "Mode",
         ["Single Stock", "Portfolio Attribution"],
         horizontal=True,
+        key="mode_radio",
     )
+
+    # When mode changes, clear results so the main area resets immediately
+    if mode != st.session_state["active_mode"]:
+        st.session_state["active_mode"] = mode
+        st.session_state["run"]        = False
+        st.session_state["port_run"]   = False
+        st.session_state["ai_insight"] = None
+        st.session_state["ai_error"]   = None
+        st.session_state["port_results"] = None
+        st.rerun()
+
     st.markdown("---")
 
     if mode == "Single Stock":
@@ -802,7 +949,6 @@ with st.sidebar:
             unsafe_allow_html=True
         )
 
-        # Initialize holdings list in session state
         if "port_holdings" not in st.session_state:
             st.session_state["port_holdings"] = [
                 {"ticker": "AAPL", "amount": 30000},
@@ -811,7 +957,6 @@ with st.sidebar:
                 {"ticker": "GOOGL", "amount": 20000},
             ]
 
-        # Render each holding row
         to_remove = None
         for idx, holding in enumerate(st.session_state["port_holdings"]):
             col_t, col_a, col_x = st.columns([2, 2, 0.6])
@@ -840,13 +985,11 @@ with st.sidebar:
             st.session_state["port_holdings"].pop(to_remove)
             st.rerun()
 
-        # Add new row button
         st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
         if st.button("＋  Add Stock", use_container_width=True, key="port_add"):
             st.session_state["port_holdings"].append({"ticker": "", "amount": 10000})
             st.rerun()
 
-        # Live weight preview
         total_amt = sum(h["amount"] for h in st.session_state["port_holdings"] if h["amount"] > 0)
         if total_amt > 0:
             preview_lines = []
@@ -912,11 +1055,42 @@ with st.sidebar:
 
 
 # ════════════════════════════════════════════
+#  MAIN AREA ROUTING
+# ════════════════════════════════════════════
+
+current_mode = st.session_state.get("active_mode", "Single Stock")
+
+# ── Neither mode has been run yet — show welcome
+if not st.session_state["run"] and not st.session_state["port_run"]:
+    if current_mode == "Single Stock":
+        st.markdown(
+            '<div class="interpret-box" style="margin-top:40px;text-align:center;">'
+            '<b>Single Stock Mode</b><br><br>'
+            '1. Enter a ticker in the sidebar<br>'
+            '2. Set your date range<br>'
+            '3. Click <b>▶ RUN REGRESSION</b><br><br>'
+            '<span style="color:#334155;font-size:11px;">Factor data (FF5 + Momentum) loads automatically. '
+            'AI macro intelligence runs on every regression.</span>'
+            '</div>', unsafe_allow_html=True)
+    else:
+        st.markdown(
+            '<div class="interpret-box" style="margin-top:40px;text-align:center;">'
+            '<b>Portfolio Attribution Mode</b><br><br>'
+            '1. Add your holdings (ticker + amount) in the sidebar<br>'
+            '2. Set your date range<br>'
+            '3. Click <b>▶ RUN PORTFOLIO ATTRIBUTION</b><br><br>'
+            '<span style="color:#334155;font-size:11px;">Runs FF5 + Momentum regression per stock, '
+            'then shows weighted factor exposures and concentration risk.</span>'
+            '</div>', unsafe_allow_html=True)
+    st.stop()
+
+
+# ════════════════════════════════════════════
 #  PORTFOLIO ATTRIBUTION MODE
 # ════════════════════════════════════════════
 
 if st.session_state.get("port_run") and not st.session_state.get("run"):
-    weights   = st.session_state.get("port_weights", {})
+    weights    = st.session_state.get("port_weights", {})
     port_start = st.session_state.get("port_start", start_date)
     port_end   = st.session_state.get("port_end",   end_date)
     port_hac   = st.session_state.get("port_hac",   hac_lags)
@@ -955,12 +1129,10 @@ if st.session_state.get("port_run") and not st.session_state.get("run"):
         st.markdown('<div class="error-box">No stocks could be regressed. Check tickers and date range.</div>', unsafe_allow_html=True)
         st.stop()
 
-    # Filter weights to only successful tickers
     valid_weights = {t: weights[t] for t in port_results}
     total = sum(valid_weights.values())
     valid_weights = {t: v / total for t, v in valid_weights.items()}
 
-    # Get available factors (intersection)
     avail_sets = [set(port_results[t]["available"]) for t in port_results]
     common_factors = list(avail_sets[0].intersection(*avail_sets[1:])) if len(avail_sets) > 1 else list(avail_sets[0])
     ordered_factors = [f for f in ["Mkt-RF", "SMB", "HML", "RMW", "CMA", "Mom"] if f in common_factors]
@@ -974,15 +1146,6 @@ if st.session_state.get("port_run") and not st.session_state.get("run"):
 # ════════════════════════════════════════════
 
 if not st.session_state["run"]:
-    st.markdown(
-        '<div class="interpret-box" style="margin-top:40px;text-align:center;">'
-        '<b>How to use</b><br><br>'
-        '1. Select <b>Single Stock</b> or <b>Portfolio Attribution</b> in the sidebar<br>'
-        '2. Enter ticker(s) and date range<br>'
-        '3. Adjust HAC lags &amp; annualization if needed<br>'
-        '4. Click the Run button<br><br>'
-        '<span style="color:#334155;font-size:11px;">Factor data (FF5) is loaded automatically — no file upload needed.</span>'
-        '</div>', unsafe_allow_html=True)
     st.stop()
 
 ticker     = st.session_state.get("ticker_ran", "AVGO")
@@ -1173,8 +1336,8 @@ try:
     today_display = date.today().strftime("%B %d, %Y")
     st.markdown(
         f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#475569;margin-bottom:12px;">'
-        f'Auto-generated · Per-factor deep analysis · Current macro context as of {today_display} · Forward forecast · Key risks'
-        f'<br><span style="color:#334155;">Powered by Groq · Llama 3.3 70b · Runs automatically on each regression</span>'
+        f'Live fundamentals-grounded analysis · Per-factor deep dive · Current macro context as of {today_display} · Forward forecast · Key risks'
+        f'<br><span style="color:#334155;">Powered by Groq · Llama 3.3 70b · Uses live price, P/E, P/B, margins, analyst targets, short interest</span>'
         f'</div>', unsafe_allow_html=True)
 
     _ai_key = f"{ticker}_{start_date}_{end_date}_{hac_lags}_{annualize}"
@@ -1182,7 +1345,7 @@ try:
         st.session_state["ai_run_key"] = _ai_key
         st.session_state["ai_insight"] = None
         st.session_state["ai_error"]   = None
-        with st.spinner(f"Analyzing {len(available)} factors against current macro environment ({today_display})..."):
+        with st.spinner(f"Fetching live fundamentals + analyzing {len(available)} factors for {ticker}..."):
             insight, error = get_ai_insight(
                 ticker, model, available, alpha_ann, alpha_p, r2, n, start_date, end_date
             )
@@ -1327,3 +1490,7 @@ try:
 except Exception as e:
     st.markdown(f'<div class="error-box">Error: {str(e)}</div>', unsafe_allow_html=True)
     raise e
+Done
+
+You are out of free messages until 12:50 AM
+Upgrade
