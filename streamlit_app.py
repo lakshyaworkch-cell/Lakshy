@@ -70,8 +70,6 @@ h1, h2, h3 { font-family: 'JetBrains Mono', monospace !important; letter-spacing
 .diag-sub  { font-size: 10px; color: #1e293b; font-family: 'JetBrains Mono', monospace; margin-top: 3px; }
 .interpret-box { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 20px 24px; font-size: 13px; line-height: 1.8; color: #94a3b8; }
 .interpret-box b { color: #e2e8f0; }
-
-/* ── Enhanced AI Box ── */
 .ai-box {
     background: rgba(167,139,250,0.04);
     border: 1px solid rgba(167,139,250,0.15);
@@ -86,8 +84,6 @@ h1, h2, h3 { font-family: 'JetBrains Mono', monospace !important; letter-spacing
     font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 2px;
     text-transform: uppercase; color: #7c3aed; margin-bottom: 16px;
 }
-
-/* ── Per-Factor Cards ── */
 .factor-insight-card {
     background: rgba(255,255,255,0.025);
     border: 1px solid rgba(255,255,255,0.07);
@@ -135,8 +131,6 @@ h1, h2, h3 { font-family: 'JetBrains Mono', monospace !important; letter-spacing
 .fi-news-label {
     font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: #334155; margin-bottom: 4px;
 }
-
-/* Summary section */
 .ai-summary-box {
     background: rgba(96,165,250,0.04);
     border: 1px solid rgba(96,165,250,0.12);
@@ -148,12 +142,63 @@ h1, h2, h3 { font-family: 'JetBrains Mono', monospace !important; letter-spacing
     line-height: 1.8;
 }
 .ai-summary-box b { color: #e2e8f0; }
-
 .stTextInput > div > div > input { background: rgba(255,255,255,0.04) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #e2e8f0 !important; font-family: 'JetBrains Mono', monospace !important; border-radius: 8px !important; }
 .stTextInput > div > div > input:focus { border-color: rgba(96,165,250,0.4) !important; box-shadow: 0 0 0 3px rgba(96,165,250,0.08) !important; }
 .stButton > button { background: rgba(255,255,255,0.06) !important; color: #e2e8f0 !important; font-family: 'JetBrains Mono', monospace !important; font-weight: 500 !important; letter-spacing: 1px !important; border: 1px solid rgba(255,255,255,0.12) !important; border-radius: 8px !important; padding: 10px 28px !important; transition: all 0.2s !important; }
 .stButton > button:hover { background: rgba(52,211,153,0.1) !important; border-color: rgba(52,211,153,0.3) !important; color: #34d399 !important; }
 .error-box { background: rgba(248,113,113,0.06); border: 1px solid rgba(248,113,113,0.2); border-radius: 8px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #f87171; }
+
+/* ── Portfolio Attribution Styles ── */
+.port-header {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 2.5px;
+    text-transform: uppercase; color: #334155; border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding-bottom: 8px; margin: 28px 0 16px 0;
+}
+.port-stock-card {
+    background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px; padding: 14px 18px; margin-bottom: 10px;
+}
+.port-stock-ticker {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700;
+    color: #e2e8f0; letter-spacing: 1px;
+}
+.port-weight-badge {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    background: rgba(96,165,250,0.1); color: #60a5fa; margin-left: 8px;
+}
+.port-factor-bar-container {
+    display: flex; align-items: center; gap: 10px; margin: 3px 0;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+}
+.port-factor-label { color: #475569; width: 110px; flex-shrink: 0; }
+.port-bar-wrap {
+    flex: 1; height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden;
+}
+.port-bar-pos { height: 100%; background: #34d399; border-radius: 4px; }
+.port-bar-neg { height: 100%; background: #f87171; border-radius: 4px; }
+.port-bar-val { width: 60px; text-align: right; }
+.port-summary-card {
+    background: linear-gradient(135deg, rgba(96,165,250,0.06), rgba(167,139,250,0.06));
+    border: 1px solid rgba(96,165,250,0.15); border-radius: 12px; padding: 20px 24px;
+    margin-bottom: 16px;
+}
+.port-attribution-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 12px;
+}
+.port-attr-cell {
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 8px; padding: 12px 14px;
+}
+.port-attr-factor { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #475569; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
+.port-attr-beta { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 600; }
+.port-attr-beta.pos { color: #34d399; }
+.port-attr-beta.neg { color: #f87171; }
+.port-compare-row {
+    display: grid; gap: 8px; align-items: center; padding: 8px 12px;
+    border-radius: 8px; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -210,6 +255,16 @@ FACTOR_DESCRIPTIONS = {
     "Mom":    "Momentum factor (past winners vs past losers)",
 }
 
+FACTOR_COLORS = {
+    "Mkt-RF": "#60a5fa",
+    "SMB":    "#34d399",
+    "HML":    "#fbbf24",
+    "RMW":    "#a78bfa",
+    "CMA":    "#f97316",
+    "Mom":    "#ec4899",
+    "const":  "#94a3b8",
+}
+
 
 @st.cache_data(show_spinner=False)
 def load_factors():
@@ -222,18 +277,8 @@ def load_factors():
     return ff
 
 
-# ─────────────────────────────────────────────
-#  Live price: 3-layer fallback
-# ─────────────────────────────────────────────
-
 def get_live_price(ticker_symbol):
-    """
-    Returns (live_price, prev_close, currency) or raises Exception.
-    Tries fast_info → history("5d") → info dict.
-    """
     t = yf.Ticker(ticker_symbol)
-
-    # Layer 1: fast_info (attribute names differ across yfinance versions)
     try:
         fi = t.fast_info
         lp = getattr(fi, "last_price", None) or getattr(fi, "lastPrice", None)
@@ -243,8 +288,6 @@ def get_live_price(ticker_symbol):
             return float(lp), float(pc), cy
     except Exception:
         pass
-
-    # Layer 2: recent history
     try:
         hist = t.history(period="5d")
         if not hist.empty and len(hist) >= 2:
@@ -254,8 +297,6 @@ def get_live_price(ticker_symbol):
             return p, p, "USD"
     except Exception:
         pass
-
-    # Layer 3: info dict
     try:
         info = t.info
         lp = info.get("currentPrice") or info.get("regularMarketPrice")
@@ -265,16 +306,10 @@ def get_live_price(ticker_symbol):
             return float(lp), float(pc), cy
     except Exception:
         pass
-
     raise ValueError("All price-fetch layers failed")
 
 
-# ─────────────────────────────────────────────
-#  AI helpers — date-aware prompts
-# ─────────────────────────────────────────────
-
 def _call_groq(client, system_msg, user_msg, max_tokens=600):
-    """Single Groq call with json_object mode and robust cleaning."""
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[
@@ -292,8 +327,7 @@ def _call_groq(client, system_msg, user_msg, max_tokens=600):
 
 
 def _factor_prompt(ticker, factor_code, factor_name, beta, p_value, significant, description):
-    today = date.today().strftime("%B %d, %Y")   # e.g. "June 08, 2026"
-
+    today = date.today().strftime("%B %d, %Y")
     system = (
         "You are a senior quantitative analyst. "
         "You MUST respond with a single valid JSON object and nothing else. "
@@ -324,7 +358,6 @@ Return EXACTLY this JSON (fill in every field, 1-3 sentences each, no line break
 
 def _summary_prompt(ticker, alpha_ann, alpha_p, r2, factor_summaries):
     today = date.today().strftime("%B %d, %Y")
-
     system = (
         "You are a senior portfolio strategist. "
         "Respond with a single valid JSON object only. No markdown."
@@ -353,12 +386,10 @@ def get_ai_insight(ticker, model_result, available, alpha_ann, alpha_p, r2, n, s
     api_key = st.secrets.get("GROQ_API_KEY", None)
     if not api_key:
         return None, "No API key found. Add `GROQ_API_KEY` to your `.streamlit/secrets.toml` file."
-
     try:
         client = Groq(api_key=api_key)
         factors_out = []
         errors = []
-
         for f in available:
             beta = float(model_result.params[f])
             pval = float(model_result.pvalues[f])
@@ -381,28 +412,18 @@ def get_ai_insight(ticker, model_result, available, alpha_ann, alpha_p, r2, n, s
                     "forward_forecast": "", "key_risks": "",
                 })
                 errors.append(f"{f}: {e}")
-
         sys_msg, usr_msg = _summary_prompt(ticker, alpha_ann, alpha_p, r2, factors_out)
         try:
             summary = _call_groq(client, sys_msg, usr_msg, max_tokens=500)
         except Exception as e:
-            summary = {
-                "alpha_analysis": f"Summary unavailable: {e}",
-                "portfolio_verdict": "",
-            }
+            summary = {"alpha_analysis": f"Summary unavailable: {e}", "portfolio_verdict": ""}
             errors.append(f"summary: {e}")
-
         result = {"factors": factors_out, **summary}
         err_msg = "; ".join(errors) if errors else None
         return result, err_msg
-
     except Exception as e:
         return None, str(e)
 
-
-# ─────────────────────────────────────────────
-#  Render AI output as rich factor cards
-# ─────────────────────────────────────────────
 
 def render_ai_insight(ticker, insight_data):
     factors = insight_data.get("factors", [])
@@ -419,25 +440,21 @@ def render_ai_insight(ticker, insight_data):
         f'✦ AI Factor Intelligence · {ticker} · As of {today_str}</div>',
         unsafe_allow_html=True,
     )
-
     for fac in factors:
         code    = fac.get("code", "")
         name    = fac.get("name", code)
         beta    = fac.get("beta", 0)
         sig     = fac.get("significant", False)
         outlook = fac.get("outlook", "neutral").lower()
-
         card_cls   = "positive" if beta > 0 else "negative"
         beta_cls   = "pos" if beta > 0 else "neg"
         outlook_cls  = {"bullish": "bullish", "bearish": "bearish", "neutral": "neutral", "mixed": "mixed"}.get(outlook, "neutral")
         outlook_icon = {"bullish": "↑ BULLISH", "bearish": "↓ BEARISH", "neutral": "→ NEUTRAL", "mixed": "⇅ MIXED"}.get(outlook, "→ NEUTRAL")
         sig_label = "SIGNIFICANT" if sig else "INSIGNIFICANT"
-
         what     = bold(fac.get("what_it_means", ""))
         macro    = bold(fac.get("current_macro_context", ""))
         forecast = bold(fac.get("forward_forecast", ""))
         risks    = bold(fac.get("key_risks", ""))
-
         st.markdown(f"""
         <div class="factor-insight-card {card_cls}">
           <div class="fi-header">
@@ -448,18 +465,15 @@ def render_ai_insight(ticker, insight_data):
           </div>
           <div class="fi-body">
             <div style="margin-bottom:8px;">
-              <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;
-                           text-transform:uppercase;color:#475569;">WHAT IT MEANS FOR {ticker}</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#475569;">WHAT IT MEANS FOR {ticker}</span>
               <div style="margin-top:4px;">{what}</div>
             </div>
             <div style="margin-bottom:8px;">
-              <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;
-                           text-transform:uppercase;color:#475569;">CURRENT MACRO CONTEXT</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#475569;">CURRENT MACRO CONTEXT</span>
               <div style="margin-top:4px;">{macro}</div>
             </div>
             <div style="margin-bottom:8px;">
-              <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;
-                           text-transform:uppercase;color:#475569;">FORWARD FORECAST</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#475569;">FORWARD FORECAST</span>
               <div style="margin-top:4px;">{forecast}</div>
             </div>
             <div class="fi-news">
@@ -472,18 +486,277 @@ def render_ai_insight(ticker, insight_data):
     if alpha_analysis:
         st.markdown(f"""
         <div class="ai-summary-box">
-          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;
-                      text-transform:uppercase;color:#3b82f6;margin-bottom:8px;">ALPHA PERSISTENCE ANALYSIS</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#3b82f6;margin-bottom:8px;">ALPHA PERSISTENCE ANALYSIS</div>
           {bold(alpha_analysis)}
         </div>""", unsafe_allow_html=True)
-
     if portfolio_verdict:
         st.markdown(f"""
         <div class="ai-summary-box" style="border-color:rgba(167,139,250,0.15);color:#c4b5fd;background:rgba(167,139,250,0.04);">
-          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;
-                      text-transform:uppercase;color:#7c3aed;margin-bottom:8px;">PORTFOLIO VERDICT</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#7c3aed;margin-bottom:8px;">PORTFOLIO VERDICT</div>
           {bold(portfolio_verdict)}
         </div>""", unsafe_allow_html=True)
+
+
+# ─────────────────────────────────────────────
+#  Portfolio Attribution Functions
+# ─────────────────────────────────────────────
+
+@st.cache_data(show_spinner=False)
+def run_single_regression(ticker_sym, start_str, end_str, hac_lags, ff_key):
+    """Run OLS regression for a single ticker; returns params dict or None."""
+    try:
+        ff_raw = load_factors()
+        ff = ff_raw.loc[start_str:end_str].copy()
+        available = [c for c in ["Mkt-RF", "SMB", "HML", "RMW", "CMA", "Mom"] if c in ff.columns]
+        has_rf = "RF" in ff.columns
+        ff[available] = ff[available].astype(float) / 100
+        if has_rf:
+            ff["RF"] = ff["RF"].astype(float) / 100
+
+        raw = yf.download(ticker_sym, start=start_str[:7] + "-01",
+                          end=end_str[:7] + "-28", auto_adjust=True, progress=False)
+        if raw.empty:
+            return None, f"No data for {ticker_sym}"
+
+        close = raw["Close"]
+        if isinstance(close, pd.DataFrame):
+            close = close.iloc[:, 0]
+        monthly = close.resample("ME").last()
+        returns = monthly.pct_change().dropna()
+        returns.index = returns.index.to_period("M")
+
+        data = pd.DataFrame({"Stock": returns}).join(
+            ff[available + (["RF"] if has_rf else [])], how="inner"
+        )
+        if len(data) < 12:
+            return None, f"Too few obs for {ticker_sym} ({len(data)})"
+
+        if has_rf:
+            data["Y"] = data["Stock"] - data["RF"]
+        else:
+            data["Y"] = data["Stock"]
+
+        X = sm.add_constant(data[available])
+        y = data["Y"]
+        model = sm.OLS(y, X).fit(cov_type="HAC", cov_kwds={"maxlags": hac_lags})
+
+        alpha = model.params["const"]
+        alpha_ann = (1 + alpha) ** 12 - 1
+        result = {
+            "ticker":     ticker_sym,
+            "params":     dict(model.params),
+            "pvalues":    dict(model.pvalues),
+            "r2":         model.rsquared,
+            "alpha_ann":  alpha_ann,
+            "available":  available,
+            "nobs":       int(model.nobs),
+        }
+        return result, None
+    except Exception as e:
+        return None, str(e)
+
+
+def make_bar_html(beta, max_abs):
+    """Create a mini horizontal bar for a beta value."""
+    pct = min(abs(beta) / max_abs * 100, 100) if max_abs > 0 else 0
+    color_cls = "port-bar-pos" if beta >= 0 else "port-bar-neg"
+    val_color = "#34d399" if beta >= 0 else "#f87171"
+    return (
+        f'<div class="port-factor-bar-container">'
+        f'<div style="width:60px;font-family:JetBrains Mono,monospace;font-size:10px;'
+        f'color:{val_color};text-align:right;">{beta:+.3f}</div>'
+        f'<div class="port-bar-wrap"><div class="{color_cls}" style="width:{pct:.1f}%"></div></div>'
+        f'</div>'
+    )
+
+
+def render_portfolio_attribution(port_results, weights, available_factors):
+    """Render the full portfolio attribution section."""
+    tickers = list(port_results.keys())
+    n_stocks = len(tickers)
+
+    # ── Weighted portfolio betas
+    port_betas = {f: 0.0 for f in ["const"] + available_factors}
+    for tkr, w in weights.items():
+        if tkr in port_results:
+            for f in ["const"] + available_factors:
+                port_betas[f] += w * port_results[tkr]["params"].get(f, 0.0)
+
+    port_alpha_ann = sum(
+        weights[tkr] * port_results[tkr]["alpha_ann"]
+        for tkr in tickers if tkr in port_results
+    )
+    port_r2_avg = np.mean([port_results[t]["r2"] for t in tickers])
+
+    # ── Portfolio Summary Banner
+    alpha_color = "#34d399" if port_alpha_ann > 0 else "#f87171"
+    st.markdown(f"""
+    <div class="port-summary-card">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;
+                  text-transform:uppercase;color:#60a5fa;margin-bottom:14px;">
+        ◈ Portfolio-Level Factor Attribution · {n_stocks} Holdings
+      </div>
+      <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:baseline;">
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#475569;margin-bottom:2px;">WTDAVG ALPHA (ANN)</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:700;color:{alpha_color};">{port_alpha_ann:+.2%}</div>
+        </div>
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#475569;margin-bottom:2px;">AVG R²</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:700;color:#60a5fa;">{port_r2_avg:.4f}</div>
+        </div>
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#475569;margin-bottom:2px;">MKT BETA (PORT)</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:700;color:#a78bfa;">{port_betas.get("Mkt-RF", 0):+.3f}</div>
+        </div>
+      </div>
+    </div>""", unsafe_allow_html=True)
+
+    # ── Portfolio weighted factor betas grid
+    st.markdown(
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:2px;'
+        'text-transform:uppercase;color:#475569;margin-bottom:10px;">PORTFOLIO WEIGHTED FACTOR EXPOSURES</div>',
+        unsafe_allow_html=True
+    )
+    grid_html = '<div class="port-attribution-grid">'
+    for f in available_factors:
+        b = port_betas.get(f, 0)
+        bcls = "pos" if b >= 0 else "neg"
+        grid_html += f"""
+        <div class="port-attr-cell">
+          <div class="port-attr-factor">{FACTOR_NAMES.get(f, f)}</div>
+          <div class="port-attr-beta {bcls}">{b:+.4f}</div>
+        </div>"""
+    grid_html += '</div>'
+    st.markdown(grid_html, unsafe_allow_html=True)
+
+    # ── Stacked bar chart (SVG) for factor comparison across stocks
+    st.markdown(
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:2px;'
+        'text-transform:uppercase;color:#475569;margin:20px 0 10px 0;">FACTOR LOADING COMPARISON</div>',
+        unsafe_allow_html=True
+    )
+
+    # Build comparison table
+    col_labels = ["TICKER", "WEIGHT"] + [FACTOR_NAMES.get(f, f) for f in available_factors] + ["ANN α", "R²"]
+    all_betas_flat = []
+    for tkr in tickers:
+        for f in available_factors:
+            all_betas_flat.append(abs(port_results[tkr]["params"].get(f, 0)))
+    max_abs = max(all_betas_flat) if all_betas_flat else 1
+
+    grid_cols = f"80px 60px " + " ".join(["1fr"] * len(available_factors)) + " 70px 60px"
+    rows_html = f"""
+    <div style="overflow-x:auto;">
+    <div style="display:grid;grid-template-columns:{grid_cols};gap:6px;min-width:700px;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:#334155;text-transform:uppercase;padding:4px 0;">TICKER</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:#334155;text-transform:uppercase;padding:4px 0;">WT</div>
+    """
+    for f in available_factors:
+        fc = FACTOR_COLORS.get(f, "#94a3b8")
+        rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;letter-spacing:1.5px;color:{fc};text-transform:uppercase;padding:4px 0;">{FACTOR_NAMES.get(f,f)}</div>'
+    rows_html += '<div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;letter-spacing:1.5px;color:#a78bfa;text-transform:uppercase;padding:4px 0;">ANN α</div>'
+    rows_html += '<div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;letter-spacing:1.5px;color:#60a5fa;text-transform:uppercase;padding:4px 0;">R²</div>'
+
+    for tkr in tickers:
+        res = port_results[tkr]
+        w = weights[tkr]
+        alpha_c = "#34d399" if res["alpha_ann"] > 0 else "#f87171"
+        rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;font-weight:700;color:#e2e8f0;padding:8px 0;border-top:1px solid rgba(255,255,255,0.05);">{tkr}</div>'
+        rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#60a5fa;padding:8px 0;border-top:1px solid rgba(255,255,255,0.05);">{w:.0%}</div>'
+        for f in available_factors:
+            b = res["params"].get(f, 0)
+            bc = "#34d399" if b >= 0 else "#f87171"
+            pct = min(abs(b) / max_abs * 100, 100) if max_abs > 0 else 0
+            bar_color = "#34d399" if b >= 0 else "#f87171"
+            rows_html += f"""
+            <div style="padding:8px 0;border-top:1px solid rgba(255,255,255,0.05);">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:{bc};">{b:+.3f}</div>
+              <div style="height:3px;background:rgba(255,255,255,0.05);border-radius:2px;margin-top:3px;">
+                <div style="width:{pct:.1f}%;height:100%;background:{bar_color};border-radius:2px;"></div>
+              </div>
+            </div>"""
+        rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:{alpha_c};padding:8px 0;border-top:1px solid rgba(255,255,255,0.05);">{res["alpha_ann"]:+.2%}</div>'
+        rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#60a5fa;padding:8px 0;border-top:1px solid rgba(255,255,255,0.05);">{res["r2"]:.3f}</div>'
+
+    # Portfolio row
+    rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;font-weight:700;color:#a78bfa;padding:8px 0;border-top:2px solid rgba(167,139,250,0.2);">PORTFOLIO</div>'
+    rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#a78bfa;padding:8px 0;border-top:2px solid rgba(167,139,250,0.2);">100%</div>'
+    for f in available_factors:
+        b = port_betas.get(f, 0)
+        bc = "#34d399" if b >= 0 else "#f87171"
+        pct = min(abs(b) / max_abs * 100, 100) if max_abs > 0 else 0
+        bar_color = "#34d399" if b >= 0 else "#f87171"
+        rows_html += f"""
+        <div style="padding:8px 0;border-top:2px solid rgba(167,139,250,0.2);">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:{bc};">{b:+.3f}</div>
+          <div style="height:3px;background:rgba(255,255,255,0.05);border-radius:2px;margin-top:3px;">
+            <div style="width:{pct:.1f}%;height:100%;background:{bar_color};border-radius:2px;"></div>
+          </div>
+        </div>"""
+    alpha_c = "#34d399" if port_alpha_ann > 0 else "#f87171"
+    rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;font-weight:600;color:{alpha_c};padding:8px 0;border-top:2px solid rgba(167,139,250,0.2);">{port_alpha_ann:+.2%}</div>'
+    rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#60a5fa;padding:8px 0;border-top:2px solid rgba(167,139,250,0.2);">{port_r2_avg:.3f}</div>'
+    rows_html += '</div></div>'
+
+    st.markdown(
+        f'<div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);'
+        f'border-radius:10px;padding:16px 18px;">{rows_html}</div>',
+        unsafe_allow_html=True
+    )
+
+    # ── Concentration Risk
+    st.markdown(
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:2px;'
+        'text-transform:uppercase;color:#475569;margin:20px 0 10px 0;">FACTOR CONCENTRATION RISK</div>',
+        unsafe_allow_html=True
+    )
+    # Dispersion of factor betas across holdings
+    risk_html = '<div style="display:flex;gap:10px;flex-wrap:wrap;">'
+    for f in available_factors:
+        vals = [port_results[t]["params"].get(f, 0) for t in tickers]
+        dispersion = np.std(vals)
+        port_b = port_betas.get(f, 0)
+        risk_color = "#f87171" if dispersion > 0.5 else "#fbbf24" if dispersion > 0.2 else "#34d399"
+        risk_label = "HIGH" if dispersion > 0.5 else "MODERATE" if dispersion > 0.2 else "LOW"
+        risk_html += f"""
+        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);
+                    border-radius:8px;padding:12px 14px;min-width:110px;flex:1;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#475569;
+                      margin-bottom:4px;text-transform:uppercase;">{FACTOR_NAMES.get(f,f)}</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;
+                      color:{risk_color};">{risk_label}</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#334155;margin-top:2px;">
+            σ = {dispersion:.3f}
+          </div>
+        </div>"""
+    risk_html += '</div>'
+    st.markdown(risk_html, unsafe_allow_html=True)
+
+    # ── Export
+    st.markdown(
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:2px;'
+        'text-transform:uppercase;color:#475569;margin:20px 0 10px 0;">EXPORT</div>',
+        unsafe_allow_html=True
+    )
+    rows = []
+    for tkr in tickers:
+        res = port_results[tkr]
+        row = {"Ticker": tkr, "Weight": weights[tkr], "Ann_Alpha": res["alpha_ann"], "R2": res["r2"]}
+        for f in available_factors:
+            row[FACTOR_NAMES.get(f, f)] = res["params"].get(f, 0)
+        rows.append(row)
+    port_row = {"Ticker": "PORTFOLIO", "Weight": 1.0, "Ann_Alpha": port_alpha_ann, "R2": port_r2_avg}
+    for f in available_factors:
+        port_row[FACTOR_NAMES.get(f, f)] = port_betas.get(f, 0)
+    rows.append(port_row)
+    export_df = pd.DataFrame(rows)
+    st.download_button(
+        "⬇  Download Portfolio Attribution CSV",
+        export_df.to_csv(index=False),
+        file_name="portfolio_factor_attribution.csv",
+        mime="text/csv",
+    )
 
 
 # ════════════════════════════════════════════
@@ -503,10 +776,38 @@ if "ai_insight" not in st.session_state:
     st.session_state["ai_insight"] = None
 if "ai_error" not in st.session_state:
     st.session_state["ai_error"] = None
+if "port_run" not in st.session_state:
+    st.session_state["port_run"] = False
+if "port_results" not in st.session_state:
+    st.session_state["port_results"] = None
 
 with st.sidebar:
     st.markdown("### Configuration")
-    ticker = st.text_input("Stock Ticker", "AVGO").upper().strip()
+
+    # ── Mode toggle
+    mode = st.radio(
+        "Mode",
+        ["Single Stock", "Portfolio Attribution"],
+        horizontal=True,
+    )
+    st.markdown("---")
+
+    if mode == "Single Stock":
+        ticker = st.text_input("Stock Ticker", "AVGO").upper().strip()
+    else:
+        st.markdown("**Portfolio Holdings**")
+        st.markdown(
+            '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:#475569;margin-bottom:8px;">'
+            'Enter tickers and weights. Weights auto-normalize to 100%.</div>',
+            unsafe_allow_html=True
+        )
+        port_input_raw = st.text_area(
+            "Tickers & Weights (one per line: TICKER WEIGHT)",
+            value="AAPL 0.30\nMSFT 0.25\nNVDA 0.25\nGOOGL 0.20",
+            height=130,
+            help="Format: TICKER WEIGHT  e.g. AAPL 0.30"
+        )
+
     st.markdown("**Date Range**")
     start_date = st.date_input("Start", value=pd.to_datetime("2010-01-01"))
     end_date   = st.date_input("End",   value=pd.to_datetime("2026-04-30"))
@@ -514,15 +815,42 @@ with st.sidebar:
     hac_lags  = st.slider("HAC Max Lags", 1, 12, 3, help="Newey-West lags for HAC robust SE")
     annualize = st.selectbox("Annualization", [12, 52, 252], help="12=monthly, 52=weekly, 252=daily")
 
-    if st.button("▶  RUN REGRESSION", use_container_width=True):
-        st.session_state["run"]        = True
-        st.session_state["ticker_ran"] = ticker
-        st.session_state["start_ran"]  = start_date
-        st.session_state["end_ran"]    = end_date
-        st.session_state["hac_ran"]    = hac_lags
-        st.session_state["ann_ran"]    = annualize
-        st.session_state["ai_insight"] = None
-        st.session_state["ai_error"]   = None
+    if mode == "Single Stock":
+        if st.button("▶  RUN REGRESSION", use_container_width=True):
+            st.session_state["run"]        = True
+            st.session_state["ticker_ran"] = ticker
+            st.session_state["start_ran"]  = start_date
+            st.session_state["end_ran"]    = end_date
+            st.session_state["hac_ran"]    = hac_lags
+            st.session_state["ann_ran"]    = annualize
+            st.session_state["ai_insight"] = None
+            st.session_state["ai_error"]   = None
+            st.session_state["port_run"]   = False
+    else:
+        if st.button("▶  RUN PORTFOLIO ATTRIBUTION", use_container_width=True):
+            # Parse portfolio input
+            lines = [l.strip() for l in port_input_raw.strip().split("\n") if l.strip()]
+            parsed = []
+            for line in lines:
+                parts = line.split()
+                if len(parts) >= 2:
+                    try:
+                        parsed.append((parts[0].upper(), float(parts[1])))
+                    except ValueError:
+                        pass
+                elif len(parts) == 1:
+                    parsed.append((parts[0].upper(), 1.0))
+
+            if parsed:
+                total_w = sum(w for _, w in parsed)
+                normalized = {tkr: w / total_w for tkr, w in parsed}
+                st.session_state["port_weights"] = normalized
+                st.session_state["port_start"]   = start_date
+                st.session_state["port_end"]     = end_date
+                st.session_state["port_hac"]     = hac_lags
+                st.session_state["port_run"]     = True
+                st.session_state["run"]          = False
+                st.session_state["port_results"] = None
 
     st.markdown("---")
     st.markdown(
@@ -531,19 +859,82 @@ with st.sidebar:
         '<span style="color:#475569;">github.com/lakshyaworkch-cell/Lakshy</span>'
         '</div>', unsafe_allow_html=True)
 
+
+# ════════════════════════════════════════════
+#  PORTFOLIO ATTRIBUTION MODE
+# ════════════════════════════════════════════
+
+if st.session_state.get("port_run") and not st.session_state.get("run"):
+    weights   = st.session_state.get("port_weights", {})
+    port_start = st.session_state.get("port_start", start_date)
+    port_end   = st.session_state.get("port_end",   end_date)
+    port_hac   = st.session_state.get("port_hac",   hac_lags)
+
+    if not weights:
+        st.markdown('<div class="error-box">No valid tickers found. Check your input format.</div>', unsafe_allow_html=True)
+        st.stop()
+
+    st.markdown("## Portfolio Factor Attribution")
+    st.markdown(
+        f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#475569;margin-bottom:20px;">'
+        f'{len(weights)} holdings · FF5 + Momentum · HAC SE · {port_start} → {port_end}'
+        f'</div>', unsafe_allow_html=True
+    )
+
+    port_results = {}
+    errors = []
+
+    progress_bar = st.progress(0, text="Running regressions…")
+    for i, (tkr, w) in enumerate(weights.items()):
+        progress_bar.progress((i) / len(weights), text=f"Regressing {tkr}…")
+        start_str = str(port_start)[:7]
+        end_str   = str(port_end)[:7]
+        res, err = run_single_regression(tkr, start_str, end_str, port_hac, f"{start_str}_{end_str}")
+        if res:
+            port_results[tkr] = res
+        else:
+            errors.append(f"{tkr}: {err}")
+    progress_bar.progress(1.0, text="Done.")
+
+    if errors:
+        for e in errors:
+            st.markdown(f'<div class="error-box">⚠ {e}</div>', unsafe_allow_html=True)
+
+    if not port_results:
+        st.markdown('<div class="error-box">No stocks could be regressed. Check tickers and date range.</div>', unsafe_allow_html=True)
+        st.stop()
+
+    # Filter weights to only successful tickers
+    valid_weights = {t: weights[t] for t in port_results}
+    total = sum(valid_weights.values())
+    valid_weights = {t: v / total for t, v in valid_weights.items()}
+
+    # Get available factors (intersection)
+    avail_sets = [set(port_results[t]["available"]) for t in port_results]
+    common_factors = list(avail_sets[0].intersection(*avail_sets[1:])) if len(avail_sets) > 1 else list(avail_sets[0])
+    ordered_factors = [f for f in ["Mkt-RF", "SMB", "HML", "RMW", "CMA", "Mom"] if f in common_factors]
+
+    render_portfolio_attribution(port_results, valid_weights, ordered_factors)
+    st.stop()
+
+
+# ════════════════════════════════════════════
+#  SINGLE STOCK MODE
+# ════════════════════════════════════════════
+
 if not st.session_state["run"]:
     st.markdown(
         '<div class="interpret-box" style="margin-top:40px;text-align:center;">'
         '<b>How to use</b><br><br>'
-        '1. Enter a stock ticker in the sidebar<br>'
-        '2. Choose your date range<br>'
+        '1. Select <b>Single Stock</b> or <b>Portfolio Attribution</b> in the sidebar<br>'
+        '2. Enter ticker(s) and date range<br>'
         '3. Adjust HAC lags &amp; annualization if needed<br>'
-        '4. Click <b>RUN REGRESSION</b><br><br>'
+        '4. Click the Run button<br><br>'
         '<span style="color:#334155;font-size:11px;">Factor data (FF5) is loaded automatically — no file upload needed.</span>'
         '</div>', unsafe_allow_html=True)
     st.stop()
 
-ticker     = st.session_state.get("ticker_ran", ticker)
+ticker     = st.session_state.get("ticker_ran", "AVGO")
 start_date = st.session_state.get("start_ran", start_date)
 end_date   = st.session_state.get("end_ran", end_date)
 hac_lags   = st.session_state.get("hac_ran", hac_lags)
@@ -639,7 +1030,7 @@ try:
         cls = {"pass": "diag-pass", "fail": "diag-fail", "warn": "diag-warn"}.get(status, "diag-pass")
         return f'<div class="diag-item"><div class="diag-name">{name}</div><div class="diag-val {cls}">{val}</div><div class="diag-sub">{sub}</div></div>'
 
-    # ── Live price banner — 3-layer fallback ──
+    # ── Live price banner
     try:
         _live_price, _prev_close, _currency = get_live_price(ticker)
         _chg     = _live_price - _prev_close
@@ -668,7 +1059,7 @@ try:
         )
     st.markdown(_price_html, unsafe_allow_html=True)
 
-    # ── Key metrics ──
+    # ── Key metrics
     c1, c2, c3, c4 = st.columns(4)
     with c1:
         st.markdown(f"""
@@ -701,7 +1092,7 @@ try:
           <div class="metric-sub">p={f_p:.4f} · N={n}</div>
         </div>""", unsafe_allow_html=True)
 
-    # ── Factor loadings table ──
+    # ── Factor loadings table
     st.markdown('<div class="section-title">Factor Loadings</div>', unsafe_allow_html=True)
     st.markdown("""
     <div class="factor-row header">
@@ -726,10 +1117,7 @@ try:
         f'★★★ p&lt;0.01 · ★★ p&lt;0.05 · ★ p&lt;0.10 · n.s. not significant'
         f' | HAC Newey-West SE, maxlags={hac_lags}</div>', unsafe_allow_html=True)
 
-
-    # ─────────────────────────────────────────────
-    #  AI MACRO INTELLIGENCE — date-aware
-    # ─────────────────────────────────────────────
+    # ── AI Macro Intelligence
     st.markdown('<div class="section-title">AI Macro Intelligence</div>', unsafe_allow_html=True)
     today_display = date.today().strftime("%B %d, %Y")
     st.markdown(
@@ -761,10 +1149,7 @@ try:
     if st.session_state["ai_insight"]:
         render_ai_insight(ticker, st.session_state["ai_insight"])
 
-
-    # ─────────────────────────────────────────────
-    #  TABS
-    # ─────────────────────────────────────────────
+    # ── Tabs
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "95% Confidence Intervals",
         "Regression Diagnostics",
@@ -838,7 +1223,6 @@ try:
                     roll_dates.append(str(data.index[i - 1]))
                 except Exception:
                     pass
-
             if roll_betas:
                 mn, mx = min(roll_betas), max(roll_betas)
                 rng = mx - mn if mx != mn else 1
@@ -868,7 +1252,7 @@ try:
     with st.expander("Full OLS Summary (statsmodels)"):
         st.text(model.summary().as_text())
 
-    # ── Export ──
+    # ── Export
     st.markdown('<div class="section-title">Export Results</div>', unsafe_allow_html=True)
     export_df = pd.DataFrame({
         "Factor":   [FACTOR_NAMES.get(n, n) for n in model.params.index],
