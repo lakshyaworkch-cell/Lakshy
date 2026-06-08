@@ -4,7 +4,7 @@ import numpy as np
 import yfinance as yf
 import statsmodels.api as sm
 from scipy import stats
-from groq import Groq
+import google.generativeai as genai
 from datetime import date
 import re
 import json
@@ -330,7 +330,7 @@ def get_live_price(ticker_symbol):
     raise ValueError("All price-fetch layers failed")
 
 
-def _call_groq(client, system_msg, user_msg, max_tokens=800):
+def _call_gemini(client, system_msg, user_msg, max_tokens=800):
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[
@@ -516,15 +516,15 @@ Return EXACTLY this JSON (2-4 sentences per field, use specific numbers from the
 
 
 def get_ai_insight(ticker, model_result, available, alpha_ann, alpha_p, r2, n, start_date, end_date):
-    api_key = st.secrets.get("GROQ_API_KEY", None)
+    api_key = st.secrets.get("GEMINI_API_KEY", None)
     if not api_key:
-        return None, "No API key found. Add `GROQ_API_KEY` to your `.streamlit/secrets.toml` file."
+        return None, "No API key found. Add `gemini_API_KEY` to your `.streamlit/secrets.toml` file."
 
     ctx = _get_stock_context(ticker)
     ctx_str = _fmt_ctx(ctx)
 
     try:
-        client = Groq(api_key=api_key)
+        genai.configure(api_key=api_key)
         factors_out = []
         errors = []
 
@@ -538,7 +538,7 @@ def get_ai_insight(ticker, model_result, available, alpha_ann, alpha_p, r2, n, s
                 ctx_str=ctx_str,
             )
             try:
-                result = _call_groq(client, sys_msg, usr_msg, max_tokens=900)
+                result = _call_gemini(client, sys_msg, usr_msg, max_tokens=900)
                 result["beta"] = beta
                 result["significant"] = sig
                 factors_out.append(result)
@@ -555,7 +555,7 @@ def get_ai_insight(ticker, model_result, available, alpha_ann, alpha_p, r2, n, s
 
         sys_msg, usr_msg = _summary_prompt(ticker, alpha_ann, alpha_p, r2, factors_out, ctx_str)
         try:
-            summary = _call_groq(client, sys_msg, usr_msg, max_tokens=700)
+            summary = _call_gemini(client, sys_msg, usr_msg, max_tokens=700)
         except Exception as e:
             summary = {
                 "alpha_analysis": f"Summary unavailable: {e}",
@@ -1433,7 +1433,7 @@ if current_mode == "Single Stock":
         ai_header_html = (
             f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#475569;margin-bottom:12px;">'
             f'Live fundamentals-grounded analysis · Per-factor deep dive · Current macro context as of {today_display} · Forward forecast · Key risks'
-            f'<br><span style="color:#334155;">Powered by Groq · Llama 3.3 70b · Uses live price, P/E, P/B, margins, analyst targets, short interest</span>'
+            f'<br><span style="color:#334155;">Powered by gemini · Llama 3.3 70b · Uses live price, P/E, P/B, margins, analyst targets, short interest</span>'
             f'</div>'
         )
         st.markdown(ai_header_html, unsafe_allow_html=True)
