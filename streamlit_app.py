@@ -589,8 +589,8 @@ try:
     # ── Live price banner ──
     try:
         _info        = yf.Ticker(ticker).fast_info
-        _live_price  = _info.last_price
-        _prev_close  = _info.previous_close
+        _live_price  = _info.lastPrice
+        _prev_close  = _info.previousClose
         _chg         = _live_price - _prev_close
         _chg_pct     = (_chg / _prev_close) * 100
         _currency    = getattr(_info, "currency", "USD")
