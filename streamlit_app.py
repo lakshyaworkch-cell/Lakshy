@@ -797,16 +797,73 @@ with st.sidebar:
     else:
         st.markdown("**Portfolio Holdings**")
         st.markdown(
-            '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:#475569;margin-bottom:8px;">'
-            'Enter tickers and weights. Weights auto-normalize to 100%.</div>',
+            '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:#475569;margin-bottom:10px;">'
+            'Add stocks with ticker &amp; amount invested. Weights are auto-calculated.</div>',
             unsafe_allow_html=True
         )
-        port_input_raw = st.text_area(
-            "Tickers & Weights (one per line: TICKER WEIGHT)",
-            value="AAPL 0.30\nMSFT 0.25\nNVDA 0.25\nGOOGL 0.20",
-            height=130,
-            help="Format: TICKER WEIGHT  e.g. AAPL 0.30"
-        )
+
+        # Initialize holdings list in session state
+        if "port_holdings" not in st.session_state:
+            st.session_state["port_holdings"] = [
+                {"ticker": "AAPL", "amount": 30000},
+                {"ticker": "MSFT", "amount": 25000},
+                {"ticker": "NVDA", "amount": 25000},
+                {"ticker": "GOOGL", "amount": 20000},
+            ]
+
+        # Render each holding row
+        to_remove = None
+        for idx, holding in enumerate(st.session_state["port_holdings"]):
+            col_t, col_a, col_x = st.columns([2, 2, 0.6])
+            with col_t:
+                new_ticker = st.text_input(
+                    "Ticker", value=holding["ticker"],
+                    key=f"port_ticker_{idx}",
+                    label_visibility="collapsed",
+                    placeholder="TICKER"
+                ).upper().strip()
+                st.session_state["port_holdings"][idx]["ticker"] = new_ticker
+            with col_a:
+                new_amount = st.number_input(
+                    "Amount", value=float(holding["amount"]),
+                    min_value=0.0, step=1000.0,
+                    key=f"port_amount_{idx}",
+                    label_visibility="collapsed",
+                    format="%.0f"
+                )
+                st.session_state["port_holdings"][idx]["amount"] = new_amount
+            with col_x:
+                if st.button("×", key=f"port_remove_{idx}", help="Remove"):
+                    to_remove = idx
+
+        if to_remove is not None:
+            st.session_state["port_holdings"].pop(to_remove)
+            st.rerun()
+
+        # Add new row button
+        st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
+        if st.button("＋  Add Stock", use_container_width=True, key="port_add"):
+            st.session_state["port_holdings"].append({"ticker": "", "amount": 10000})
+            st.rerun()
+
+        # Live weight preview
+        total_amt = sum(h["amount"] for h in st.session_state["port_holdings"] if h["amount"] > 0)
+        if total_amt > 0:
+            preview_lines = []
+            for h in st.session_state["port_holdings"]:
+                if h["ticker"] and h["amount"] > 0:
+                    w = h["amount"] / total_amt
+                    preview_lines.append(f'{h["ticker"]} · {w:.1%}')
+            if preview_lines:
+                st.markdown(
+                    '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;'
+                    'color:#475569;margin-top:8px;padding:8px 10px;'
+                    'background:rgba(255,255,255,0.02);border-radius:6px;'
+                    'border:1px solid rgba(255,255,255,0.05);line-height:1.8;">'
+                    + " &nbsp;|&nbsp; ".join(preview_lines) +
+                    '</div>',
+                    unsafe_allow_html=True
+                )
 
     st.markdown("**Date Range**")
     start_date = st.date_input("Start", value=pd.to_datetime("2010-01-01"))
