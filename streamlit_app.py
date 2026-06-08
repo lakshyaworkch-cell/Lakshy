@@ -6,6 +6,7 @@ import statsmodels.api as sm
 from scipy import stats
 from groq import Groq
 import re
+import json
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -68,9 +69,85 @@ h1, h2, h3 { font-family: 'JetBrains Mono', monospace !important; letter-spacing
 .diag-sub  { font-size: 10px; color: #1e293b; font-family: 'JetBrains Mono', monospace; margin-top: 3px; }
 .interpret-box { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 20px 24px; font-size: 13px; line-height: 1.8; color: #94a3b8; }
 .interpret-box b { color: #e2e8f0; }
-.ai-box { background: rgba(167,139,250,0.04); border: 1px solid rgba(167,139,250,0.15); border-radius: 12px; padding: 20px 24px; font-size: 13px; line-height: 1.9; color: #c4b5fd; }
+
+/* ── Enhanced AI Box ── */
+.ai-box {
+    background: rgba(167,139,250,0.04);
+    border: 1px solid rgba(167,139,250,0.15);
+    border-radius: 12px;
+    padding: 24px 28px;
+    font-size: 13px;
+    line-height: 1.9;
+    color: #c4b5fd;
+}
 .ai-box b { color: #e2e8f0; }
-.ai-box h4 { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #7c3aed; margin-bottom: 12px; }
+.ai-box h4 {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 2px;
+    text-transform: uppercase; color: #7c3aed; margin-bottom: 16px;
+}
+
+/* ── Per-Factor Cards ── */
+.factor-insight-card {
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    position: relative;
+    overflow: hidden;
+}
+.factor-insight-card.positive { border-left: 3px solid #34d399; }
+.factor-insight-card.negative { border-left: 3px solid #f87171; }
+.factor-insight-card.neutral  { border-left: 3px solid #6b7280; }
+.fi-header {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+}
+.fi-name {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600;
+    color: #e2e8f0; letter-spacing: 1px;
+}
+.fi-beta {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    padding: 2px 8px; border-radius: 4px;
+}
+.fi-beta.pos { background: rgba(52,211,153,0.12); color: #34d399; }
+.fi-beta.neg { background: rgba(248,113,113,0.12); color: #f87171; }
+.fi-sig-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1.5px;
+    color: #475569; text-transform: uppercase;
+}
+.fi-outlook {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase; margin-left: auto;
+}
+.fi-outlook.bullish  { background: rgba(52,211,153,0.1); color: #34d399; }
+.fi-outlook.bearish  { background: rgba(248,113,113,0.1); color: #f87171; }
+.fi-outlook.neutral  { background: rgba(107,114,128,0.1); color: #6b7280; }
+.fi-outlook.mixed    { background: rgba(251,191,36,0.1);  color: #fbbf24; }
+.fi-body { font-size: 12px; color: #94a3b8; line-height: 1.75; }
+.fi-news {
+    margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    font-size: 11px; color: #475569; font-family: 'JetBrains Mono', monospace;
+}
+.fi-news-label {
+    font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: #334155; margin-bottom: 4px;
+}
+
+/* Summary section */
+.ai-summary-box {
+    background: rgba(96,165,250,0.04);
+    border: 1px solid rgba(96,165,250,0.12);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-top: 16px;
+    font-size: 12px;
+    color: #93c5fd;
+    line-height: 1.8;
+}
+.ai-summary-box b { color: #e2e8f0; }
+
 .stTextInput > div > div > input { background: rgba(255,255,255,0.04) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #e2e8f0 !important; font-family: 'JetBrains Mono', monospace !important; border-radius: 8px !important; }
 .stTextInput > div > div > input:focus { border-color: rgba(96,165,250,0.4) !important; box-shadow: 0 0 0 3px rgba(96,165,250,0.08) !important; }
 .stButton > button { background: rgba(255,255,255,0.06) !important; color: #e2e8f0 !important; font-family: 'JetBrains Mono', monospace !important; font-weight: 500 !important; letter-spacing: 1px !important; border: 1px solid rgba(255,255,255,0.12) !important; border-radius: 8px !important; padding: 10px 28px !important; transition: all 0.2s !important; }
@@ -136,53 +213,177 @@ def load_factors():
     ff.index = pd.to_datetime(ff.index, format="%Y%m").to_period("M")
     return ff
 
+
+# ─────────────────────────────────────────────
+#  NEW: Enhanced AI prompt — requests JSON output
+#  with per-factor deep analysis + news awareness
+# ─────────────────────────────────────────────
+
 def build_ai_prompt(ticker, model_result, available, alpha_ann, alpha_p, r2, n, start_date, end_date):
-    lines = []
-    lines.append(f"Ticker: {ticker}")
-    lines.append(f"Date range: {start_date} to {end_date} ({n} monthly observations)")
-    lines.append(f"Annualized Alpha: {alpha_ann:+.2%} (p={alpha_p:.4f}, {'significant' if alpha_p < 0.05 else 'not significant'})")
-    lines.append(f"R²: {r2:.4f}")
-    lines.append("")
-    lines.append("Factor loadings (statistically significant at p<0.10):")
-    for f in available:
-        p = model_result.pvalues[f]
-        b = model_result.params[f]
-        if p < 0.10:
-            lines.append(f"  - {FACTOR_NAMES.get(f, f)} ({f}): beta={b:+.4f}, p={p:.4f} — {FACTOR_DESCRIPTIONS.get(f, '')}")
-    lines.append("")
-    lines.append("All factor betas for context:")
+    factor_lines = []
     for f in available:
         b = model_result.params[f]
         p = model_result.pvalues[f]
-        lines.append(f"  - {f}: {b:+.4f} (p={p:.4f})")
+        sig = "significant" if p < 0.05 else "marginal" if p < 0.10 else "not significant"
+        factor_lines.append(
+            f'  - {f} ({FACTOR_NAMES.get(f, f)}): beta={b:+.4f}, p={p:.4f}, {sig} | {FACTOR_DESCRIPTIONS.get(f, "")}'
+        )
 
-    prompt = "\n".join(lines)
-    prompt += """
+    prompt = f"""You are an expert quantitative analyst and macroeconomist with access to current financial news and market conditions as of mid-2025.
 
-Based on these Fama-French factor regression results, please provide a concise macro-economic narrative (around 200-250 words) covering:
+STOCK: {ticker}
+DATE RANGE: {start_date} to {end_date} ({n} monthly observations)
+ANNUALIZED ALPHA: {alpha_ann:+.2%} (p={alpha_p:.4f}, {'SIGNIFICANT' if alpha_p < 0.05 else 'not significant'})
+R²: {r2:.4f}
 
-1. **What the significant factor exposures reveal** about how this stock behaves relative to the broader economy.
-2. **What the current macroeconomic environment means for these exposures**.
-3. **A brief forward-looking note** on whether these factor exposures are favorable or risky given current economic conditions.
+ALL FACTOR LOADINGS:
+{chr(10).join(factor_lines)}
 
-Write in clear, professional but accessible language. Use **bold** for key terms. Do not repeat the raw numbers."""
+YOUR TASK:
+Produce a detailed, news-aware factor analysis. You MUST return a valid JSON object with EXACTLY this structure (no markdown fences, no extra text before or after):
+
+{{
+  "factors": [
+    {{
+      "code": "<factor code, e.g. Mkt-RF>",
+      "name": "<human name>",
+      "beta": <number>,
+      "significant": <true/false>,
+      "outlook": "<one of: bullish | bearish | neutral | mixed>",
+      "what_it_means": "<2-3 sentences: what does this specific beta value tell us about how {ticker} behaves? Be specific to the stock and magnitude of the beta>",
+      "current_macro_context": "<3-4 sentences: what is happening RIGHT NOW in mid-2025 that affects this factor? Reference real macroeconomic conditions: Fed policy, inflation trajectory, credit conditions, earnings trends, sector rotations, geopolitical events, AI boom, etc. Be specific and current>",
+      "forward_forecast": "<2-3 sentences: given the current macro environment and this stock's exposure, what is the likely near-term impact on returns from this factor? Is the exposure a tailwind or headwind? Why?>",
+      "key_risks": "<1-2 sentences: the main risk to this factor outlook>"
+    }}
+  ],
+  "alpha_analysis": "<3-4 sentences: deep dive on the alpha — is it persistent or episodic? What might explain it for {ticker} specifically — superior earnings quality, pricing power, competitive moat, re-rating potential? What are the risks to alpha persistence?>",
+  "portfolio_verdict": "<3-4 sentences: overall verdict — combining all factor exposures, is {ticker} well-positioned or vulnerable in the current macro regime? What type of macro scenario would be best/worst for this stock? Conclude with a concise risk-adjusted view.>"
+}}
+
+CRITICAL REQUIREMENTS:
+- Reference REAL current events: Fed rate decisions, tariff/trade war developments, AI infrastructure spending cycle, semiconductor demand, credit spreads, yield curve shape, consumer spending trends, China macro, energy prices — whichever are relevant to {ticker}'s factor exposures.
+- Be SPECIFIC to {ticker}'s industry and business model when possible.
+- The "outlook" field must honestly reflect whether the current macro regime favors or hurts that factor exposure for this specific stock.
+- Return ONLY the JSON. No preamble, no explanation, no markdown code fences.
+"""
     return prompt
+
 
 def get_ai_insight(ticker, model_result, available, alpha_ann, alpha_p, r2, n, start_date, end_date):
     api_key = st.secrets.get("GROQ_API_KEY", None)
     if not api_key:
         return None, "No API key found. Add `GROQ_API_KEY` to your `.streamlit/secrets.toml` file."
+
     prompt = build_ai_prompt(ticker, model_result, available, alpha_ann, alpha_p, r2, n, start_date, end_date)
     try:
         client = Groq(api_key=api_key)
         response = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=600,
+            max_tokens=3000,   # ← much larger for detailed output
+            temperature=0.4,   # ← slightly creative but grounded
         )
-        return response.choices[0].message.content, None
+        raw = response.choices[0].message.content.strip()
+        # Strip markdown fences if the model wraps anyway
+        raw = re.sub(r'^```json\s*', '', raw)
+        raw = re.sub(r'\s*```$', '', raw)
+        parsed = json.loads(raw)
+        return parsed, None
+    except json.JSONDecodeError as e:
+        return None, f"JSON parse error: {e}. Raw response may be malformed."
     except Exception as e:
         return None, str(e)
+
+
+# ─────────────────────────────────────────────
+#  NEW: Render the enhanced AI output as cards
+# ─────────────────────────────────────────────
+
+def render_ai_insight(ticker, insight_data):
+    """Render the structured JSON insight as rich factor cards."""
+    factors = insight_data.get("factors", [])
+    alpha_analysis = insight_data.get("alpha_analysis", "")
+    portfolio_verdict = insight_data.get("portfolio_verdict", "")
+
+    def bold(text):
+        return re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
+
+    st.markdown(
+        f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:2px;'
+        f'text-transform:uppercase;color:#7c3aed;margin-bottom:16px;">✦ AI Factor Intelligence · {ticker}</div>',
+        unsafe_allow_html=True,
+    )
+
+    for fac in factors:
+        code = fac.get("code", "")
+        name = fac.get("name", code)
+        beta = fac.get("beta", 0)
+        sig  = fac.get("significant", False)
+        outlook = fac.get("outlook", "neutral").lower()
+
+        card_cls = "positive" if beta > 0 else "negative"
+        beta_cls = "pos" if beta > 0 else "neg"
+        outlook_cls = {"bullish": "bullish", "bearish": "bearish", "neutral": "neutral", "mixed": "mixed"}.get(outlook, "neutral")
+        outlook_icon = {"bullish": "↑ BULLISH", "bearish": "↓ BEARISH", "neutral": "→ NEUTRAL", "mixed": "⇅ MIXED"}.get(outlook, "→ NEUTRAL")
+
+        sig_label = "SIGNIFICANT" if sig else "INSIGNIFICANT"
+
+        what      = bold(fac.get("what_it_means", ""))
+        macro     = bold(fac.get("current_macro_context", ""))
+        forecast  = bold(fac.get("forward_forecast", ""))
+        risks     = bold(fac.get("key_risks", ""))
+
+        st.markdown(f"""
+        <div class="factor-insight-card {card_cls}">
+          <div class="fi-header">
+            <div class="fi-name">{name}</div>
+            <div class="fi-beta {beta_cls}">{beta:+.4f}</div>
+            <div class="fi-sig-label">{sig_label}</div>
+            <div class="fi-outlook {outlook_cls}">{outlook_icon}</div>
+          </div>
+          <div class="fi-body">
+            <div style="margin-bottom:8px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;
+                           text-transform:uppercase;color:#475569;">WHAT IT MEANS FOR {ticker}</span>
+              <div style="margin-top:4px;">{what}</div>
+            </div>
+            <div style="margin-bottom:8px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;
+                           text-transform:uppercase;color:#475569;">CURRENT MACRO CONTEXT</span>
+              <div style="margin-top:4px;">{macro}</div>
+            </div>
+            <div style="margin-bottom:8px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;
+                           text-transform:uppercase;color:#475569;">FORWARD FORECAST</span>
+              <div style="margin-top:4px;">{forecast}</div>
+            </div>
+            <div class="fi-news">
+              <div class="fi-news-label">⚠ KEY RISK</div>
+              {risks}
+            </div>
+          </div>
+        </div>""", unsafe_allow_html=True)
+
+    if alpha_analysis:
+        st.markdown(f"""
+        <div class="ai-summary-box">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;
+                      text-transform:uppercase;color:#3b82f6;margin-bottom:8px;">ALPHA PERSISTENCE ANALYSIS</div>
+          {bold(alpha_analysis)}
+        </div>""", unsafe_allow_html=True)
+
+    if portfolio_verdict:
+        st.markdown(f"""
+        <div class="ai-summary-box" style="border-color:rgba(167,139,250,0.15);color:#c4b5fd;background:rgba(167,139,250,0.04);">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;
+                      text-transform:uppercase;color:#7c3aed;margin-bottom:8px;">PORTFOLIO VERDICT</div>
+          {bold(portfolio_verdict)}
+        </div>""", unsafe_allow_html=True)
+
+
+# ════════════════════════════════════════════
+#  MAIN UI — unchanged from original below
+# ════════════════════════════════════════════
 
 st.markdown("# Factor Regression")
 st.markdown(
@@ -418,14 +619,18 @@ try:
     interp += "</div>"
     st.markdown(interp, unsafe_allow_html=True)
 
-    st.markdown('<div class="section-title">AI Macro Insight</div>', unsafe_allow_html=True)
+    # ─────────────────────────────────────────────
+    #  AI MACRO INSIGHT — Enhanced Section
+    # ─────────────────────────────────────────────
+    st.markdown('<div class="section-title">AI Macro Intelligence</div>', unsafe_allow_html=True)
     st.markdown(
         '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#475569;margin-bottom:12px;">'
-        'Groq (Llama 3.3 70b) interprets your significant factor exposures in the context of the current macro environment.'
+        'Per-factor deep analysis · Current macro context · Forward forecast · Key risks'
+        '<br><span style="color:#334155;">Powered by Groq · Llama 3.3 70b · ~3× more detail than standard analysis</span>'
         '</div>', unsafe_allow_html=True)
 
-    if st.button("✦  Generate AI Macro Insight", use_container_width=False):
-        with st.spinner("Thinking..."):
+    if st.button("✦  Generate Deep Factor Intelligence", use_container_width=False):
+        with st.spinner("Analyzing each factor against current macro environment..."):
             insight, error = get_ai_insight(
                 ticker, model, available, alpha_ann, alpha_p, r2, n, start_date, end_date
             )
@@ -435,14 +640,11 @@ try:
     if st.session_state["ai_error"]:
         st.markdown(f'<div class="error-box">AI Error: {st.session_state["ai_error"]}</div>', unsafe_allow_html=True)
     elif st.session_state["ai_insight"]:
-        insight_html = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', st.session_state["ai_insight"])
-        insight_html = insight_html.replace('\n\n', '<br><br>').replace('\n', '<br>')
-        st.markdown(
-            f'<div class="ai-box">'
-            f'<h4>✦ Groq · Macro Analysis · {ticker}</h4>'
-            f'{insight_html}'
-            f'</div>', unsafe_allow_html=True)
+        render_ai_insight(ticker, st.session_state["ai_insight"])
 
+    # ─────────────────────────────────────────────
+    #  TABS — unchanged
+    # ─────────────────────────────────────────────
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "95% Confidence Intervals",
         "Regression Diagnostics",
