@@ -76,7 +76,7 @@ h1, h2, h3 { font-family: 'JetBrains Mono', monospace !important; letter-spacing
     border: 1px solid rgba(167,139,250,0.15);
     border-radius: 12px;
     padding: 24px 28px;
-    font-size: 13px;
+    font-size: 15px;
     line-height: 1.9;
     color: #c4b5fd;
 }
@@ -125,11 +125,11 @@ h1, h2, h3 { font-family: 'JetBrains Mono', monospace !important; letter-spacing
 .fi-outlook.bearish  { background: rgba(248,113,113,0.1); color: #f87171; }
 .fi-outlook.neutral  { background: rgba(107,114,128,0.1); color: #6b7280; }
 .fi-outlook.mixed    { background: rgba(251,191,36,0.1);  color: #fbbf24; }
-.fi-body { font-size: 12px; color: #94a3b8; line-height: 1.75; }
+.fi-body { font-size: 14px; color: #94a3b8; line-height: 1.85; }
 .fi-news {
     margin-top: 10px; padding-top: 10px;
     border-top: 1px solid rgba(255,255,255,0.05);
-    font-size: 11px; color: #475569; font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; color: #475569; font-family: 'JetBrains Mono', monospace;
 }
 .fi-news-label {
     font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: #334155; margin-bottom: 4px;
@@ -142,7 +142,7 @@ h1, h2, h3 { font-family: 'JetBrains Mono', monospace !important; letter-spacing
     border-radius: 10px;
     padding: 16px 20px;
     margin-top: 16px;
-    font-size: 12px;
+    font-size: 14px;
     color: #93c5fd;
     line-height: 1.8;
 }
