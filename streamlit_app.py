@@ -586,6 +586,38 @@ try:
         cls = {"pass": "diag-pass", "fail": "diag-fail", "warn": "diag-warn"}.get(status, "diag-pass")
         return f'<div class="diag-item"><div class="diag-name">{name}</div><div class="diag-val {cls}">{val}</div><div class="diag-sub">{sub}</div></div>'
 
+    # ── Live price banner ──
+    try:
+        _info        = yf.Ticker(ticker).fast_info
+        _live_price  = _info.last_price
+        _prev_close  = _info.previous_close
+        _chg         = _live_price - _prev_close
+        _chg_pct     = (_chg / _prev_close) * 100
+        _currency    = getattr(_info, "currency", "USD")
+        _price_color = "#34d399" if _chg >= 0 else "#f87171"
+        _arrow       = "&#9650;" if _chg >= 0 else "&#9660;"
+        _price_html  = (
+            f'<div style="display:flex;align-items:baseline;gap:16px;margin-bottom:20px;' +
+            f'padding:14px 20px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);' +
+            f'border-radius:12px;flex-wrap:wrap;">' +
+            f'<span style="font-family:JetBrains Mono,monospace;font-size:22px;font-weight:700;color:#e2e8f0;">{ticker}</span>' +
+            f'<span style="font-family:JetBrains Mono,monospace;font-size:28px;font-weight:700;color:{_price_color};">' +
+            f'{_currency} {_live_price:,.2f}</span>' +
+            f'<span style="font-family:JetBrains Mono,monospace;font-size:15px;color:{_price_color};">' +
+            f'{_arrow} {abs(_chg):,.2f} ({abs(_chg_pct):.2f}%)</span>' +
+            f'<span style="font-family:JetBrains Mono,monospace;font-size:11px;color:#334155;margin-left:auto;">' +
+            f'LIVE &nbsp;·&nbsp; prev close {_currency} {_prev_close:,.2f}</span>' +
+            f'</div>'
+        )
+    except Exception:
+        _price_html = (
+            f'<div style="padding:14px 20px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);' +
+            f'border-radius:12px;margin-bottom:20px;font-family:JetBrains Mono,monospace;' +
+            f'font-size:22px;font-weight:700;color:#e2e8f0;">{ticker} ' +
+            f'<span style="font-size:12px;color:#475569;">· price unavailable</span></div>'
+        )
+    st.markdown(_price_html, unsafe_allow_html=True)
+
     c1, c2, c3, c4 = st.columns(4)
     with c1:
         st.markdown(f"""
