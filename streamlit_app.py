@@ -642,34 +642,6 @@ try:
         f'★★★ p&lt;0.01 · ★★ p&lt;0.05 · ★ p&lt;0.10 · n.s. not significant'
         f' | HAC Newey-West SE, maxlags={hac_lags}</div>', unsafe_allow_html=True)
 
-    st.markdown('<div class="section-title">Interpretation</div>', unsafe_allow_html=True)
-    sig_factors   = [FACTOR_NAMES.get(f, f) for f in available if model.pvalues[f] < 0.05]
-    insig_factors = [FACTOR_NAMES.get(f, f) for f in available if model.pvalues[f] >= 0.05]
-    alpha_sig    = "statistically significant" if alpha_p < 0.05 else "not statistically significant"
-    alpha_interp = "outperforms" if alpha_ann > 0 else "underperforms"
-
-    interp = f"""<div class="interpret-box">
-    <b>{ticker}</b> — {y_label}<br><br>
-    The model explains <b>{r2:.1%}</b> of return variation (Adj R² = {r2_adj:.1%}) over <b>{n}</b> monthly observations.<br><br>
-    The annualized alpha of <b>{alpha_ann:+.2%}</b> is {alpha_sig} (t = {alpha_t:.3f}, p = {alpha_p:.4f}),
-    suggesting the stock <b>{alpha_interp}</b> what factor exposures alone would predict.<br><br>"""
-    if sig_factors:
-        interp += f"<b>Significant factors (p&lt;0.05):</b> {', '.join(sig_factors)}.<br>"
-    if insig_factors:
-        interp += f"<b>Insignificant factors:</b> {', '.join(insig_factors)}.<br>"
-    mkt_b = model.params.get("Mkt-RF", None)
-    if mkt_b is not None:
-        interp += f"<br>Market beta of <b>{mkt_b:.4f}</b> implies the stock is {'more' if mkt_b > 1 else 'less'} volatile than the market."
-    if dw_status != "pass":
-        interp += f"<br><br>⚠ Durbin-Watson ({dw:.3f}) suggests possible autocorrelation. HAC correction applied."
-    if bp_status != "pass":
-        interp += f"<br>⚠ Breusch-Pagan (p={bp_p:.4f}) indicates heteroscedasticity. HAC robust SEs account for this."
-    if jb_status != "pass":
-        interp += f"<br>⚠ Jarque-Bera (p={jb_p:.4f}) suggests non-normal residuals."
-    if cn_status != "pass":
-        interp += f"<br>⚠ Condition number ({cond:.1f}) indicates {'moderate' if cn_status=='warn' else 'severe'} multicollinearity."
-    interp += "</div>"
-    st.markdown(interp, unsafe_allow_html=True)
 
     # ─────────────────────────────────────────────
     #  AI MACRO INSIGHT — Enhanced Section
@@ -682,16 +654,24 @@ try:
         '</div>', unsafe_allow_html=True)
 
     if st.button("✦  Generate Deep Factor Intelligence", use_container_width=False):
-        with st.spinner("Analyzing each factor against current macro environment..."):
+        with st.spinner(f"Analyzing {len(available)} factors individually against mid-2025 macro environment..."):
             insight, error = get_ai_insight(
                 ticker, model, available, alpha_ann, alpha_p, r2, n, start_date, end_date
             )
         st.session_state["ai_insight"] = insight
         st.session_state["ai_error"]   = error
 
-    if st.session_state["ai_error"]:
+    # Fatal error (no insight at all)
+    if st.session_state["ai_error"] and not st.session_state["ai_insight"]:
         st.markdown(f'<div class="error-box">AI Error: {st.session_state["ai_error"]}</div>', unsafe_allow_html=True)
-    elif st.session_state["ai_insight"]:
+    # Partial errors — show warning but still render cards
+    elif st.session_state["ai_error"] and st.session_state["ai_insight"]:
+        st.markdown(
+            f'<div class="error-box" style="border-color:rgba(251,191,36,0.3);color:#fbbf24;">' +
+            f'⚠ Some factors had errors (showing placeholders): {st.session_state["ai_error"]}</div>',
+            unsafe_allow_html=True)
+
+    if st.session_state["ai_insight"]:
         render_ai_insight(ticker, st.session_state["ai_insight"])
 
     # ─────────────────────────────────────────────
