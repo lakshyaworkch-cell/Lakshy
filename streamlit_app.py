@@ -884,20 +884,14 @@ with st.sidebar:
             st.session_state["ai_error"]   = None
             st.session_state["port_run"]   = False
     else:
+        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
         if st.button("▶  RUN PORTFOLIO ATTRIBUTION", use_container_width=True):
-            # Parse portfolio input
-            lines = [l.strip() for l in port_input_raw.strip().split("\n") if l.strip()]
-            parsed = []
-            for line in lines:
-                parts = line.split()
-                if len(parts) >= 2:
-                    try:
-                        parsed.append((parts[0].upper(), float(parts[1])))
-                    except ValueError:
-                        pass
-                elif len(parts) == 1:
-                    parsed.append((parts[0].upper(), 1.0))
-
+            holdings = st.session_state.get("port_holdings", [])
+            parsed = [
+                (h["ticker"], h["amount"])
+                for h in holdings
+                if h["ticker"] and h["amount"] > 0
+            ]
             if parsed:
                 total_w = sum(w for _, w in parsed)
                 normalized = {tkr: w / total_w for tkr, w in parsed}
