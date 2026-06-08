@@ -1490,7 +1490,4 @@ try:
 except Exception as e:
     st.markdown(f'<div class="error-box">Error: {str(e)}</div>', unsafe_allow_html=True)
     raise e
-Done
 
-You are out of free messages until 12:50 AM
-Upgrade
