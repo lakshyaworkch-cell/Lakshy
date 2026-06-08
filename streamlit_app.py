@@ -649,12 +649,17 @@ try:
     st.markdown('<div class="section-title">AI Macro Intelligence</div>', unsafe_allow_html=True)
     st.markdown(
         '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#475569;margin-bottom:12px;">'
-        'Per-factor deep analysis · Current macro context · Forward forecast · Key risks'
-        '<br><span style="color:#334155;">Powered by Groq · Llama 3.3 70b · ~3× more detail than standard analysis</span>'
+        'Auto-generated · Per-factor deep analysis · Current macro context · Forward forecast · Key risks'
+        '<br><span style="color:#334155;">Powered by Groq · Llama 3.3 70b · Runs automatically on each regression</span>'
         '</div>', unsafe_allow_html=True)
 
-    if st.button("✦  Generate Deep Factor Intelligence", use_container_width=False):
-        with st.spinner(f"Analyzing {len(available)} factors individually against mid-2025 macro environment..."):
+    # Auto-generate AI insight whenever a fresh regression is run
+    _ai_key = f"{ticker}_{start_date}_{end_date}_{hac_lags}_{annualize}"
+    if st.session_state.get("ai_run_key") != _ai_key:
+        st.session_state["ai_run_key"] = _ai_key
+        st.session_state["ai_insight"] = None
+        st.session_state["ai_error"]   = None
+        with st.spinner(f"Analyzing {len(available)} factors against mid-2025 macro environment..."):
             insight, error = get_ai_insight(
                 ticker, model, available, alpha_ann, alpha_p, r2, n, start_date, end_date
             )
