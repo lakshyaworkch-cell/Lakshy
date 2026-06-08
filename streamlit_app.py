@@ -5,6 +5,7 @@ import yfinance as yf
 import statsmodels.api as sm
 from scipy import stats
 from groq import Groq
+from datetime import date
 import re
 import json
 import warnings
@@ -156,6 +157,11 @@ h1, h2, h3 { font-family: 'JetBrains Mono', monospace !important; letter-spacing
 </style>
 """, unsafe_allow_html=True)
 
+
+# ─────────────────────────────────────────────
+#  Helpers
+# ─────────────────────────────────────────────
+
 def sig_badge(p):
     if p < 0.001: return '<span class="sig-badge badge-001">★★★</span>'
     elif p < 0.01: return '<span class="sig-badge badge-01">★★★</span>'
@@ -184,6 +190,7 @@ def fmt_tstat(t):
     color = "#34d399" if abs(t) > 1.96 else "#475569"
     return f'<span style="color:{color}">{t:+.3f}</span>'
 
+
 FACTOR_NAMES = {
     "const":  "Alpha (α)",
     "Mkt-RF": "Market (β)",
@@ -203,6 +210,7 @@ FACTOR_DESCRIPTIONS = {
     "Mom":    "Momentum factor (past winners vs past losers)",
 }
 
+
 @st.cache_data(show_spinner=False)
 def load_factors():
     ff = pd.read_csv(FF_URL, index_col=0)
@@ -215,9 +223,54 @@ def load_factors():
 
 
 # ─────────────────────────────────────────────
-#  AI: one small focused call per factor + summary
-#  Uses response_format json_object to guarantee
-#  valid JSON and avoids truncation/escape issues
+#  Live price: 3-layer fallback
+# ─────────────────────────────────────────────
+
+def get_live_price(ticker_symbol):
+    """
+    Returns (live_price, prev_close, currency) or raises Exception.
+    Tries fast_info → history("5d") → info dict.
+    """
+    t = yf.Ticker(ticker_symbol)
+
+    # Layer 1: fast_info (attribute names differ across yfinance versions)
+    try:
+        fi = t.fast_info
+        lp = getattr(fi, "last_price", None) or getattr(fi, "lastPrice", None)
+        pc = getattr(fi, "previous_close", None) or getattr(fi, "previousClose", None)
+        cy = getattr(fi, "currency", "USD") or "USD"
+        if lp and pc:
+            return float(lp), float(pc), cy
+    except Exception:
+        pass
+
+    # Layer 2: recent history
+    try:
+        hist = t.history(period="5d")
+        if not hist.empty and len(hist) >= 2:
+            return float(hist["Close"].iloc[-1]), float(hist["Close"].iloc[-2]), "USD"
+        elif not hist.empty:
+            p = float(hist["Close"].iloc[-1])
+            return p, p, "USD"
+    except Exception:
+        pass
+
+    # Layer 3: info dict
+    try:
+        info = t.info
+        lp = info.get("currentPrice") or info.get("regularMarketPrice")
+        pc = info.get("previousClose") or info.get("regularMarketPreviousClose")
+        cy = info.get("currency", "USD")
+        if lp and pc:
+            return float(lp), float(pc), cy
+    except Exception:
+        pass
+
+    raise ValueError("All price-fetch layers failed")
+
+
+# ─────────────────────────────────────────────
+#  AI helpers — date-aware prompts
 # ─────────────────────────────────────────────
 
 def _call_groq(client, system_msg, user_msg, max_tokens=600):
@@ -230,23 +283,24 @@ def _call_groq(client, system_msg, user_msg, max_tokens=600):
         ],
         max_tokens=max_tokens,
         temperature=0.3,
-        response_format={"type": "json_object"},   # ← guaranteed valid JSON
+        response_format={"type": "json_object"},
     )
     raw = response.choices[0].message.content.strip()
-    # Belt-and-suspenders: strip fences in case model ignores json_object mode
     raw = re.sub(r"^```json\s*", "", raw)
     raw = re.sub(r"\s*```$",     "", raw)
     return json.loads(raw)
 
 
 def _factor_prompt(ticker, factor_code, factor_name, beta, p_value, significant, description):
+    today = date.today().strftime("%B %d, %Y")   # e.g. "June 08, 2026"
+
     system = (
         "You are a senior quantitative analyst. "
         "You MUST respond with a single valid JSON object and nothing else. "
         "No markdown, no prose outside the JSON."
     )
     sig_word = "statistically significant" if significant else "not statistically significant"
-    user = f"""Analyze the {factor_name} ({factor_code}) loading for stock {ticker}.
+    user = f"""Today's date is {today}. Analyze the {factor_name} ({factor_code}) loading for stock {ticker}.
 
 Factor details:
 - Beta: {beta:+.4f}
@@ -261,14 +315,16 @@ Return EXACTLY this JSON (fill in every field, 1-3 sentences each, no line break
   "significant": {"true" if significant else "false"},
   "outlook": "<bullish|bearish|neutral|mixed>",
   "what_it_means": "<What this beta magnitude reveals about {ticker} behaviour. Be specific.>",
-  "current_macro_context": "<Mid-2025 macro conditions relevant to this factor: Fed policy, inflation, AI capex cycle, tariffs, credit spreads, sector rotation. Be concrete.>",
-  "forward_forecast": "<Near-term tailwind or headwind for {ticker} from this factor given current macro. State direction and reason.>",
+  "current_macro_context": "<As of {today}: current Fed policy, inflation, AI capex, tariffs, credit spreads, sector rotation relevant to this factor. Be concrete and current.>",
+  "forward_forecast": "<Near-term tailwind or headwind for {ticker} from this factor given the current macro environment as of {today}. State direction and reason.>",
   "key_risks": "<One main risk that could flip this outlook.>"
 }}"""
     return system, user
 
 
 def _summary_prompt(ticker, alpha_ann, alpha_p, r2, factor_summaries):
+    today = date.today().strftime("%B %d, %Y")
+
     system = (
         "You are a senior portfolio strategist. "
         "Respond with a single valid JSON object only. No markdown."
@@ -278,7 +334,8 @@ def _summary_prompt(ticker, alpha_ann, alpha_p, r2, factor_summaries):
         f"- {f['name']}: beta={f['beta']:+.4f}, outlook={f.get('outlook','?')}"
         for f in factor_summaries
     )
-    user = f"""Stock: {ticker}
+    user = f"""Today's date is {today}.
+Stock: {ticker}
 Annualized alpha: {alpha_ann:+.2%} (p={alpha_p:.4f}, {sig_word})
 R²: {r2:.4f}
 Factor outlooks:
@@ -286,8 +343,8 @@ Factor outlooks:
 
 Return EXACTLY this JSON (2-4 sentences per field, no line breaks inside strings):
 {{
-  "alpha_analysis": "<Is this alpha persistent or episodic? What drives it for {ticker} — moat, pricing power, earnings quality? What threatens persistence?>",
-  "portfolio_verdict": "<Overall: is {ticker} well-positioned or vulnerable in mid-2025 macro regime? Best-case and worst-case macro scenario. Concise risk-adjusted conclusion.>"
+  "alpha_analysis": "<Is this alpha persistent or episodic? What drives it for {ticker} — moat, pricing power, earnings quality? What threatens persistence? Use current market context as of {today}.>",
+  "portfolio_verdict": "<Overall: is {ticker} well-positioned or vulnerable in the current macro regime as of {today}? Best-case and worst-case macro scenario. Concise risk-adjusted conclusion.>"
 }}"""
     return system, user
 
@@ -302,7 +359,6 @@ def get_ai_insight(ticker, model_result, available, alpha_ann, alpha_p, r2, n, s
         factors_out = []
         errors = []
 
-        # ── One call per factor (small, never truncated) ──
         for f in available:
             beta = float(model_result.params[f])
             pval = float(model_result.pvalues[f])
@@ -313,12 +369,10 @@ def get_ai_insight(ticker, model_result, available, alpha_ann, alpha_p, r2, n, s
             )
             try:
                 result = _call_groq(client, sys_msg, usr_msg, max_tokens=550)
-                # Ensure numeric beta comes from our data, not the model
                 result["beta"] = beta
                 result["significant"] = sig
                 factors_out.append(result)
             except Exception as e:
-                # Gracefully degrade: include a placeholder so rendering still works
                 factors_out.append({
                     "code": f, "name": FACTOR_NAMES.get(f, f),
                     "beta": beta, "significant": sig, "outlook": "neutral",
@@ -328,7 +382,6 @@ def get_ai_insight(ticker, model_result, available, alpha_ann, alpha_p, r2, n, s
                 })
                 errors.append(f"{f}: {e}")
 
-        # ── Single summary call ──
         sys_msg, usr_msg = _summary_prompt(ticker, alpha_ann, alpha_p, r2, factors_out)
         try:
             summary = _call_groq(client, sys_msg, usr_msg, max_tokens=500)
@@ -348,42 +401,42 @@ def get_ai_insight(ticker, model_result, available, alpha_ann, alpha_p, r2, n, s
 
 
 # ─────────────────────────────────────────────
-#  NEW: Render the enhanced AI output as cards
+#  Render AI output as rich factor cards
 # ─────────────────────────────────────────────
 
 def render_ai_insight(ticker, insight_data):
-    """Render the structured JSON insight as rich factor cards."""
     factors = insight_data.get("factors", [])
     alpha_analysis = insight_data.get("alpha_analysis", "")
     portfolio_verdict = insight_data.get("portfolio_verdict", "")
 
     def bold(text):
-        return re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
+        return re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', str(text))
 
+    today_str = date.today().strftime("%B %d, %Y")
     st.markdown(
         f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:2px;'
-        f'text-transform:uppercase;color:#7c3aed;margin-bottom:16px;">✦ AI Factor Intelligence · {ticker}</div>',
+        f'text-transform:uppercase;color:#7c3aed;margin-bottom:16px;">'
+        f'✦ AI Factor Intelligence · {ticker} · As of {today_str}</div>',
         unsafe_allow_html=True,
     )
 
     for fac in factors:
-        code = fac.get("code", "")
-        name = fac.get("name", code)
-        beta = fac.get("beta", 0)
-        sig  = fac.get("significant", False)
+        code    = fac.get("code", "")
+        name    = fac.get("name", code)
+        beta    = fac.get("beta", 0)
+        sig     = fac.get("significant", False)
         outlook = fac.get("outlook", "neutral").lower()
 
-        card_cls = "positive" if beta > 0 else "negative"
-        beta_cls = "pos" if beta > 0 else "neg"
-        outlook_cls = {"bullish": "bullish", "bearish": "bearish", "neutral": "neutral", "mixed": "mixed"}.get(outlook, "neutral")
+        card_cls   = "positive" if beta > 0 else "negative"
+        beta_cls   = "pos" if beta > 0 else "neg"
+        outlook_cls  = {"bullish": "bullish", "bearish": "bearish", "neutral": "neutral", "mixed": "mixed"}.get(outlook, "neutral")
         outlook_icon = {"bullish": "↑ BULLISH", "bearish": "↓ BEARISH", "neutral": "→ NEUTRAL", "mixed": "⇅ MIXED"}.get(outlook, "→ NEUTRAL")
-
         sig_label = "SIGNIFICANT" if sig else "INSIGNIFICANT"
 
-        what      = bold(fac.get("what_it_means", ""))
-        macro     = bold(fac.get("current_macro_context", ""))
-        forecast  = bold(fac.get("forward_forecast", ""))
-        risks     = bold(fac.get("key_risks", ""))
+        what     = bold(fac.get("what_it_means", ""))
+        macro    = bold(fac.get("current_macro_context", ""))
+        forecast = bold(fac.get("forward_forecast", ""))
+        risks    = bold(fac.get("key_risks", ""))
 
         st.markdown(f"""
         <div class="factor-insight-card {card_cls}">
@@ -434,7 +487,7 @@ def render_ai_insight(ticker, insight_data):
 
 
 # ════════════════════════════════════════════
-#  MAIN UI — unchanged from original below
+#  MAIN UI
 # ════════════════════════════════════════════
 
 st.markdown("# Factor Regression")
@@ -586,38 +639,36 @@ try:
         cls = {"pass": "diag-pass", "fail": "diag-fail", "warn": "diag-warn"}.get(status, "diag-pass")
         return f'<div class="diag-item"><div class="diag-name">{name}</div><div class="diag-val {cls}">{val}</div><div class="diag-sub">{sub}</div></div>'
 
-    # ── Live price banner ──
+    # ── Live price banner — 3-layer fallback ──
     try:
-        _info        = yf.Ticker(ticker).fast_info
-        _live_price  = _info.lastPrice
-        _prev_close  = _info.previousClose
-        _chg         = _live_price - _prev_close
-        _chg_pct     = (_chg / _prev_close) * 100
-        _currency    = getattr(_info, "currency", "USD")
+        _live_price, _prev_close, _currency = get_live_price(ticker)
+        _chg     = _live_price - _prev_close
+        _chg_pct = (_chg / _prev_close) * 100
         _price_color = "#34d399" if _chg >= 0 else "#f87171"
         _arrow       = "&#9650;" if _chg >= 0 else "&#9660;"
         _price_html  = (
-            f'<div style="display:flex;align-items:baseline;gap:16px;margin-bottom:20px;' +
-            f'padding:14px 20px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);' +
-            f'border-radius:12px;flex-wrap:wrap;">' +
-            f'<span style="font-family:JetBrains Mono,monospace;font-size:22px;font-weight:700;color:#e2e8f0;">{ticker}</span>' +
-            f'<span style="font-family:JetBrains Mono,monospace;font-size:28px;font-weight:700;color:{_price_color};">' +
-            f'{_currency} {_live_price:,.2f}</span>' +
-            f'<span style="font-family:JetBrains Mono,monospace;font-size:15px;color:{_price_color};">' +
-            f'{_arrow} {abs(_chg):,.2f} ({abs(_chg_pct):.2f}%)</span>' +
-            f'<span style="font-family:JetBrains Mono,monospace;font-size:11px;color:#334155;margin-left:auto;">' +
-            f'LIVE &nbsp;·&nbsp; prev close {_currency} {_prev_close:,.2f}</span>' +
+            f'<div style="display:flex;align-items:baseline;gap:16px;margin-bottom:20px;'
+            f'padding:14px 20px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);'
+            f'border-radius:12px;flex-wrap:wrap;">'
+            f'<span style="font-family:JetBrains Mono,monospace;font-size:22px;font-weight:700;color:#e2e8f0;">{ticker}</span>'
+            f'<span style="font-family:JetBrains Mono,monospace;font-size:28px;font-weight:700;color:{_price_color};">'
+            f'{_currency} {_live_price:,.2f}</span>'
+            f'<span style="font-family:JetBrains Mono,monospace;font-size:15px;color:{_price_color};">'
+            f'{_arrow} {abs(_chg):,.2f} ({abs(_chg_pct):.2f}%)</span>'
+            f'<span style="font-family:JetBrains Mono,monospace;font-size:11px;color:#334155;margin-left:auto;">'
+            f'LIVE &nbsp;·&nbsp; prev close {_currency} {_prev_close:,.2f}</span>'
             f'</div>'
         )
     except Exception:
         _price_html = (
-            f'<div style="padding:14px 20px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);' +
-            f'border-radius:12px;margin-bottom:20px;font-family:JetBrains Mono,monospace;' +
-            f'font-size:22px;font-weight:700;color:#e2e8f0;">{ticker} ' +
+            f'<div style="padding:14px 20px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);'
+            f'border-radius:12px;margin-bottom:20px;font-family:JetBrains Mono,monospace;'
+            f'font-size:22px;font-weight:700;color:#e2e8f0;">{ticker} '
             f'<span style="font-size:12px;color:#475569;">· price unavailable</span></div>'
         )
     st.markdown(_price_html, unsafe_allow_html=True)
 
+    # ── Key metrics ──
     c1, c2, c3, c4 = st.columns(4)
     with c1:
         st.markdown(f"""
@@ -650,6 +701,7 @@ try:
           <div class="metric-sub">p={f_p:.4f} · N={n}</div>
         </div>""", unsafe_allow_html=True)
 
+    # ── Factor loadings table ──
     st.markdown('<div class="section-title">Factor Loadings</div>', unsafe_allow_html=True)
     st.markdown("""
     <div class="factor-row header">
@@ -676,43 +728,42 @@ try:
 
 
     # ─────────────────────────────────────────────
-    #  AI MACRO INSIGHT — Enhanced Section
+    #  AI MACRO INTELLIGENCE — date-aware
     # ─────────────────────────────────────────────
     st.markdown('<div class="section-title">AI Macro Intelligence</div>', unsafe_allow_html=True)
+    today_display = date.today().strftime("%B %d, %Y")
     st.markdown(
-        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#475569;margin-bottom:12px;">'
-        'Auto-generated · Per-factor deep analysis · Current macro context · Forward forecast · Key risks'
-        '<br><span style="color:#334155;">Powered by Groq · Llama 3.3 70b · Runs automatically on each regression</span>'
-        '</div>', unsafe_allow_html=True)
+        f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#475569;margin-bottom:12px;">'
+        f'Auto-generated · Per-factor deep analysis · Current macro context as of {today_display} · Forward forecast · Key risks'
+        f'<br><span style="color:#334155;">Powered by Groq · Llama 3.3 70b · Runs automatically on each regression</span>'
+        f'</div>', unsafe_allow_html=True)
 
-    # Auto-generate AI insight whenever a fresh regression is run
     _ai_key = f"{ticker}_{start_date}_{end_date}_{hac_lags}_{annualize}"
     if st.session_state.get("ai_run_key") != _ai_key:
         st.session_state["ai_run_key"] = _ai_key
         st.session_state["ai_insight"] = None
         st.session_state["ai_error"]   = None
-        with st.spinner(f"Analyzing {len(available)} factors against mid-2025 macro environment..."):
+        with st.spinner(f"Analyzing {len(available)} factors against current macro environment ({today_display})..."):
             insight, error = get_ai_insight(
                 ticker, model, available, alpha_ann, alpha_p, r2, n, start_date, end_date
             )
         st.session_state["ai_insight"] = insight
         st.session_state["ai_error"]   = error
 
-    # Fatal error (no insight at all)
     if st.session_state["ai_error"] and not st.session_state["ai_insight"]:
         st.markdown(f'<div class="error-box">AI Error: {st.session_state["ai_error"]}</div>', unsafe_allow_html=True)
-    # Partial errors — show warning but still render cards
     elif st.session_state["ai_error"] and st.session_state["ai_insight"]:
         st.markdown(
-            f'<div class="error-box" style="border-color:rgba(251,191,36,0.3);color:#fbbf24;">' +
+            f'<div class="error-box" style="border-color:rgba(251,191,36,0.3);color:#fbbf24;">'
             f'⚠ Some factors had errors (showing placeholders): {st.session_state["ai_error"]}</div>',
             unsafe_allow_html=True)
 
     if st.session_state["ai_insight"]:
         render_ai_insight(ticker, st.session_state["ai_insight"])
 
+
     # ─────────────────────────────────────────────
-    #  TABS — unchanged
+    #  TABS
     # ─────────────────────────────────────────────
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "95% Confidence Intervals",
@@ -817,6 +868,7 @@ try:
     with st.expander("Full OLS Summary (statsmodels)"):
         st.text(model.summary().as_text())
 
+    # ── Export ──
     st.markdown('<div class="section-title">Export Results</div>', unsafe_allow_html=True)
     export_df = pd.DataFrame({
         "Factor":   [FACTOR_NAMES.get(n, n) for n in model.params.index],
