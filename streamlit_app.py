@@ -16,7 +16,6 @@ FF_URL = "https://raw.githubusercontent.com/lakshyaworkch-cell/Lakshy/main/F-F_R
 
 st.set_page_config(page_title="Factor Regression", page_icon="📈", layout="wide")
 
-# ── Background image (embedded as base64 so no external file needed) ──────────
 def get_bg_base64():
     try:
         with open("ranger-4df6c1b6.png", "rb") as f:
@@ -91,20 +90,6 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
 .diag-sub  {{ font-size: 10px; color: #1e293b; font-family: 'JetBrains Mono', monospace; margin-top: 3px; }}
 .interpret-box {{ background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 20px 24px; font-size: 13px; line-height: 1.8; color: #94a3b8; }}
 .interpret-box b {{ color: #e2e8f0; }}
-.ai-box {{
-    background: rgba(167,139,250,0.04);
-    border: 1px solid rgba(167,139,250,0.15);
-    border-radius: 12px;
-    padding: 24px 28px;
-    font-size: 15px;
-    line-height: 1.9;
-    color: #c4b5fd;
-}}
-.ai-box b {{ color: #e2e8f0; }}
-.ai-box h4 {{
-    font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 2px;
-    text-transform: uppercase; color: #7c3aed; margin-bottom: 16px;
-}}
 .factor-insight-card {{
     background: rgba(255,255,255,0.025);
     border: 1px solid rgba(255,255,255,0.07);
@@ -117,23 +102,12 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
 .factor-insight-card.positive {{ border-left: 3px solid #34d399; }}
 .factor-insight-card.negative {{ border-left: 3px solid #f87171; }}
 .factor-insight-card.neutral  {{ border-left: 3px solid #6b7280; }}
-.fi-header {{
-    display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
-}}
-.fi-name {{
-    font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600;
-    color: #e2e8f0; letter-spacing: 1px;
-}}
-.fi-beta {{
-    font-family: 'JetBrains Mono', monospace; font-size: 11px;
-    padding: 2px 8px; border-radius: 4px;
-}}
+.fi-header {{ display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }}
+.fi-name {{ font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; color: #e2e8f0; letter-spacing: 1px; }}
+.fi-beta {{ font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 2px 8px; border-radius: 4px; }}
 .fi-beta.pos {{ background: rgba(52,211,153,0.12); color: #34d399; }}
 .fi-beta.neg {{ background: rgba(248,113,113,0.12); color: #f87171; }}
-.fi-sig-label {{
-    font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1.5px;
-    color: #475569; text-transform: uppercase;
-}}
+.fi-sig-label {{ font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1.5px; color: #475569; text-transform: uppercase; }}
 .fi-outlook {{
     display: inline-block; padding: 2px 8px; border-radius: 4px;
     font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 600;
@@ -149,9 +123,7 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
     border-top: 1px solid rgba(255,255,255,0.05);
     font-size: 13px; color: #475569; font-family: 'JetBrains Mono', monospace;
 }}
-.fi-news-label {{
-    font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: #334155; margin-bottom: 4px;
-}}
+.fi-news-label {{ font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: #334155; margin-bottom: 4px; }}
 .ai-summary-box {{
     background: rgba(96,165,250,0.04);
     border: 1px solid rgba(96,165,250,0.12);
@@ -163,63 +135,32 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
     line-height: 1.8;
 }}
 .ai-summary-box b {{ color: #e2e8f0; }}
+.factor-selector {{
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+}}
 .stTextInput > div > div > input {{ background: rgba(255,255,255,0.04) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #e2e8f0 !important; font-family: 'JetBrains Mono', monospace !important; border-radius: 8px !important; }}
 .stTextInput > div > div > input:focus {{ border-color: rgba(96,165,250,0.4) !important; box-shadow: 0 0 0 3px rgba(96,165,250,0.08) !important; }}
 .stButton > button {{ background: rgba(255,255,255,0.06) !important; color: #e2e8f0 !important; font-family: 'JetBrains Mono', monospace !important; font-weight: 500 !important; letter-spacing: 1px !important; border: 1px solid rgba(255,255,255,0.12) !important; border-radius: 8px !important; padding: 10px 28px !important; transition: all 0.2s !important; }}
 .stButton > button:hover {{ background: rgba(52,211,153,0.1) !important; border-color: rgba(52,211,153,0.3) !important; color: #34d399 !important; }}
 .error-box {{ background: rgba(248,113,113,0.06); border: 1px solid rgba(248,113,113,0.2); border-radius: 8px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #f87171; }}
-
-/* ── Portfolio Attribution Styles ── */
-.port-header {{
-    font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 2.5px;
-    text-transform: uppercase; color: #334155; border-bottom: 1px solid rgba(255,255,255,0.06);
-    padding-bottom: 8px; margin: 28px 0 16px 0;
-}}
-.port-stock-card {{
-    background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 10px; padding: 14px 18px; margin-bottom: 10px;
-}}
-.port-stock-ticker {{
-    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700;
-    color: #e2e8f0; letter-spacing: 1px;
-}}
-.port-weight-badge {{
-    display: inline-block; padding: 2px 8px; border-radius: 4px;
-    font-family: 'JetBrains Mono', monospace; font-size: 10px;
-    background: rgba(96,165,250,0.1); color: #60a5fa; margin-left: 8px;
-}}
-.port-factor-bar-container {{
-    display: flex; align-items: center; gap: 10px; margin: 3px 0;
-    font-family: 'JetBrains Mono', monospace; font-size: 11px;
-}}
-.port-factor-label {{ color: #475569; width: 110px; flex-shrink: 0; }}
-.port-bar-wrap {{
-    flex: 1; height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden;
-}}
-.port-bar-pos {{ height: 100%; background: #34d399; border-radius: 4px; }}
-.port-bar-neg {{ height: 100%; background: #f87171; border-radius: 4px; }}
-.port-bar-val {{ width: 60px; text-align: right; }}
-.port-summary-card {{
-    background: linear-gradient(135deg, rgba(96,165,250,0.06), rgba(167,139,250,0.06));
-    border: 1px solid rgba(96,165,250,0.15); border-radius: 12px; padding: 20px 24px;
-    margin-bottom: 16px;
-}}
-.port-attribution-grid {{
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 12px;
-}}
-.port-attr-cell {{
-    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 8px; padding: 12px 14px;
-}}
+.info-box {{ background: rgba(96,165,250,0.06); border: 1px solid rgba(96,165,250,0.2); border-radius: 8px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #60a5fa; }}
+/* Portfolio Attribution Styles */
+.port-header {{ font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; color: #334155; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 8px; margin: 28px 0 16px 0; }}
+.port-stock-card {{ background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 14px 18px; margin-bottom: 10px; }}
+.port-stock-ticker {{ font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: #e2e8f0; letter-spacing: 1px; }}
+.port-weight-badge {{ display: inline-block; padding: 2px 8px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 10px; background: rgba(96,165,250,0.1); color: #60a5fa; margin-left: 8px; }}
+.port-summary-card {{ background: linear-gradient(135deg, rgba(96,165,250,0.06), rgba(167,139,250,0.06)); border: 1px solid rgba(96,165,250,0.15); border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; }}
+.port-attribution-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 12px; }}
+.port-attr-cell {{ background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 12px 14px; }}
 .port-attr-factor {{ font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #475569; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }}
 .port-attr-beta {{ font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 600; }}
 .port-attr-beta.pos {{ color: #34d399; }}
 .port-attr-beta.neg {{ color: #f87171; }}
-.port-compare-row {{
-    display: grid; gap: 8px; align-items: center; padding: 8px 12px;
-    border-radius: 8px; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);
-}}
+.port-compare-row {{ display: grid; gap: 8px; align-items: center; padding: 8px 12px; border-radius: 8px; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; font-size: 11px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -227,6 +168,8 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
 # ─────────────────────────────────────────────
 #  Helpers
 # ─────────────────────────────────────────────
+
+ALL_FACTORS = ["Mkt-RF", "SMB", "HML", "RMW", "CMA", "Mom"]
 
 def sig_badge(p):
     if p < 0.001: return '<span class="sig-badge badge-001">★★★</span>'
@@ -352,34 +295,34 @@ def _get_stock_context(ticker):
     try:
         t_obj = yf.Ticker(ticker)
         info = t_obj.info
-        ctx["current_price"]   = info.get("currentPrice") or info.get("regularMarketPrice")
-        ctx["market_cap"]      = info.get("marketCap")
-        ctx["sector"]          = info.get("sector", "Unknown")
-        ctx["industry"]        = info.get("industry", "Unknown")
-        ctx["pe_ratio"]        = info.get("trailingPE")
-        ctx["pb_ratio"]        = info.get("priceToBook")
-        ctx["ps_ratio"]        = info.get("priceToSalesTrailing12Months")
-        ctx["revenue_growth"]  = info.get("revenueGrowth")
-        ctx["earnings_growth"] = info.get("earningsGrowth")
-        ctx["profit_margin"]   = info.get("profitMargins")
-        ctx["gross_margin"]    = info.get("grossMargins")
-        ctx["roe"]             = info.get("returnOnEquity")
-        ctx["debt_to_equity"]  = info.get("debtToEquity")
-        ctx["free_cashflow"]   = info.get("freeCashflow")
-        ctx["dividend_yield"]  = info.get("dividendYield")
-        ctx["beta_1y"]         = info.get("beta")
-        ctx["52w_high"]        = info.get("fiftyTwoWeekHigh")
-        ctx["52w_low"]         = info.get("fiftyTwoWeekLow")
-        ctx["short_ratio"]     = info.get("shortRatio")
-        ctx["short_pct_float"] = info.get("shortPercentOfFloat")
-        ctx["analyst_target"]  = info.get("targetMeanPrice")
-        ctx["rec_mean"]        = info.get("recommendationMean")
-        ctx["num_analysts"]    = info.get("numberOfAnalystOpinions")
-        ctx["forward_pe"]      = info.get("forwardPE")
-        ctx["peg_ratio"]       = info.get("pegRatio")
+        ctx["current_price"]        = info.get("currentPrice") or info.get("regularMarketPrice")
+        ctx["market_cap"]           = info.get("marketCap")
+        ctx["sector"]               = info.get("sector", "Unknown")
+        ctx["industry"]             = info.get("industry", "Unknown")
+        ctx["pe_ratio"]             = info.get("trailingPE")
+        ctx["pb_ratio"]             = info.get("priceToBook")
+        ctx["ps_ratio"]             = info.get("priceToSalesTrailing12Months")
+        ctx["revenue_growth"]       = info.get("revenueGrowth")
+        ctx["earnings_growth"]      = info.get("earningsGrowth")
+        ctx["profit_margin"]        = info.get("profitMargins")
+        ctx["gross_margin"]         = info.get("grossMargins")
+        ctx["roe"]                  = info.get("returnOnEquity")
+        ctx["debt_to_equity"]       = info.get("debtToEquity")
+        ctx["free_cashflow"]        = info.get("freeCashflow")
+        ctx["dividend_yield"]       = info.get("dividendYield")
+        ctx["beta_1y"]              = info.get("beta")
+        ctx["52w_high"]             = info.get("fiftyTwoWeekHigh")
+        ctx["52w_low"]              = info.get("fiftyTwoWeekLow")
+        ctx["short_ratio"]          = info.get("shortRatio")
+        ctx["short_pct_float"]      = info.get("shortPercentOfFloat")
+        ctx["analyst_target"]       = info.get("targetMeanPrice")
+        ctx["rec_mean"]             = info.get("recommendationMean")
+        ctx["num_analysts"]         = info.get("numberOfAnalystOpinions")
+        ctx["forward_pe"]           = info.get("forwardPE")
+        ctx["peg_ratio"]            = info.get("pegRatio")
         ctx["enterprise_ev_ebitda"] = info.get("enterpriseToEbitda")
-        ctx["held_pct_inst"]   = info.get("heldPercentInstitutions")
-        ctx["company_name"]    = info.get("longName", ticker)
+        ctx["held_pct_inst"]        = info.get("heldPercentInstitutions")
+        ctx["company_name"]         = info.get("longName", ticker)
         hist = t_obj.history(period="ytd")
         if not hist.empty and len(hist) >= 2:
             ctx["ytd_return"] = (hist["Close"].iloc[-1] / hist["Close"].iloc[0]) - 1
@@ -439,13 +382,11 @@ def _factor_prompt(ticker, factor_code, factor_name, beta, p_value, significant,
         "Never write generic statements like 'interest rates affect valuations'. "
         "For macro context, use your knowledge of the current environment as of your training data "
         "(Fed funds rate, 10Y yield, CPI, VIX, sector performance). "
-        "Be concrete: cite actual figures (e.g. 'P/B of 3.2x vs HML threshold ~1x means growth tilt', "
-        "'net margin of 22% supports RMW', '52-week momentum of +47% drives high Mom beta'). "
+        "Be concrete: cite actual figures. "
         "You MUST respond with a single valid JSON object and nothing else. "
         "No markdown, no prose outside the JSON."
     )
     sig_word = "statistically significant (p<0.05)" if significant else f"not statistically significant (p={p_value:.3f})"
-
     user = f"""Today is {today}. Analyze the {factor_name} ({factor_code}) loading for {ticker}.
 
 === LIVE STOCK DATA ===
@@ -456,16 +397,6 @@ Factor: {factor_name} ({factor_code})
 Definition: {description}
 Beta: {beta:+.4f}
 P-value: {p_value:.4f} ({sig_word})
-
-=== YOUR TASK ===
-Use the live data above to give a SPECIFIC, NUMBER-DRIVEN analysis.
-Cross-reference the actual fundamentals with what this beta implies.
-For example:
-- For SMB: compare actual market cap to small/large-cap thresholds
-- For HML: compare actual P/B ratio to value thresholds
-- For RMW: use actual margin/ROE data to explain the loading
-- For Momentum: use actual 1M/3M/YTD returns to explain the loading
-- For Market: compare regression beta to Yahoo's 1Y beta
 
 Return EXACTLY this JSON (fill every field, no line breaks inside strings):
 {{
@@ -492,16 +423,14 @@ def _summary_prompt(ticker, alpha_ann, alpha_p, r2, factor_summaries, ctx_str):
     )
     sig_word = "statistically significant" if alpha_p < 0.05 else "not statistically significant"
     lines = "\n".join(
-        f"- {f['name']}: beta={f['beta']:+.4f}, outlook={f.get('outlook','?')}, "
-        f"sig={'yes' if f.get('significant') else 'no'}"
+        f"- {f['name']}: beta={f['beta']:+.4f}, outlook={f.get('outlook','?')}, sig=yes"
         for f in factor_summaries
     )
-
     user = f"""Today: {today}. Stock: {ticker}
 Annualized alpha: {alpha_ann:+.2%} (p={alpha_p:.4f}, {sig_word})
 R²: {r2:.4f}
-Factor loadings:
-{lines}
+Significant factor loadings:
+{lines if lines else "None — no factors were statistically significant."}
 
 === LIVE STOCK DATA ===
 {ctx_str}
@@ -518,38 +447,48 @@ Return EXACTLY this JSON (2-4 sentences per field, use specific numbers from the
 def get_ai_insight(ticker, model_result, available, alpha_ann, alpha_p, r2, n, start_date, end_date):
     api_key = st.secrets.get("GROQ_API_KEY", None)
     if not api_key:
-        return None, "No API key found. Add `GROQ_API_KEY` to your `.streamlit/secrets.toml` file."
+        return None, "No API key found. Add GROQ_API_KEY to your Streamlit secrets."
 
     ctx = _get_stock_context(ticker)
     ctx_str = _fmt_ctx(ctx)
 
     try:
         client = Groq(api_key=api_key)
+
+        # ── Only run AI on statistically significant factors (p < 0.05)
+        sig_factors = [f for f in available if float(model_result.pvalues[f]) < 0.05]
+
+        if not sig_factors:
+            # Still run summary even with no significant factors
+            sys_msg, usr_msg = _summary_prompt(ticker, alpha_ann, alpha_p, r2, [], ctx_str)
+            try:
+                summary = _call_groq(client, sys_msg, usr_msg, max_tokens=700)
+            except Exception as e:
+                summary = {"alpha_analysis": f"Summary unavailable: {e}", "positioning_context": "", "portfolio_verdict": ""}
+            return {"factors": [], **summary}, None
+
         factors_out = []
         errors = []
 
-        for f in available:
+        for f in sig_factors:
             beta = float(model_result.params[f])
             pval = float(model_result.pvalues[f])
-            sig  = pval < 0.05
             sys_msg, usr_msg = _factor_prompt(
-                ticker, f, FACTOR_NAMES.get(f, f), beta, pval, sig,
-                FACTOR_DESCRIPTIONS.get(f, f),
-                ctx_str=ctx_str,
+                ticker, f, FACTOR_NAMES.get(f, f), beta, pval, True,
+                FACTOR_DESCRIPTIONS.get(f, f), ctx_str=ctx_str,
             )
             try:
                 result = _call_groq(client, sys_msg, usr_msg, max_tokens=900)
                 result["beta"] = beta
-                result["significant"] = sig
+                result["significant"] = True
                 factors_out.append(result)
             except Exception as e:
                 factors_out.append({
                     "code": f, "name": FACTOR_NAMES.get(f, f),
-                    "beta": beta, "significant": sig, "outlook": "neutral",
+                    "beta": beta, "significant": True, "outlook": "neutral",
                     "what_it_means": "Analysis unavailable.",
                     "current_macro_context": f"Error: {e}",
-                    "recent_stock_news": "",
-                    "forward_forecast": "", "key_risks": "",
+                    "recent_stock_news": "", "forward_forecast": "", "key_risks": "",
                 })
                 errors.append(f"{f}: {e}")
 
@@ -557,11 +496,7 @@ def get_ai_insight(ticker, model_result, available, alpha_ann, alpha_p, r2, n, s
         try:
             summary = _call_groq(client, sys_msg, usr_msg, max_tokens=700)
         except Exception as e:
-            summary = {
-                "alpha_analysis": f"Summary unavailable: {e}",
-                "positioning_context": "",
-                "portfolio_verdict": "",
-            }
+            summary = {"alpha_analysis": f"Summary unavailable: {e}", "positioning_context": "", "portfolio_verdict": ""}
             errors.append(f"summary: {e}")
 
         result = {"factors": factors_out, **summary}
@@ -572,10 +507,10 @@ def get_ai_insight(ticker, model_result, available, alpha_ann, alpha_p, r2, n, s
 
 
 def render_ai_insight(ticker, insight_data):
-    factors = insight_data.get("factors", [])
-    alpha_analysis      = insight_data.get("alpha_analysis", "")
-    positioning_context = insight_data.get("positioning_context", "")
-    portfolio_verdict   = insight_data.get("portfolio_verdict", "")
+    factors            = insight_data.get("factors", [])
+    alpha_analysis     = insight_data.get("alpha_analysis", "")
+    positioning_context= insight_data.get("positioning_context", "")
+    portfolio_verdict  = insight_data.get("portfolio_verdict", "")
 
     def bold(text):
         return re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', str(text))
@@ -584,56 +519,59 @@ def render_ai_insight(ticker, insight_data):
     st.markdown(
         f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:2px;'
         f'text-transform:uppercase;color:#7c3aed;margin-bottom:16px;">'
-        f'✦ AI Factor Intelligence · {ticker} · As of {today_str}</div>',
+        f'✦ AI Factor Intelligence · {ticker} · As of {today_str} · Significant Factors Only</div>',
         unsafe_allow_html=True,
     )
-    for fac in factors:
-        code    = fac.get("code", "")
-        name    = fac.get("name", code)
-        beta    = fac.get("beta", 0)
-        sig     = fac.get("significant", False)
-        outlook = fac.get("outlook", "neutral").lower()
-        card_cls   = "positive" if beta > 0 else "negative"
-        beta_cls   = "pos" if beta > 0 else "neg"
-        outlook_cls  = {"bullish": "bullish", "bearish": "bearish", "neutral": "neutral", "mixed": "mixed"}.get(outlook, "neutral")
-        outlook_icon = {"bullish": "↑ BULLISH", "bearish": "↓ BEARISH", "neutral": "→ NEUTRAL", "mixed": "⇅ MIXED"}.get(outlook, "→ NEUTRAL")
-        sig_label = "SIGNIFICANT" if sig else "INSIGNIFICANT"
-        what     = bold(fac.get("what_it_means", ""))
-        macro    = bold(fac.get("current_macro_context", ""))
-        news     = bold(fac.get("recent_stock_news", ""))
-        forecast = bold(fac.get("forward_forecast", ""))
-        risks    = bold(fac.get("key_risks", ""))
-        st.markdown(f"""
-        <div class="factor-insight-card {card_cls}">
-          <div class="fi-header">
-            <div class="fi-name">{name}</div>
-            <div class="fi-beta {beta_cls}">{beta:+.4f}</div>
-            <div class="fi-sig-label">{sig_label}</div>
-            <div class="fi-outlook {outlook_cls}">{outlook_icon}</div>
-          </div>
-          <div class="fi-body">
-            <div style="margin-bottom:8px;">
-              <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#475569;">WHAT IT MEANS FOR {ticker}</span>
-              <div style="margin-top:4px;">{what}</div>
-            </div>
-            <div style="margin-bottom:8px;">
-              <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#475569;">CURRENT MACRO CONTEXT</span>
-              <div style="margin-top:4px;">{macro}</div>
-            </div>
-            {"" if not news else f'''<div style="margin-bottom:8px;">
-              <span style="font-family:JetBrains Mono,monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#475569;">RECENT NEWS &amp; CATALYSTS</span>
-              <div style="margin-top:4px;">{news}</div>
-            </div>'''}
-            <div style="margin-bottom:8px;">
-              <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#475569;">FORWARD FORECAST</span>
-              <div style="margin-top:4px;">{forecast}</div>
-            </div>
-            <div class="fi-news">
-              <div class="fi-news-label">⚠ KEY RISK</div>
-              {risks}
-            </div>
-          </div>
-        </div>""", unsafe_allow_html=True)
+
+    if not factors:
+        st.markdown(
+            '<div class="info-box">No statistically significant factors found (p&lt;0.05). '
+            'AI analysis skipped for individual factors — see summary below.</div>',
+            unsafe_allow_html=True
+        )
+    else:
+        for fac in factors:
+            code    = fac.get("code", "")
+            name    = fac.get("name", code)
+            beta    = fac.get("beta", 0)
+            outlook = fac.get("outlook", "neutral").lower()
+            card_cls    = "positive" if beta > 0 else "negative"
+            beta_cls    = "pos" if beta > 0 else "neg"
+            outlook_cls  = {"bullish":"bullish","bearish":"bearish","neutral":"neutral","mixed":"mixed"}.get(outlook,"neutral")
+            outlook_icon = {"bullish":"↑ BULLISH","bearish":"↓ BEARISH","neutral":"→ NEUTRAL","mixed":"⇅ MIXED"}.get(outlook,"→ NEUTRAL")
+            what     = bold(fac.get("what_it_means", ""))
+            macro    = bold(fac.get("current_macro_context", ""))
+            news     = bold(fac.get("recent_stock_news", ""))
+            forecast = bold(fac.get("forward_forecast", ""))
+            risks    = bold(fac.get("key_risks", ""))
+            st.markdown(f"""
+            <div class="factor-insight-card {card_cls}">
+              <div class="fi-header">
+                <div class="fi-name">{name}</div>
+                <div class="fi-beta {beta_cls}">{beta:+.4f}</div>
+                <div class="fi-sig-label">SIGNIFICANT</div>
+                <div class="fi-outlook {outlook_cls}">{outlook_icon}</div>
+              </div>
+              <div class="fi-body">
+                <div style="margin-bottom:8px;">
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#475569;">WHAT IT MEANS FOR {ticker}</span>
+                  <div style="margin-top:4px;">{what}</div>
+                </div>
+                <div style="margin-bottom:8px;">
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#475569;">CURRENT MACRO CONTEXT</span>
+                  <div style="margin-top:4px;">{macro}</div>
+                </div>
+                {"" if not news else f'<div style="margin-bottom:8px;"><span style="font-family:JetBrains Mono,monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#475569;">RECENT NEWS &amp; CATALYSTS</span><div style="margin-top:4px;">{news}</div></div>'}
+                <div style="margin-bottom:8px;">
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#475569;">FORWARD FORECAST</span>
+                  <div style="margin-top:4px;">{forecast}</div>
+                </div>
+                <div class="fi-news">
+                  <div class="fi-news-label">⚠ KEY RISK</div>
+                  {risks}
+                </div>
+              </div>
+            </div>""", unsafe_allow_html=True)
 
     if alpha_analysis:
         st.markdown(f"""
@@ -662,11 +600,12 @@ def render_ai_insight(ticker, insight_data):
 # ─────────────────────────────────────────────
 
 @st.cache_data(show_spinner=False)
-def run_single_regression(ticker_sym, start_str, end_str, hac_lags, ff_key):
+def run_single_regression(ticker_sym, start_str, end_str, hac_lags, ff_key, selected_factors_key):
     try:
         ff_raw = load_factors()
         ff = ff_raw.loc[start_str:end_str].copy()
-        available = [c for c in ["Mkt-RF", "SMB", "HML", "RMW", "CMA", "Mom"] if c in ff.columns]
+        selected = list(selected_factors_key)  # passed as tuple for caching
+        available = [c for c in selected if c in ff.columns]
         has_rf = "RF" in ff.columns
         ff[available] = ff[available].astype(float) / 100
         if has_rf:
@@ -702,13 +641,13 @@ def run_single_regression(ticker_sym, start_str, end_str, hac_lags, ff_key):
         alpha = model.params["const"]
         alpha_ann = (1 + alpha) ** 12 - 1
         result = {
-            "ticker":     ticker_sym,
-            "params":     dict(model.params),
-            "pvalues":    dict(model.pvalues),
-            "r2":         model.rsquared,
-            "alpha_ann":  alpha_ann,
-            "available":  available,
-            "nobs":       int(model.nobs),
+            "ticker":    ticker_sym,
+            "params":    dict(model.params),
+            "pvalues":   dict(model.pvalues),
+            "r2":        model.rsquared,
+            "alpha_ann": alpha_ann,
+            "available": available,
+            "nobs":      int(model.nobs),
         }
         return result, None
     except Exception as e:
@@ -716,7 +655,7 @@ def run_single_regression(ticker_sym, start_str, end_str, hac_lags, ff_key):
 
 
 def render_portfolio_attribution(port_results, weights, available_factors):
-    tickers = list(port_results.keys())
+    tickers  = list(port_results.keys())
     n_stocks = len(tickers)
 
     port_betas = {f: 0.0 for f in ["const"] + available_factors}
@@ -725,17 +664,13 @@ def render_portfolio_attribution(port_results, weights, available_factors):
             for f in ["const"] + available_factors:
                 port_betas[f] += w * port_results[tkr]["params"].get(f, 0.0)
 
-    port_alpha_ann = sum(
-        weights[tkr] * port_results[tkr]["alpha_ann"]
-        for tkr in tickers if tkr in port_results
-    )
-    port_r2_avg = np.mean([port_results[t]["r2"] for t in tickers])
+    port_alpha_ann = sum(weights[tkr] * port_results[tkr]["alpha_ann"] for tkr in tickers if tkr in port_results)
+    port_r2_avg    = np.mean([port_results[t]["r2"] for t in tickers])
 
     alpha_color = "#34d399" if port_alpha_ann > 0 else "#f87171"
     st.markdown(f"""
     <div class="port-summary-card">
-      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;
-                  text-transform:uppercase;color:#60a5fa;margin-bottom:14px;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#60a5fa;margin-bottom:14px;">
         ◈ Portfolio-Level Factor Attribution · {n_stocks} Holdings
       </div>
       <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:baseline;">
@@ -754,42 +689,24 @@ def render_portfolio_attribution(port_results, weights, available_factors):
       </div>
     </div>""", unsafe_allow_html=True)
 
-    st.markdown(
-        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:2px;'
-        'text-transform:uppercase;color:#475569;margin-bottom:10px;">PORTFOLIO WEIGHTED FACTOR EXPOSURES</div>',
-        unsafe_allow_html=True
-    )
+    st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#475569;margin-bottom:10px;">PORTFOLIO WEIGHTED FACTOR EXPOSURES</div>', unsafe_allow_html=True)
     grid_html = '<div class="port-attribution-grid">'
     for f in available_factors:
-        b = port_betas.get(f, 0)
+        b    = port_betas.get(f, 0)
         bcls = "pos" if b >= 0 else "neg"
-        grid_html += f"""
-        <div class="port-attr-cell">
-          <div class="port-attr-factor">{FACTOR_NAMES.get(f, f)}</div>
-          <div class="port-attr-beta {bcls}">{b:+.4f}</div>
-        </div>"""
+        grid_html += f'<div class="port-attr-cell"><div class="port-attr-factor">{FACTOR_NAMES.get(f, f)}</div><div class="port-attr-beta {bcls}">{b:+.4f}</div></div>'
     grid_html += '</div>'
     st.markdown(grid_html, unsafe_allow_html=True)
 
-    st.markdown(
-        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:2px;'
-        'text-transform:uppercase;color:#475569;margin:20px 0 10px 0;">FACTOR LOADING COMPARISON</div>',
-        unsafe_allow_html=True
-    )
+    st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#475569;margin:20px 0 10px 0;">FACTOR LOADING COMPARISON</div>', unsafe_allow_html=True)
 
-    all_betas_flat = []
-    for tkr in tickers:
-        for f in available_factors:
-            all_betas_flat.append(abs(port_results[tkr]["params"].get(f, 0)))
+    all_betas_flat = [abs(port_results[tkr]["params"].get(f, 0)) for tkr in tickers for f in available_factors]
     max_abs = max(all_betas_flat) if all_betas_flat else 1
 
     grid_cols = f"80px 60px " + " ".join(["1fr"] * len(available_factors)) + " 70px 60px"
-    rows_html = f"""
-    <div style="overflow-x:auto;">
-    <div style="display:grid;grid-template-columns:{grid_cols};gap:6px;min-width:700px;">
-      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:#334155;text-transform:uppercase;padding:4px 0;">TICKER</div>
-      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:#334155;text-transform:uppercase;padding:4px 0;">WT</div>
-    """
+    rows_html = f'<div style="overflow-x:auto;"><div style="display:grid;grid-template-columns:{grid_cols};gap:6px;min-width:700px;">'
+    rows_html += '<div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;letter-spacing:1.5px;color:#334155;text-transform:uppercase;padding:4px 0;">TICKER</div>'
+    rows_html += '<div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;letter-spacing:1.5px;color:#334155;text-transform:uppercase;padding:4px 0;">WT</div>'
     for f in available_factors:
         fc = FACTOR_COLORS.get(f, "#94a3b8")
         rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;letter-spacing:1.5px;color:{fc};text-transform:uppercase;padding:4px 0;">{FACTOR_NAMES.get(f,f)}</div>'
@@ -797,82 +714,44 @@ def render_portfolio_attribution(port_results, weights, available_factors):
     rows_html += '<div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;letter-spacing:1.5px;color:#60a5fa;text-transform:uppercase;padding:4px 0;">R²</div>'
 
     for tkr in tickers:
-        res = port_results[tkr]
-        w = weights[tkr]
+        res     = port_results[tkr]
+        w       = weights[tkr]
         alpha_c = "#34d399" if res["alpha_ann"] > 0 else "#f87171"
         rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;font-weight:700;color:#e2e8f0;padding:8px 0;border-top:1px solid rgba(255,255,255,0.05);">{tkr}</div>'
         rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#60a5fa;padding:8px 0;border-top:1px solid rgba(255,255,255,0.05);">{w:.0%}</div>'
         for f in available_factors:
-            b = res["params"].get(f, 0)
-            bc = "#34d399" if b >= 0 else "#f87171"
+            b   = res["params"].get(f, 0)
+            bc  = "#34d399" if b >= 0 else "#f87171"
             pct = min(abs(b) / max_abs * 100, 100) if max_abs > 0 else 0
-            bar_color = "#34d399" if b >= 0 else "#f87171"
-            rows_html += f"""
-            <div style="padding:8px 0;border-top:1px solid rgba(255,255,255,0.05);">
-              <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:{bc};">{b:+.3f}</div>
-              <div style="height:3px;background:rgba(255,255,255,0.05);border-radius:2px;margin-top:3px;">
-                <div style="width:{pct:.1f}%;height:100%;background:{bar_color};border-radius:2px;"></div>
-              </div>
-            </div>"""
+            rows_html += f'<div style="padding:8px 0;border-top:1px solid rgba(255,255,255,0.05);"><div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:{bc};">{b:+.3f}</div><div style="height:3px;background:rgba(255,255,255,0.05);border-radius:2px;margin-top:3px;"><div style="width:{pct:.1f}%;height:100%;background:{bc};border-radius:2px;"></div></div></div>'
         rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:{alpha_c};padding:8px 0;border-top:1px solid rgba(255,255,255,0.05);">{res["alpha_ann"]:+.2%}</div>'
         rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#60a5fa;padding:8px 0;border-top:1px solid rgba(255,255,255,0.05);">{res["r2"]:.3f}</div>'
 
-    # Portfolio row
     rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;font-weight:700;color:#a78bfa;padding:8px 0;border-top:2px solid rgba(167,139,250,0.2);">PORTFOLIO</div>'
     rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#a78bfa;padding:8px 0;border-top:2px solid rgba(167,139,250,0.2);">100%</div>'
     for f in available_factors:
-        b = port_betas.get(f, 0)
-        bc = "#34d399" if b >= 0 else "#f87171"
+        b   = port_betas.get(f, 0)
+        bc  = "#34d399" if b >= 0 else "#f87171"
         pct = min(abs(b) / max_abs * 100, 100) if max_abs > 0 else 0
-        bar_color = "#34d399" if b >= 0 else "#f87171"
-        rows_html += f"""
-        <div style="padding:8px 0;border-top:2px solid rgba(167,139,250,0.2);">
-          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:{bc};">{b:+.3f}</div>
-          <div style="height:3px;background:rgba(255,255,255,0.05);border-radius:2px;margin-top:3px;">
-            <div style="width:{pct:.1f}%;height:100%;background:{bar_color};border-radius:2px;"></div>
-          </div>
-        </div>"""
+        rows_html += f'<div style="padding:8px 0;border-top:2px solid rgba(167,139,250,0.2);"><div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;font-weight:600;color:{bc};">{b:+.3f}</div><div style="height:3px;background:rgba(255,255,255,0.05);border-radius:2px;margin-top:3px;"><div style="width:{pct:.1f}%;height:100%;background:{bc};border-radius:2px;"></div></div></div>'
     alpha_c = "#34d399" if port_alpha_ann > 0 else "#f87171"
     rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;font-weight:600;color:{alpha_c};padding:8px 0;border-top:2px solid rgba(167,139,250,0.2);">{port_alpha_ann:+.2%}</div>'
     rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#60a5fa;padding:8px 0;border-top:2px solid rgba(167,139,250,0.2);">{port_r2_avg:.3f}</div>'
     rows_html += '</div></div>'
+    st.markdown(f'<div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:16px 18px;">{rows_html}</div>', unsafe_allow_html=True)
 
-    st.markdown(
-        f'<div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);'
-        f'border-radius:10px;padding:16px 18px;">{rows_html}</div>',
-        unsafe_allow_html=True
-    )
-
-    st.markdown(
-        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:2px;'
-        'text-transform:uppercase;color:#475569;margin:20px 0 10px 0;">FACTOR CONCENTRATION RISK</div>',
-        unsafe_allow_html=True
-    )
+    st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#475569;margin:20px 0 10px 0;">FACTOR CONCENTRATION RISK</div>', unsafe_allow_html=True)
     risk_html = '<div style="display:flex;gap:10px;flex-wrap:wrap;">'
     for f in available_factors:
-        vals = [port_results[t]["params"].get(f, 0) for t in tickers]
+        vals       = [port_results[t]["params"].get(f, 0) for t in tickers]
         dispersion = np.std(vals)
         risk_color = "#f87171" if dispersion > 0.5 else "#fbbf24" if dispersion > 0.2 else "#34d399"
         risk_label = "HIGH" if dispersion > 0.5 else "MODERATE" if dispersion > 0.2 else "LOW"
-        risk_html += f"""
-        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);
-                    border-radius:8px;padding:12px 14px;min-width:110px;flex:1;">
-          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#475569;
-                      margin-bottom:4px;text-transform:uppercase;">{FACTOR_NAMES.get(f,f)}</div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;
-                      color:{risk_color};">{risk_label}</div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#334155;margin-top:2px;">
-            σ = {dispersion:.3f}
-          </div>
-        </div>"""
+        risk_html += f'<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;min-width:110px;flex:1;"><div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:#475569;margin-bottom:4px;text-transform:uppercase;">{FACTOR_NAMES.get(f,f)}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;font-weight:600;color:{risk_color};">{risk_label}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:#334155;margin-top:2px;">σ = {dispersion:.3f}</div></div>'
     risk_html += '</div>'
     st.markdown(risk_html, unsafe_allow_html=True)
 
-    st.markdown(
-        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:2px;'
-        'text-transform:uppercase;color:#475569;margin:20px 0 10px 0;">EXPORT</div>',
-        unsafe_allow_html=True
-    )
+    st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#475569;margin:20px 0 10px 0;">EXPORT</div>', unsafe_allow_html=True)
     rows = []
     for tkr in tickers:
         res = port_results[tkr]
@@ -885,36 +764,26 @@ def render_portfolio_attribution(port_results, weights, available_factors):
         port_row[FACTOR_NAMES.get(f, f)] = port_betas.get(f, 0)
     rows.append(port_row)
     export_df = pd.DataFrame(rows)
-    st.download_button(
-        "⬇  Download Portfolio Attribution CSV",
-        export_df.to_csv(index=False),
-        file_name="portfolio_factor_attribution.csv",
-        mime="text/csv",
-    )
+    st.download_button("⬇  Download Portfolio Attribution CSV", export_df.to_csv(index=False),
+                       file_name="portfolio_factor_attribution.csv", mime="text/csv")
 
 
 # ════════════════════════════════════════════
 #  SESSION STATE INIT
 # ════════════════════════════════════════════
 
-if "run" not in st.session_state:
-    st.session_state["run"] = False
-if "ai_insight" not in st.session_state:
-    st.session_state["ai_insight"] = None
-if "ai_error" not in st.session_state:
-    st.session_state["ai_error"] = None
-if "port_run" not in st.session_state:
-    st.session_state["port_run"] = False
-if "port_results" not in st.session_state:
-    st.session_state["port_results"] = None
-# ── FIX: store results for BOTH modes independently so switching tabs
-#    does not wipe the analysis you already ran.
-if "single_stock_cache" not in st.session_state:
-    st.session_state["single_stock_cache"] = None   # holds full single-stock render data
-if "portfolio_cache" not in st.session_state:
-    st.session_state["portfolio_cache"] = None       # holds full portfolio render data
-if "active_mode" not in st.session_state:
-    st.session_state["active_mode"] = "Single Stock"
+for key, default in [
+    ("run", False), ("ai_insight", None), ("ai_error", None),
+    ("port_run", False), ("port_results", None),
+    ("single_stock_cache", None), ("portfolio_cache", None),
+    ("active_mode", "Single Stock"),
+]:
+    if key not in st.session_state:
+        st.session_state[key] = default
+
+# Default factor selection — all on
+if "selected_factors" not in st.session_state:
+    st.session_state["selected_factors"] = list(ALL_FACTORS)
 
 
 # ════════════════════════════════════════════
@@ -931,17 +800,72 @@ st.markdown("---")
 with st.sidebar:
     st.markdown("### Configuration")
 
-    mode = st.radio(
-        "Mode",
-        ["Single Stock", "Portfolio Attribution"],
-        horizontal=True,
-        key="mode_radio",
-    )
+    mode = st.radio("Mode", ["Single Stock", "Portfolio Attribution"], horizontal=True, key="mode_radio")
 
-    # ── FIX: switching mode no longer clears results — each mode keeps its own cache
     if mode != st.session_state["active_mode"]:
         st.session_state["active_mode"] = mode
         st.rerun()
+
+    st.markdown("---")
+
+    # ── Factor Selector ──────────────────────────────────────────────────────
+    st.markdown("**Factor Selection**")
+    st.markdown(
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:#475569;margin-bottom:8px;">'
+        'Choose which factors to include in the regression.</div>',
+        unsafe_allow_html=True
+    )
+
+    # Select All / Deselect All buttons
+    col_sel, col_desel = st.columns(2)
+    with col_sel:
+        if st.button("✓ All", use_container_width=True, key="select_all_factors"):
+            st.session_state["selected_factors"] = list(ALL_FACTORS)
+            st.session_state["single_stock_cache"] = None
+            st.session_state["portfolio_cache"]    = None
+            st.rerun()
+    with col_desel:
+        if st.button("✗ None", use_container_width=True, key="deselect_all_factors"):
+            st.session_state["selected_factors"] = []
+            st.session_state["single_stock_cache"] = None
+            st.session_state["portfolio_cache"]    = None
+            st.rerun()
+
+    # Individual factor checkboxes
+    new_selection = []
+    for f in ALL_FACTORS:
+        fc    = FACTOR_COLORS.get(f, "#94a3b8")
+        label = FACTOR_NAMES.get(f, f)
+        checked = f in st.session_state["selected_factors"]
+        val = st.checkbox(
+            label,
+            value=checked,
+            key=f"chk_{f}",
+        )
+        if val:
+            new_selection.append(f)
+
+    if new_selection != st.session_state["selected_factors"]:
+        st.session_state["selected_factors"] = new_selection
+        st.session_state["single_stock_cache"] = None
+        st.session_state["portfolio_cache"]    = None
+
+    # Show active selection summary
+    if st.session_state["selected_factors"]:
+        active_labels = [FACTOR_NAMES.get(f, f) for f in st.session_state["selected_factors"]]
+        st.markdown(
+            '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:#334155;'
+            'margin-top:6px;padding:6px 8px;background:rgba(255,255,255,0.02);'
+            'border-radius:6px;border:1px solid rgba(255,255,255,0.05);">'
+            f'Active: {", ".join(active_labels)}</div>',
+            unsafe_allow_html=True
+        )
+    else:
+        st.markdown(
+            '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:#f87171;'
+            'margin-top:6px;">⚠ No factors selected — select at least one.</div>',
+            unsafe_allow_html=True
+        )
 
     st.markdown("---")
 
@@ -954,7 +878,6 @@ with st.sidebar:
             'Add stocks with ticker &amp; amount invested. Weights are auto-calculated.</div>',
             unsafe_allow_html=True
         )
-
         if "port_holdings" not in st.session_state:
             st.session_state["port_holdings"] = [
                 {"ticker": "AAPL", "amount": 30000},
@@ -962,55 +885,41 @@ with st.sidebar:
                 {"ticker": "NVDA", "amount": 25000},
                 {"ticker": "GOOGL", "amount": 20000},
             ]
-
         to_remove = None
         for idx, holding in enumerate(st.session_state["port_holdings"]):
             col_t, col_a, col_x = st.columns([2, 2, 0.6])
             with col_t:
                 new_ticker = st.text_input(
                     "Ticker", value=holding["ticker"],
-                    key=f"port_ticker_{idx}",
-                    label_visibility="collapsed",
-                    placeholder="TICKER"
+                    key=f"port_ticker_{idx}", label_visibility="collapsed", placeholder="TICKER"
                 ).upper().strip()
                 st.session_state["port_holdings"][idx]["ticker"] = new_ticker
             with col_a:
                 new_amount = st.number_input(
-                    "Amount", value=float(holding["amount"]),
-                    min_value=0.0, step=1000.0,
-                    key=f"port_amount_{idx}",
-                    label_visibility="collapsed",
-                    format="%.0f"
+                    "Amount", value=float(holding["amount"]), min_value=0.0, step=1000.0,
+                    key=f"port_amount_{idx}", label_visibility="collapsed", format="%.0f"
                 )
                 st.session_state["port_holdings"][idx]["amount"] = new_amount
             with col_x:
                 if st.button("×", key=f"port_remove_{idx}", help="Remove"):
                     to_remove = idx
-
         if to_remove is not None:
             st.session_state["port_holdings"].pop(to_remove)
             st.rerun()
-
         st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
         if st.button("＋  Add Stock", use_container_width=True, key="port_add"):
             st.session_state["port_holdings"].append({"ticker": "", "amount": 10000})
             st.rerun()
-
         total_amt = sum(h["amount"] for h in st.session_state["port_holdings"] if h["amount"] > 0)
         if total_amt > 0:
-            preview_lines = []
-            for h in st.session_state["port_holdings"]:
-                if h["ticker"] and h["amount"] > 0:
-                    w = h["amount"] / total_amt
-                    preview_lines.append(f'{h["ticker"]} · {w:.1%}')
+            preview_lines = [
+                f'{h["ticker"]} · {h["amount"]/total_amt:.1%}'
+                for h in st.session_state["port_holdings"] if h["ticker"] and h["amount"] > 0
+            ]
             if preview_lines:
                 st.markdown(
-                    '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;'
-                    'color:#475569;margin-top:8px;padding:8px 10px;'
-                    'background:rgba(255,255,255,0.02);border-radius:6px;'
-                    'border:1px solid rgba(255,255,255,0.05);line-height:1.8;">'
-                    + " &nbsp;|&nbsp; ".join(preview_lines) +
-                    '</div>',
+                    '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:#475569;margin-top:8px;padding:8px 10px;background:rgba(255,255,255,0.02);border-radius:6px;border:1px solid rgba(255,255,255,0.05);line-height:1.8;">'
+                    + " &nbsp;|&nbsp; ".join(preview_lines) + '</div>',
                     unsafe_allow_html=True
                 )
 
@@ -1023,34 +932,36 @@ with st.sidebar:
 
     if mode == "Single Stock":
         if st.button("▶  RUN REGRESSION", use_container_width=True):
-            st.session_state["run"]        = True
-            st.session_state["ticker_ran"] = ticker
-            st.session_state["start_ran"]  = start_date
-            st.session_state["end_ran"]    = end_date
-            st.session_state["hac_ran"]    = hac_lags
-            st.session_state["ann_ran"]    = annualize
-            st.session_state["ai_insight"] = None
-            st.session_state["ai_error"]   = None
-            st.session_state["single_stock_cache"] = None   # force re-run
+            if not st.session_state["selected_factors"]:
+                st.error("Select at least one factor before running.")
+            else:
+                st.session_state["run"]        = True
+                st.session_state["ticker_ran"] = ticker
+                st.session_state["start_ran"]  = start_date
+                st.session_state["end_ran"]    = end_date
+                st.session_state["hac_ran"]    = hac_lags
+                st.session_state["ann_ran"]    = annualize
+                st.session_state["ai_insight"] = None
+                st.session_state["ai_error"]   = None
+                st.session_state["single_stock_cache"] = None
     else:
         st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
         if st.button("▶  RUN PORTFOLIO ATTRIBUTION", use_container_width=True):
-            holdings = st.session_state.get("port_holdings", [])
-            parsed = [
-                (h["ticker"], h["amount"])
-                for h in holdings
-                if h["ticker"] and h["amount"] > 0
-            ]
-            if parsed:
-                total_w = sum(w for _, w in parsed)
-                normalized = {tkr: w / total_w for tkr, w in parsed}
-                st.session_state["port_weights"] = normalized
-                st.session_state["port_start"]   = start_date
-                st.session_state["port_end"]      = end_date
-                st.session_state["port_hac"]      = hac_lags
-                st.session_state["port_run"]      = True
-                st.session_state["port_results"]  = None
-                st.session_state["portfolio_cache"] = None  # force re-run
+            if not st.session_state["selected_factors"]:
+                st.error("Select at least one factor before running.")
+            else:
+                holdings = st.session_state.get("port_holdings", [])
+                parsed   = [(h["ticker"], h["amount"]) for h in holdings if h["ticker"] and h["amount"] > 0]
+                if parsed:
+                    total_w    = sum(w for _, w in parsed)
+                    normalized = {tkr: w / total_w for tkr, w in parsed}
+                    st.session_state["port_weights"]    = normalized
+                    st.session_state["port_start"]      = start_date
+                    st.session_state["port_end"]        = end_date
+                    st.session_state["port_hac"]        = hac_lags
+                    st.session_state["port_run"]        = True
+                    st.session_state["port_results"]    = None
+                    st.session_state["portfolio_cache"] = None
 
     st.markdown("---")
     st.markdown(
@@ -1066,7 +977,6 @@ with st.sidebar:
 
 current_mode = st.session_state.get("active_mode", "Single Stock")
 
-# ── Neither mode has been run yet — show welcome
 if not st.session_state["run"] and not st.session_state["port_run"] \
         and st.session_state["single_stock_cache"] is None \
         and st.session_state["portfolio_cache"] is None:
@@ -1074,21 +984,20 @@ if not st.session_state["run"] and not st.session_state["port_run"] \
         st.markdown(
             '<div class="interpret-box" style="margin-top:40px;text-align:center;">'
             '<b>Single Stock Mode</b><br><br>'
-            '1. Enter a ticker in the sidebar<br>'
-            '2. Set your date range<br>'
-            '3. Click <b>▶ RUN REGRESSION</b><br><br>'
-            '<span style="color:#334155;font-size:11px;">Factor data (FF5 + Momentum) loads automatically. '
-            'AI macro intelligence runs on every regression.</span>'
+            '1. Select factors in the sidebar (or use ✓ All)<br>'
+            '2. Enter a ticker<br>'
+            '3. Set your date range<br>'
+            '4. Click <b>▶ RUN REGRESSION</b><br><br>'
+            '<span style="color:#334155;font-size:11px;">AI analysis runs only on statistically significant factors (p&lt;0.05).</span>'
             '</div>', unsafe_allow_html=True)
     else:
         st.markdown(
             '<div class="interpret-box" style="margin-top:40px;text-align:center;">'
             '<b>Portfolio Attribution Mode</b><br><br>'
-            '1. Add your holdings (ticker + amount) in the sidebar<br>'
-            '2. Set your date range<br>'
-            '3. Click <b>▶ RUN PORTFOLIO ATTRIBUTION</b><br><br>'
-            '<span style="color:#334155;font-size:11px;">Runs FF5 + Momentum regression per stock, '
-            'then shows weighted factor exposures and concentration risk.</span>'
+            '1. Select factors in the sidebar<br>'
+            '2. Add your holdings (ticker + amount)<br>'
+            '3. Set your date range<br>'
+            '4. Click <b>▶ RUN PORTFOLIO ATTRIBUTION</b>'
             '</div>', unsafe_allow_html=True)
     st.stop()
 
@@ -1098,19 +1007,17 @@ if not st.session_state["run"] and not st.session_state["port_run"] \
 # ════════════════════════════════════════════
 
 if current_mode == "Portfolio Attribution":
-    # ── If cache exists and no new run triggered, just show the cached result
     if st.session_state["portfolio_cache"] is not None and not st.session_state.get("port_run"):
         cache = st.session_state["portfolio_cache"]
         st.markdown("## Portfolio Factor Attribution")
         st.markdown(
             f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#475569;margin-bottom:20px;">'
-            f'{len(cache["weights"])} holdings · FF5 + Momentum · HAC SE · {cache["port_start"]} → {cache["port_end"]}'
+            f'{len(cache["weights"])} holdings · {len(cache["ordered_factors"])} factors · HAC SE · {cache["port_start"]} → {cache["port_end"]}'
             f'</div>', unsafe_allow_html=True
         )
         render_portfolio_attribution(cache["port_results"], cache["weights"], cache["ordered_factors"])
         st.stop()
 
-    # ── Run (or re-run) portfolio attribution
     if not st.session_state.get("port_run"):
         st.stop()
 
@@ -1118,59 +1025,52 @@ if current_mode == "Portfolio Attribution":
     port_start = st.session_state.get("port_start", start_date)
     port_end   = st.session_state.get("port_end",   end_date)
     port_hac   = st.session_state.get("port_hac",   hac_lags)
+    sel_factors= tuple(st.session_state["selected_factors"])
 
     if not weights:
-        st.markdown('<div class="error-box">No valid tickers found. Check your input format.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="error-box">No valid tickers found.</div>', unsafe_allow_html=True)
         st.stop()
 
     st.markdown("## Portfolio Factor Attribution")
     st.markdown(
         f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#475569;margin-bottom:20px;">'
-        f'{len(weights)} holdings · FF5 + Momentum · HAC SE · {port_start} → {port_end}'
+        f'{len(weights)} holdings · {len(sel_factors)} factors · HAC SE · {port_start} → {port_end}'
         f'</div>', unsafe_allow_html=True
     )
 
     port_results = {}
-    errors = []
-
+    errors       = []
     progress_bar = st.progress(0, text="Running regressions…")
     for i, (tkr, w) in enumerate(weights.items()):
-        progress_bar.progress((i) / len(weights), text=f"Regressing {tkr}…")
+        progress_bar.progress(i / len(weights), text=f"Regressing {tkr}…")
         start_str = str(port_start)[:7]
         end_str   = str(port_end)[:7]
-        res, err = run_single_regression(tkr, start_str, end_str, port_hac, f"{start_str}_{end_str}")
+        res, err  = run_single_regression(tkr, start_str, end_str, port_hac, f"{start_str}_{end_str}", sel_factors)
         if res:
             port_results[tkr] = res
         else:
             errors.append(f"{tkr}: {err}")
     progress_bar.progress(1.0, text="Done.")
 
-    if errors:
-        for e in errors:
-            st.markdown(f'<div class="error-box">⚠ {e}</div>', unsafe_allow_html=True)
-
+    for e in errors:
+        st.markdown(f'<div class="error-box">⚠ {e}</div>', unsafe_allow_html=True)
     if not port_results:
-        st.markdown('<div class="error-box">No stocks could be regressed. Check tickers and date range.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="error-box">No stocks could be regressed.</div>', unsafe_allow_html=True)
         st.stop()
 
     valid_weights = {t: weights[t] for t in port_results}
     total = sum(valid_weights.values())
     valid_weights = {t: v / total for t, v in valid_weights.items()}
 
-    avail_sets = [set(port_results[t]["available"]) for t in port_results]
-    common_factors = list(avail_sets[0].intersection(*avail_sets[1:])) if len(avail_sets) > 1 else list(avail_sets[0])
-    ordered_factors = [f for f in ["Mkt-RF", "SMB", "HML", "RMW", "CMA", "Mom"] if f in common_factors]
+    avail_sets      = [set(port_results[t]["available"]) for t in port_results]
+    common_factors  = list(avail_sets[0].intersection(*avail_sets[1:])) if len(avail_sets) > 1 else list(avail_sets[0])
+    ordered_factors = [f for f in ALL_FACTORS if f in common_factors]
 
-    # ── Save to cache so switching back to this tab re-renders without re-running
     st.session_state["portfolio_cache"] = {
-        "port_results":    port_results,
-        "weights":         valid_weights,
-        "ordered_factors": ordered_factors,
-        "port_start":      port_start,
-        "port_end":        port_end,
+        "port_results": port_results, "weights": valid_weights,
+        "ordered_factors": ordered_factors, "port_start": port_start, "port_end": port_end,
     }
-    st.session_state["port_run"] = False   # reset trigger; cache keeps the data
-
+    st.session_state["port_run"] = False
     render_portfolio_attribution(port_results, valid_weights, ordered_factors)
     st.stop()
 
@@ -1180,24 +1080,20 @@ if current_mode == "Portfolio Attribution":
 # ════════════════════════════════════════════
 
 if current_mode == "Single Stock":
-    # ── If cache exists and no new run triggered, re-render from cache ──────
+
     if st.session_state["single_stock_cache"] is not None and not st.session_state["run"]:
         c = st.session_state["single_stock_cache"]
-        # Re-display the stored price HTML + all sections from cache
         st.markdown(c["price_html"], unsafe_allow_html=True)
-
         col1, col2, col3, col4 = st.columns(4)
         with col1: st.markdown(c["metric_alpha"], unsafe_allow_html=True)
-        with col2: st.markdown(c["metric_r2"], unsafe_allow_html=True)
-        with col3: st.markdown(c["metric_ir"], unsafe_allow_html=True)
-        with col4: st.markdown(c["metric_f"], unsafe_allow_html=True)
-
+        with col2: st.markdown(c["metric_r2"],    unsafe_allow_html=True)
+        with col3: st.markdown(c["metric_ir"],    unsafe_allow_html=True)
+        with col4: st.markdown(c["metric_f"],     unsafe_allow_html=True)
         st.markdown('<div class="section-title">Factor Loadings</div>', unsafe_allow_html=True)
         for row_html in c["factor_rows"]:
             st.markdown(row_html, unsafe_allow_html=True)
         st.markdown(c["factor_legend"], unsafe_allow_html=True)
-
-        st.markdown('<div class="section-title">AI Macro Intelligence</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">AI Macro Intelligence · Significant Factors Only</div>', unsafe_allow_html=True)
         st.markdown(c["ai_header"], unsafe_allow_html=True)
         if c.get("ai_error") and not c.get("ai_insight"):
             st.markdown(f'<div class="error-box">AI Error: {c["ai_error"]}</div>', unsafe_allow_html=True)
@@ -1205,60 +1101,48 @@ if current_mode == "Single Stock":
             st.markdown(f'<div class="error-box" style="border-color:rgba(251,191,36,0.3);color:#fbbf24;">⚠ Some factors had errors: {c["ai_error"]}</div>', unsafe_allow_html=True)
         if c.get("ai_insight"):
             render_ai_insight(c["ticker"], c["ai_insight"])
-
-        # Recreate tabs from stored data
-        tab1, tab2, tab3, tab4, tab5 = st.tabs([
-            "95% Confidence Intervals", "Regression Diagnostics",
-            "Variance Inflation Factors", "Model Fit", "Rolling Market Beta",
-        ])
-        with tab1: st.markdown(c["ci_html"], unsafe_allow_html=True)
+        tab1, tab2, tab3, tab4, tab5 = st.tabs(["95% Confidence Intervals","Regression Diagnostics","Variance Inflation Factors","Model Fit","Rolling Market Beta"])
+        with tab1: st.markdown(c["ci_html"],   unsafe_allow_html=True)
         with tab2: st.markdown(c["diag_html"], unsafe_allow_html=True)
-        with tab3: st.markdown(c["vif_html"], unsafe_allow_html=True)
-        with tab4: st.markdown(c["fit_html"], unsafe_allow_html=True)
+        with tab3: st.markdown(c["vif_html"],  unsafe_allow_html=True)
+        with tab4: st.markdown(c["fit_html"],  unsafe_allow_html=True)
         with tab5:
-            if c.get("rolling_html"):
-                st.markdown(c["rolling_html"], unsafe_allow_html=True)
-            else:
-                st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#334155;padding:20px 0;">Need at least 36 months of data and the Mkt-RF factor to display rolling beta.</div>', unsafe_allow_html=True)
-
+            if c.get("rolling_html"): st.markdown(c["rolling_html"], unsafe_allow_html=True)
+            else: st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#334155;padding:20px 0;">Need at least 36 months of data and Mkt-RF selected to display rolling beta.</div>', unsafe_allow_html=True)
         with st.expander("Full OLS Summary (statsmodels)"):
             st.text(c["ols_summary"])
-
         st.markdown('<div class="section-title">Export Results</div>', unsafe_allow_html=True)
         col_a, col_b = st.columns(2)
         with col_a:
-            st.download_button("⬇  Download Results CSV", c["export_csv"],
-                               file_name=f"{c['ticker']}_factor_regression.csv", mime="text/csv", use_container_width=True)
+            st.download_button("⬇  Download Results CSV", c["export_csv"], file_name=f"{c['ticker']}_factor_regression.csv", mime="text/csv", use_container_width=True)
         with col_b:
-            st.download_button("⬇  Download Merged Data CSV", c["merged_csv"],
-                               file_name=f"{c['ticker']}_merged_data.csv", mime="text/csv", use_container_width=True)
+            st.download_button("⬇  Download Merged Data CSV", c["merged_csv"], file_name=f"{c['ticker']}_merged_data.csv", mime="text/csv", use_container_width=True)
         st.stop()
 
-    # ── No cache and no run triggered → stop (welcome already shown above)
     if not st.session_state["run"]:
         st.stop()
 
-    # ── Fresh regression run ─────────────────────────────────────────────────
     ticker     = st.session_state.get("ticker_ran", "AVGO")
     start_date = st.session_state.get("start_ran", start_date)
-    end_date   = st.session_state.get("end_ran", end_date)
-    hac_lags   = st.session_state.get("hac_ran", hac_lags)
-    annualize  = st.session_state.get("ann_ran", annualize)
+    end_date   = st.session_state.get("end_ran",   end_date)
+    hac_lags   = st.session_state.get("hac_ran",   hac_lags)
+    annualize  = st.session_state.get("ann_ran",   annualize)
+    sel_factors= st.session_state["selected_factors"]
 
     try:
         with st.spinner("Loading factor data from GitHub..."):
             try:
                 ff_raw = load_factors()
             except Exception as e:
-                st.markdown(f'<div class="error-box">Failed to load factor data from GitHub: {e}</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="error-box">Failed to load factor data: {e}</div>', unsafe_allow_html=True)
                 st.stop()
 
-        ff = ff_raw.loc[str(start_date)[:7]: str(end_date)[:7]].copy()
-        available = [c for c in ["Mkt-RF", "SMB", "HML", "RMW", "CMA", "Mom"] if c in ff.columns]
+        ff        = ff_raw.loc[str(start_date)[:7]: str(end_date)[:7]].copy()
+        available = [c for c in sel_factors if c in ff.columns]
         has_rf    = "RF" in ff.columns
 
         if not available:
-            st.markdown('<div class="error-box">No recognised factor columns found in the CSV.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="error-box">None of the selected factors found in the CSV. Try selecting different factors.</div>', unsafe_allow_html=True)
             st.stop()
 
         ff[available] = ff[available].astype(float) / 100
@@ -1269,13 +1153,12 @@ if current_mode == "Single Stock":
             raw = yf.download(ticker, start=str(start_date), end=str(end_date), auto_adjust=True, progress=False)
 
         if raw.empty:
-            st.markdown(f'<div class="error-box">No price data found for ticker: {ticker}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="error-box">No price data found for: {ticker}</div>', unsafe_allow_html=True)
             st.stop()
 
-        close = raw["Close"]
+        close   = raw["Close"]
         if isinstance(close, pd.DataFrame):
             close = close.iloc[:, 0]
-
         monthly = close.resample("ME").last()
         returns = monthly.pct_change().dropna()
         returns.index = returns.index.to_period("M")
@@ -1283,7 +1166,7 @@ if current_mode == "Single Stock":
         data = pd.DataFrame({"Stock": returns}).join(ff[available + (["RF"] if has_rf else [])], how="inner")
 
         if len(data) < 24:
-            st.markdown(f'<div class="error-box">Too few observations after merge ({len(data)}). Check date range.</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="error-box">Too few observations ({len(data)}). Check date range.</div>', unsafe_allow_html=True)
             st.stop()
 
         if has_rf:
@@ -1297,7 +1180,6 @@ if current_mode == "Single Stock":
 
         alpha     = model.params["const"]
         alpha_ann = (1 + alpha) ** annualize - 1
-        alpha_t   = model.tvalues["const"]
         alpha_p   = model.pvalues["const"]
         n         = int(model.nobs)
         r2        = model.rsquared
@@ -1311,9 +1193,9 @@ if current_mode == "Single Stock":
         ir        = alpha_ann / te if te > 0 else np.nan
 
         bp_stat, bp_p, _, _ = sm.stats.diagnostic.het_breuschpagan(resid, X)
-        dw = sm.stats.stattools.durbin_watson(resid)
-        jb_stat, jb_p = stats.jarque_bera(resid)[:2]
-        cond = np.linalg.cond(X.values)
+        dw              = sm.stats.stattools.durbin_watson(resid)
+        jb_stat, jb_p   = stats.jarque_bera(resid)[:2]
+        cond            = np.linalg.cond(X.values)
 
         vif_data = {}
         for col in available:
@@ -1330,39 +1212,45 @@ if current_mode == "Single Stock":
         cn_status = "pass" if cond < 30 else "warn" if cond < 100 else "fail"
 
         def diag_card(name, val, sub, status):
-            cls = {"pass": "diag-pass", "fail": "diag-fail", "warn": "diag-warn"}.get(status, "diag-pass")
+            cls = {"pass":"diag-pass","fail":"diag-fail","warn":"diag-warn"}.get(status,"diag-pass")
             return f'<div class="diag-item"><div class="diag-name">{name}</div><div class="diag-val {cls}">{val}</div><div class="diag-sub">{sub}</div></div>'
 
-        # ── Live price banner
+        # Live price banner
         try:
             _live_price, _prev_close, _currency = get_live_price(ticker)
             _chg     = _live_price - _prev_close
             _chg_pct = (_chg / _prev_close) * 100
-            _price_color = "#34d399" if _chg >= 0 else "#f87171"
-            _arrow       = "&#9650;" if _chg >= 0 else "&#9660;"
-            _price_html  = (
+            _clr     = "#34d399" if _chg >= 0 else "#f87171"
+            _arrow   = "&#9650;" if _chg >= 0 else "&#9660;"
+            _price_html = (
                 f'<div style="display:flex;align-items:baseline;gap:16px;margin-bottom:20px;'
                 f'padding:14px 20px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);'
                 f'border-radius:12px;flex-wrap:wrap;">'
                 f'<span style="font-family:JetBrains Mono,monospace;font-size:22px;font-weight:700;color:#e2e8f0;">{ticker}</span>'
-                f'<span style="font-family:JetBrains Mono,monospace;font-size:28px;font-weight:700;color:{_price_color};">'
-                f'{_currency} {_live_price:,.2f}</span>'
-                f'<span style="font-family:JetBrains Mono,monospace;font-size:15px;color:{_price_color};">'
-                f'{_arrow} {abs(_chg):,.2f} ({abs(_chg_pct):.2f}%)</span>'
-                f'<span style="font-family:JetBrains Mono,monospace;font-size:11px;color:#334155;margin-left:auto;">'
-                f'LIVE &nbsp;·&nbsp; prev close {_currency} {_prev_close:,.2f}</span>'
+                f'<span style="font-family:JetBrains Mono,monospace;font-size:28px;font-weight:700;color:{_clr};">{_currency} {_live_price:,.2f}</span>'
+                f'<span style="font-family:JetBrains Mono,monospace;font-size:15px;color:{_clr};">{_arrow} {abs(_chg):,.2f} ({abs(_chg_pct):.2f}%)</span>'
+                f'<span style="font-family:JetBrains Mono,monospace;font-size:11px;color:#334155;margin-left:auto;">LIVE &nbsp;·&nbsp; prev close {_currency} {_prev_close:,.2f}</span>'
                 f'</div>'
             )
         except Exception:
             _price_html = (
                 f'<div style="padding:14px 20px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);'
                 f'border-radius:12px;margin-bottom:20px;font-family:JetBrains Mono,monospace;'
-                f'font-size:22px;font-weight:700;color:#e2e8f0;">{ticker} '
-                f'<span style="font-size:12px;color:#475569;">· price unavailable</span></div>'
+                f'font-size:22px;font-weight:700;color:#e2e8f0;">{ticker} <span style="font-size:12px;color:#475569;">· price unavailable</span></div>'
             )
         st.markdown(_price_html, unsafe_allow_html=True)
 
-        # ── Key metrics
+        # Factor selector badge in main area
+        active_labels = [FACTOR_NAMES.get(f, f) for f in sel_factors]
+        st.markdown(
+            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:#475569;'
+            f'margin-bottom:16px;padding:8px 12px;background:rgba(255,255,255,0.02);'
+            f'border:1px solid rgba(255,255,255,0.06);border-radius:8px;">'
+            f'Regressing on: <span style="color:#e2e8f0;">{" · ".join(active_labels)}</span></div>',
+            unsafe_allow_html=True
+        )
+
+        # Key metrics
         _alpha_card = f"""
         <div class="metric-card {'green' if alpha_ann > 0 else 'red'}">
           <div class="metric-label">Annual Alpha</div>
@@ -1376,7 +1264,7 @@ if current_mode == "Single Stock":
           <div class="metric-sub">Adj: {r2_adj:.4f}</div>
         </div>"""
         ir_color = "#34d399" if not np.isnan(ir) and ir > 0.5 else "#fbbf24" if not np.isnan(ir) and ir > 0 else "#f87171"
-        ir_str = f"{ir:.3f}" if not np.isnan(ir) else "N/A"
+        ir_str   = f"{ir:.3f}" if not np.isnan(ir) else "N/A"
         _ir_card = f"""
         <div class="metric-card gold">
           <div class="metric-label">Information Ratio</div>
@@ -1392,22 +1280,21 @@ if current_mode == "Single Stock":
 
         c1, c2, c3, c4 = st.columns(4)
         with c1: st.markdown(_alpha_card, unsafe_allow_html=True)
-        with c2: st.markdown(_r2_card, unsafe_allow_html=True)
-        with c3: st.markdown(_ir_card, unsafe_allow_html=True)
-        with c4: st.markdown(_f_card, unsafe_allow_html=True)
+        with c2: st.markdown(_r2_card,    unsafe_allow_html=True)
+        with c3: st.markdown(_ir_card,    unsafe_allow_html=True)
+        with c4: st.markdown(_f_card,     unsafe_allow_html=True)
 
-        # ── Factor loadings table
+        # Factor loadings table — show ALL factors but highlight significant ones
         st.markdown('<div class="section-title">Factor Loadings</div>', unsafe_allow_html=True)
-        header_html = """
+        st.markdown("""
         <div class="factor-row header">
           <div>FACTOR</div><div>BETA</div><div>STD ERR</div><div>T-STAT</div><div>P-VALUE</div><div>SIG</div>
-        </div>"""
-        st.markdown(header_html, unsafe_allow_html=True)
+        </div>""", unsafe_allow_html=True)
 
         factor_rows_html = []
         for name in ["const"] + available:
-            b = model.params[name]; se = model.bse[name]
-            t = model.tvalues[name]; p = model.pvalues[name]
+            b  = model.params[name]; se = model.bse[name]
+            t  = model.tvalues[name]; p  = model.pvalues[name]
             row_h = f"""
             <div class="{row_class(name, p)}">
               <div style="color:#e2e8f0;font-weight:500">{FACTOR_NAMES.get(name, name)}</div>
@@ -1420,30 +1307,34 @@ if current_mode == "Single Stock":
             st.markdown(row_h, unsafe_allow_html=True)
             factor_rows_html.append(row_h)
 
+        # Count significant factors for the note
+        n_sig = sum(1 for f in available if model.pvalues[f] < 0.05)
         legend_html = (
             f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:#334155;margin-top:6px;">'
             f'★★★ p&lt;0.01 · ★★ p&lt;0.05 · ★ p&lt;0.10 · n.s. not significant'
-            f' | HAC Newey-West SE, maxlags={hac_lags}</div>'
+            f' | HAC Newey-West SE, maxlags={hac_lags}'
+            f' | <span style="color:#34d399;">{n_sig} of {len(available)} factors significant at p&lt;0.05</span>'
+            f' — AI analysis runs on significant factors only</div>'
         )
         st.markdown(legend_html, unsafe_allow_html=True)
 
-        # ── AI Macro Intelligence
-        st.markdown('<div class="section-title">AI Macro Intelligence</div>', unsafe_allow_html=True)
+        # AI Macro Intelligence — significant factors only
+        st.markdown('<div class="section-title">AI Macro Intelligence · Significant Factors Only</div>', unsafe_allow_html=True)
         today_display = date.today().strftime("%B %d, %Y")
         ai_header_html = (
             f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#475569;margin-bottom:12px;">'
-            f'Live fundamentals-grounded analysis · Per-factor deep dive · Current macro context as of {today_display} · Forward forecast · Key risks'
+            f'AI analysis restricted to statistically significant factors (p&lt;0.05) · {n_sig} factor(s) qualify · {today_display}'
             f'<br><span style="color:#334155;">Powered by Groq · Llama 3.3 70b · Uses live price, P/E, P/B, margins, analyst targets, short interest</span>'
             f'</div>'
         )
         st.markdown(ai_header_html, unsafe_allow_html=True)
 
-        _ai_key = f"{ticker}_{start_date}_{end_date}_{hac_lags}_{annualize}"
+        _ai_key = f"{ticker}_{start_date}_{end_date}_{hac_lags}_{annualize}_{'_'.join(sel_factors)}"
         if st.session_state.get("ai_run_key") != _ai_key:
             st.session_state["ai_run_key"] = _ai_key
             st.session_state["ai_insight"] = None
             st.session_state["ai_error"]   = None
-            with st.spinner(f"Fetching live fundamentals + analyzing {len(available)} factors for {ticker}..."):
+            with st.spinner(f"Analyzing {n_sig} significant factor(s) for {ticker}..."):
                 insight, error = get_ai_insight(
                     ticker, model, available, alpha_ann, alpha_p, r2, n, start_date, end_date
                 )
@@ -1453,56 +1344,38 @@ if current_mode == "Single Stock":
         if st.session_state["ai_error"] and not st.session_state["ai_insight"]:
             st.markdown(f'<div class="error-box">AI Error: {st.session_state["ai_error"]}</div>', unsafe_allow_html=True)
         elif st.session_state["ai_error"] and st.session_state["ai_insight"]:
-            st.markdown(
-                f'<div class="error-box" style="border-color:rgba(251,191,36,0.3);color:#fbbf24;">'
-                f'⚠ Some factors had errors (showing placeholders): {st.session_state["ai_error"]}</div>',
-                unsafe_allow_html=True)
-
+            st.markdown(f'<div class="error-box" style="border-color:rgba(251,191,36,0.3);color:#fbbf24;">⚠ Partial errors: {st.session_state["ai_error"]}</div>', unsafe_allow_html=True)
         if st.session_state["ai_insight"]:
             render_ai_insight(ticker, st.session_state["ai_insight"])
 
-        # ── Tabs
+        # Tabs
         tab1, tab2, tab3, tab4, tab5 = st.tabs([
-            "95% Confidence Intervals",
-            "Regression Diagnostics",
-            "Variance Inflation Factors",
-            "Model Fit",
-            "Rolling Market Beta",
+            "95% Confidence Intervals", "Regression Diagnostics",
+            "Variance Inflation Factors", "Model Fit", "Rolling Market Beta",
         ])
 
-        ci = model.conf_int()
+        ci      = model.conf_int()
         ci_html = '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">'
         for name in ["const"] + available:
             lo = ci.loc[name, 0]; hi = ci.loc[name, 1]; b = model.params[name]
             spans_zero = lo < 0 < hi
-            bar_color = "#34d399" if b > 0 and not spans_zero else "#f87171" if b < 0 and not spans_zero else "#6b7280"
-            ci_html += f"""
-            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px 16px;min-width:160px;flex:1;">
-              <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#475569;margin-bottom:6px;">{FACTOR_NAMES.get(name, name)}</div>
-              <div style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:{bar_color};">{b:+.4f}</div>
-              <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#334155;margin-top:4px;">[{lo:+.4f}, {hi:+.4f}]</div>
-              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#334155;margin-top:6px;">{'spans zero' if spans_zero else 'excl. zero'}</div>
-            </div>"""
+            bar_color  = "#34d399" if b > 0 and not spans_zero else "#f87171" if b < 0 and not spans_zero else "#6b7280"
+            ci_html += f'<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px 16px;min-width:160px;flex:1;"><div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:#475569;margin-bottom:6px;">{FACTOR_NAMES.get(name, name)}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:14px;font-weight:600;color:{bar_color};">{b:+.4f}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:#334155;margin-top:4px;">[{lo:+.4f}, {hi:+.4f}]</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;color:#334155;margin-top:6px;">{"spans zero" if spans_zero else "excl. zero"}</div></div>'
         ci_html += '</div>'
 
         diag_html = f"""
         <div style="height:12px"></div>
         <div class="diag-grid">
-          {diag_card("Durbin-Watson", f"{dw:.4f}", "Autocorrelation · ideal ≈ 2.0", dw_status)}
-          {diag_card("Breusch-Pagan", f"p = {bp_p:.4f}", f"Heteroscedasticity · stat={bp_stat:.3f}", bp_status)}
-          {diag_card("Jarque-Bera", f"p = {jb_p:.4f}", f"Residual normality · stat={jb_stat:.3f}", jb_status)}
-          {diag_card("Condition Number", f"{cond:.1f}", "Multicollinearity · ideal < 30", cn_status)}
+          {diag_card("Durbin-Watson",   f"{dw:.4f}",       "Autocorrelation · ideal ≈ 2.0",           dw_status)}
+          {diag_card("Breusch-Pagan",   f"p = {bp_p:.4f}", f"Heteroscedasticity · stat={bp_stat:.3f}", bp_status)}
+          {diag_card("Jarque-Bera",     f"p = {jb_p:.4f}", f"Residual normality · stat={jb_stat:.3f}", jb_status)}
+          {diag_card("Condition Number",f"{cond:.1f}",      "Multicollinearity · ideal < 30",           cn_status)}
         </div>"""
 
         vif_html = '<div style="height:12px"></div><div style="display:flex;gap:10px;flex-wrap:wrap;">'
         for col, v in vif_data.items():
             vif_color = "#34d399" if v < 5 else "#fbbf24" if v < 10 else "#f87171"
-            vif_html += f"""
-            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px 16px;min-width:110px;">
-              <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#475569;margin-bottom:4px;">{FACTOR_NAMES.get(col, col)}</div>
-              <div style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600;color:{vif_color}">{v:.2f}</div>
-              <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#334155;margin-top:2px;">{'OK' if v < 5 else 'MODERATE' if v < 10 else 'HIGH'}</div>
-            </div>"""
+            vif_html += f'<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px 16px;min-width:110px;"><div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:#475569;margin-bottom:4px;">{FACTOR_NAMES.get(col, col)}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:18px;font-weight:600;color:{vif_color}">{v:.2f}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:#334155;margin-top:2px;">{"OK" if v < 5 else "MODERATE" if v < 10 else "HIGH"}</div></div>'
         vif_html += '</div>'
 
         fit_html = f"""
@@ -1546,23 +1419,19 @@ if current_mode == "Single Stock":
                   <text x="6" y="{H+20}" fill="#334155" font-family="JetBrains Mono,monospace" font-size="10">{roll_dates[0]}</text>
                   <text x="{W-6}" y="{H+20}" fill="#334155" text-anchor="end" font-family="JetBrains Mono,monospace" font-size="10">{roll_dates[-1]}</text>
                   <text x="{W//2}" y="18" fill="#475569" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10">Current β = {roll_betas[-1]:.3f}</text>
-                </svg>
-                </div>"""
+                </svg></div>"""
 
-        with tab1: st.markdown(ci_html, unsafe_allow_html=True)
+        with tab1: st.markdown(ci_html,   unsafe_allow_html=True)
         with tab2: st.markdown(diag_html, unsafe_allow_html=True)
-        with tab3: st.markdown(vif_html, unsafe_allow_html=True)
-        with tab4: st.markdown(fit_html, unsafe_allow_html=True)
+        with tab3: st.markdown(vif_html,  unsafe_allow_html=True)
+        with tab4: st.markdown(fit_html,  unsafe_allow_html=True)
         with tab5:
-            if rolling_html:
-                st.markdown(rolling_html, unsafe_allow_html=True)
-            else:
-                st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#334155;padding:20px 0;">Need at least 36 months of data and the Mkt-RF factor to display rolling beta.</div>', unsafe_allow_html=True)
+            if rolling_html: st.markdown(rolling_html, unsafe_allow_html=True)
+            else: st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#334155;padding:20px 0;">Need at least 36 months of data and Mkt-RF selected.</div>', unsafe_allow_html=True)
 
         with st.expander("Full OLS Summary (statsmodels)"):
             st.text(model.summary().as_text())
 
-        # ── Export
         st.markdown('<div class="section-title">Export Results</div>', unsafe_allow_html=True)
         export_df = pd.DataFrame({
             "Factor":   [FACTOR_NAMES.get(n, n) for n in model.params.index],
@@ -1575,38 +1444,34 @@ if current_mode == "Single Stock":
         })
         data_export = data.copy()
         data_export.index = data_export.index.astype(str)
-
         col_a, col_b = st.columns(2)
         with col_a:
-            st.download_button("⬇  Download Results CSV", export_df.to_csv(index=False),
-                               file_name=f"{ticker}_factor_regression.csv", mime="text/csv", use_container_width=True)
+            st.download_button("⬇  Download Results CSV", export_df.to_csv(index=False), file_name=f"{ticker}_factor_regression.csv", mime="text/csv", use_container_width=True)
         with col_b:
-            st.download_button("⬇  Download Merged Data CSV", data_export.to_csv(),
-                               file_name=f"{ticker}_merged_data.csv", mime="text/csv", use_container_width=True)
+            st.download_button("⬇  Download Merged Data CSV", data_export.to_csv(), file_name=f"{ticker}_merged_data.csv", mime="text/csv", use_container_width=True)
 
-        # ── Save everything to cache so switching modes and coming back is instant
         st.session_state["single_stock_cache"] = {
-            "ticker":        ticker,
-            "price_html":    _price_html,
-            "metric_alpha":  _alpha_card,
-            "metric_r2":     _r2_card,
-            "metric_ir":     _ir_card,
-            "metric_f":      _f_card,
-            "factor_rows":   factor_rows_html,
-            "factor_legend": legend_html,
-            "ai_header":     ai_header_html,
-            "ai_insight":    st.session_state["ai_insight"],
-            "ai_error":      st.session_state["ai_error"],
-            "ci_html":       ci_html,
-            "diag_html":     diag_html,
-            "vif_html":      vif_html,
-            "fit_html":      fit_html,
-            "rolling_html":  rolling_html,
-            "ols_summary":   model.summary().as_text(),
-            "export_csv":    export_df.to_csv(index=False),
-            "merged_csv":    data_export.to_csv(),
+            "ticker":       ticker,
+            "price_html":   _price_html,
+            "metric_alpha": _alpha_card,
+            "metric_r2":    _r2_card,
+            "metric_ir":    _ir_card,
+            "metric_f":     _f_card,
+            "factor_rows":  factor_rows_html,
+            "factor_legend":legend_html,
+            "ai_header":    ai_header_html,
+            "ai_insight":   st.session_state["ai_insight"],
+            "ai_error":     st.session_state["ai_error"],
+            "ci_html":      ci_html,
+            "diag_html":    diag_html,
+            "vif_html":     vif_html,
+            "fit_html":     fit_html,
+            "rolling_html": rolling_html,
+            "ols_summary":  model.summary().as_text(),
+            "export_csv":   export_df.to_csv(index=False),
+            "merged_csv":   data_export.to_csv(),
         }
-        st.session_state["run"] = False   # reset trigger; cache keeps the data
+        st.session_state["run"] = False
 
     except Exception as e:
         st.markdown(f'<div class="error-box">Error: {str(e)}</div>', unsafe_allow_html=True)
