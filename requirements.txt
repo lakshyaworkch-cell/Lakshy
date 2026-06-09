@@ -4,4 +4,4 @@ numpy
 yfinance
 statsmodels
 scipy
-google-generativeai
+groq
