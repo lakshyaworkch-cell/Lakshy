@@ -396,6 +396,7 @@ def _factor_prompt(ticker, factor_code, factor_name, beta, p_value, significant,
         "Your analysis must be SPECIFIC to this exact ticker. "
         "You MUST respond with a single valid JSON object and nothing else."
         "You have to check various news sources and check all the finance related developments and any investments decided"
+        "make use og pnrwire to get the latest quartely results and 8-k announcements to be use more numbers"
     )
     sig_word = "statistically significant (p<0.05)" if significant else f"not statistically significant (p={p_value:.3f})"
     user = f"""Today is {today}. Analyze the {factor_name} ({factor_code}) loading for {ticker}.
