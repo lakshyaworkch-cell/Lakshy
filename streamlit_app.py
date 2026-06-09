@@ -332,6 +332,7 @@ def _factor_prompt(ticker, factor_code, factor_name, beta, p_value, significant,
         "You have been given LIVE fundamental and price data for the stock. Use it. "
         "Your analysis must be SPECIFIC to this exact ticker. "
         "You MUST respond with a single valid JSON object and nothing else."
+        "You have to check various news sources and check all the finance related developments and any investments decided"
     )
     sig_word = "statistically significant (p<0.05)" if significant else f"not statistically significant (p={p_value:.3f})"
     user = f"""Today is {today}. Analyze the {factor_name} ({factor_code}) loading for {ticker}.
