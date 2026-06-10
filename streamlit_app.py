@@ -711,6 +711,7 @@ def run_single_regression(ticker_sym, start_str, end_str, hac_lags, ff_key, sele
             return None, err
 
         data = pd.DataFrame({"Stock": returns}).join(ff[available + (["RF"] if has_rf else [])], how="inner")
+        data = data.replace([np.inf, -np.inf], np.nan).dropna()
         if len(data) < 12:
             return None, f"Too few obs for {ticker_sym} ({len(data)})"
         data["Y"] = data["Stock"] - data["RF"] if has_rf else data["Stock"]
@@ -1344,6 +1345,8 @@ if current_mode == "Single Stock":
         returns.index = returns.index.to_period("M")
 
         data = pd.DataFrame({"Stock": returns}).join(ff[available + (["RF"] if has_rf else [])], how="inner")
+        data = data.replace([np.inf, -np.inf], np.nan).dropna()
+
 
         if len(data) < 24:
             st.markdown(f'<div class="error-box">Too few observations ({len(data)}). Check date range.</div>', unsafe_allow_html=True)
