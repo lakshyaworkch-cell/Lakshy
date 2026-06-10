@@ -14,6 +14,11 @@ warnings.filterwarnings("ignore")
 
 FF_URL = "https://raw.githubusercontent.com/lakshyaworkch-cell/Lakshy/main/F-F_Research_Data_5_Factors_2x3.csv"
 
+# AQR public data URLs (monthly, Global except US — using US proxy via their Excel files)
+# AQR hosts Excel files; we use a CSV mirror for QMJ and BAB
+AQR_QMJ_URL = "https://images.aqr.com/-/media/AQR/Documents/Insights/Data-Sets/Quality-Minus-Junk-Factors-Monthly.xlsx"
+AQR_BAB_URL = "https://images.aqr.com/-/media/AQR/Documents/Insights/Data-Sets/Betting-Against-Beta-Equity-Factors-Monthly.xlsx"
+
 st.set_page_config(page_title="Factor Regression", page_icon="📈", layout="wide")
 
 def get_bg_base64():
@@ -151,6 +156,15 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
 }}
 .ai-summary-box b {{ color: #e2e8f0; }}
 
+/* === AQR BADGE === */
+.aqr-badge {{
+    display: inline-block; padding: 1px 6px; border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase;
+    background: rgba(251,191,36,0.12); color: #fbbf24;
+    border: 1px solid rgba(251,191,36,0.25); margin-left: 4px; vertical-align: middle;
+}}
+
 /* === OLS SUMMARY BOX === */
 .ols-box {{
     background: rgba(10,30,25,0.85);
@@ -228,7 +242,14 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
 #  Helpers
 # ─────────────────────────────────────────────
 
-ALL_FACTORS = ["Mkt-RF", "SMB", "HML", "RMW", "CMA", "Mom"]
+# FF5 + Momentum factors
+FF_FACTORS  = ["Mkt-RF", "SMB", "HML", "RMW", "CMA", "Mom"]
+# AQR factors
+AQR_FACTORS = ["QMJ", "BAB"]
+ALL_FACTORS = FF_FACTORS + AQR_FACTORS
+
+# Which factors come from AQR (used for badge rendering)
+AQR_FACTOR_SET = set(AQR_FACTORS)
 
 def sig_badge(p):
     if p < 0.001: return '<span class="sig-badge badge-001">★★★</span>'
@@ -266,6 +287,8 @@ FACTOR_NAMES = {
     "RMW":    "Profitability",
     "CMA":    "Investment",
     "Mom":    "Momentum",
+    "QMJ":    "Quality (QMJ)",
+    "BAB":    "Betting Agst Beta",
 }
 
 FACTOR_DESCRIPTIONS = {
@@ -275,11 +298,16 @@ FACTOR_DESCRIPTIONS = {
     "RMW":    "Profitability factor — Robust Minus Weak (profitable vs unprofitable firms)",
     "CMA":    "Investment factor — Conservative Minus Aggressive (low vs high investment firms)",
     "Mom":    "Momentum factor (past winners vs past losers)",
+    "QMJ":    "Quality Minus Junk (AQR) — long high-quality stocks, short low-quality/junk stocks",
+    "BAB":    "Betting Against Beta (AQR) — long low-beta stocks, short high-beta stocks (leverage-constrained anomaly)",
 }
 
 FACTOR_COLORS = {
     "Mkt-RF": "#60a5fa", "SMB": "#34d399", "HML": "#fbbf24",
-    "RMW": "#a78bfa", "CMA": "#f97316", "Mom": "#ec4899", "const": "#94a3b8",
+    "RMW": "#a78bfa", "CMA": "#f97316", "Mom": "#ec4899",
+    "QMJ":  "#facc15",   # gold — AQR quality
+    "BAB":  "#38bdf8",   # sky blue — AQR BAB
+    "const": "#94a3b8",
 }
 
 
@@ -292,6 +320,69 @@ def load_factors():
     ff = ff[ff.index.str.match(r"^\d{6}$")].copy()
     ff.index = pd.to_datetime(ff.index, format="%Y%m").to_period("M")
     return ff
+
+
+@st.cache_data(show_spinner=False)
+def load_aqr_factors():
+    """
+    Load QMJ and BAB monthly factor returns from AQR's public Excel files.
+    Returns a DataFrame indexed by Period("M") with columns QMJ and BAB (as decimals).
+    Falls back to empty DataFrame on any error.
+    """
+    import io
+
+    results = {}
+
+    # ── QMJ ──────────────────────────────────────────────────────────────────
+    try:
+        resp_qmj = pd.read_excel(AQR_QMJ_URL, sheet_name="QMJ Factors", header=18, index_col=0)
+        resp_qmj.index = pd.to_datetime(resp_qmj.index, errors="coerce")
+        resp_qmj = resp_qmj[resp_qmj.index.notna()]
+        resp_qmj.index = resp_qmj.index.to_period("M")
+        # AQR stores USA column; fall back to first numeric column
+        if "USA" in resp_qmj.columns:
+            qmj_series = pd.to_numeric(resp_qmj["USA"], errors="coerce").dropna()
+        else:
+            qmj_series = pd.to_numeric(resp_qmj.iloc[:, 0], errors="coerce").dropna()
+        results["QMJ"] = qmj_series
+    except Exception as e:
+        st.warning(f"Could not load AQR QMJ data: {e}. QMJ will be unavailable.")
+
+    # ── BAB ──────────────────────────────────────────────────────────────────
+    try:
+        resp_bab = pd.read_excel(AQR_BAB_URL, sheet_name="BAB Factors", header=18, index_col=0)
+        resp_bab.index = pd.to_datetime(resp_bab.index, errors="coerce")
+        resp_bab = resp_bab[resp_bab.index.notna()]
+        resp_bab.index = resp_bab.index.to_period("M")
+        if "USA" in resp_bab.columns:
+            bab_series = pd.to_numeric(resp_bab["USA"], errors="coerce").dropna()
+        else:
+            bab_series = pd.to_numeric(resp_bab.iloc[:, 0], errors="coerce").dropna()
+        results["BAB"] = bab_series
+    except Exception as e:
+        st.warning(f"Could not load AQR BAB data: {e}. BAB will be unavailable.")
+
+    if not results:
+        return pd.DataFrame()
+
+    df = pd.DataFrame(results)
+    # AQR returns are already in decimal form in recent files;
+    # if values look like percentages (mean abs > 0.5) divide by 100
+    for col in df.columns:
+        if df[col].abs().mean() > 0.5:
+            df[col] = df[col] / 100.0
+    return df
+
+
+def merge_all_factors(ff_df, aqr_df, selected_factors):
+    """
+    Merge FF and AQR factor DataFrames, return only the selected columns that exist.
+    """
+    combined = ff_df.copy()
+    for col in AQR_FACTORS:
+        if col in selected_factors and col in aqr_df.columns:
+            combined[col] = aqr_df[col]
+    return combined
 
 
 def get_live_price(ticker_symbol):
@@ -408,14 +499,20 @@ def _fmt_ctx(ctx):
 
 def _factor_prompt(ticker, factor_code, factor_name, beta, p_value, significant, description, ctx_str):
     today = date.today().strftime("%B %d, %Y")
+    is_aqr = factor_code in AQR_FACTOR_SET
+    aqr_note = (
+        "\nThis is an AQR factor. For QMJ, discuss quality metrics (profitability, earnings quality, safety, payout). "
+        "For BAB, discuss the low-beta/low-volatility anomaly and leverage constraints."
+    ) if is_aqr else ""
     system = (
         "You are a senior quantitative analyst at a top-tier hedge fund. "
         "You have been given LIVE fundamental and price data for the stock. Use it. "
         "Your analysis must be SPECIFIC to this exact ticker. "
         "You MUST respond with a single valid JSON object and nothing else."
-        "You have to check various news sources and check all the finance related developments and any investments decided"
-        "make use oF pnrwire to get the latest quartely results and 8-k announcements to be use more numbers"
-        "But dont explicitly keep saying 8-k or pnr. Make heavy use of cnbc to get the company developments"
+        "You have to check various news sources and check all the finance related developments and any investments decided."
+        "Make use of prnewswire to get the latest quarterly results and 8-k announcements to use more numbers."
+        "But dont explicitly keep saying 8-k or pnr. Make heavy use of cnbc to get the company developments."
+        + aqr_note
     )
     sig_word = "statistically significant (p<0.05)" if significant else f"not statistically significant (p={p_value:.3f})"
     user = f"""Today is {today}. Analyze the {factor_name} ({factor_code}) loading for {ticker}.
@@ -545,10 +642,12 @@ def render_ai_insight(ticker, insight_data):
             what = bold(fac.get("what_it_means", "")); macro = bold(fac.get("current_macro_context", ""))
             news = bold(fac.get("recent_stock_news", "")); forecast = bold(fac.get("forward_forecast", ""))
             risks = bold(fac.get("key_risks", ""))
+            # AQR badge for QMJ/BAB
+            aqr_tag = '<span class="aqr-badge">AQR</span>' if code in AQR_FACTOR_SET else ""
             st.markdown(f"""
             <div class="factor-insight-card {card_cls}">
               <div class="fi-header">
-                <div class="fi-name">{name}</div>
+                <div class="fi-name">{name}{aqr_tag}</div>
                 <div class="fi-beta {beta_cls}">{beta:+.4f}</div>
                 <div class="fi-sig-label">SIGNIFICANT</div>
                 <div class="fi-outlook {outlook_cls}">{outlook_icon}</div>
@@ -595,14 +694,17 @@ def fetch_monthly_returns(ticker_sym, start_str, end_str):
 @st.cache_data(show_spinner=False)
 def run_single_regression(ticker_sym, start_str, end_str, hac_lags, ff_key, selected_factors_key):
     try:
-        ff_raw = load_factors()
+        ff_raw  = load_factors()
+        aqr_raw = load_aqr_factors()
+        ff_raw  = merge_all_factors(ff_raw, aqr_raw, list(selected_factors_key))
+
         ff = ff_raw.loc[start_str:end_str].copy()
         selected  = list(selected_factors_key)
         available = [c for c in selected if c in ff.columns]
         has_rf    = "RF" in ff.columns
-        ff[available] = ff[available].astype(float) / 100
+        ff[available] = ff[available].astype(float)
         if has_rf:
-            ff["RF"] = ff["RF"].astype(float) / 100
+            ff["RF"] = ff["RF"].astype(float)
 
         returns, err = fetch_monthly_returns(ticker_sym, start_str, end_str)
         if returns is None:
@@ -635,12 +737,15 @@ def run_single_regression(ticker_sym, start_str, end_str, hac_lags, ff_key, sele
 
 def build_true_portfolio_model(port_results, weights, available_factors, start_str, end_str, hac_lags):
     try:
-        ff_raw = load_factors()
+        ff_raw  = load_factors()
+        aqr_raw = load_aqr_factors()
+        ff_raw  = merge_all_factors(ff_raw, aqr_raw, available_factors)
+
         ff = ff_raw.loc[start_str:end_str].copy()
         has_rf = "RF" in ff.columns
-        ff[available_factors] = ff[available_factors].astype(float) / 100
+        ff[available_factors] = ff[available_factors].astype(float)
         if has_rf:
-            ff["RF"] = ff["RF"].astype(float) / 100
+            ff["RF"] = ff["RF"].astype(float)
 
         all_returns = {}
         for tkr, res in port_results.items():
@@ -722,7 +827,8 @@ def render_portfolio_attribution(port_results, weights, available_factors, true_
     for f in available_factors:
         b    = port_betas.get(f, 0)
         bcls = "pos" if b >= 0 else "neg"
-        grid_html += f'<div class="port-attr-cell"><div class="port-attr-factor">{FACTOR_NAMES.get(f, f)}</div><div class="port-attr-beta {bcls}">{b:+.4f}</div></div>'
+        aqr_tag = ' <span class="aqr-badge">AQR</span>' if f in AQR_FACTOR_SET else ""
+        grid_html += f'<div class="port-attr-cell"><div class="port-attr-factor">{FACTOR_NAMES.get(f, f)}{aqr_tag}</div><div class="port-attr-beta {bcls}">{b:+.4f}</div></div>'
     grid_html += '</div>'
     st.markdown(grid_html, unsafe_allow_html=True)
 
@@ -737,7 +843,8 @@ def render_portfolio_attribution(port_results, weights, available_factors, true_
     rows_html += '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1px;color:#1D9E75;text-transform:uppercase;padding:4px 0;">WT</div>'
     for f in available_factors:
         fc = FACTOR_COLORS.get(f, "#9FE1CB")
-        rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1px;color:{fc};text-transform:uppercase;padding:4px 0;">{FACTOR_NAMES.get(f,f)}</div>'
+        aqr_tag = ' <span class="aqr-badge">AQR</span>' if f in AQR_FACTOR_SET else ""
+        rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1px;color:{fc};text-transform:uppercase;padding:4px 0;">{FACTOR_NAMES.get(f,f)}{aqr_tag}</div>'
     rows_html += '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1px;color:#a78bfa;text-transform:uppercase;padding:4px 0;">ANN α</div>'
     rows_html += '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1px;color:#60a5fa;text-transform:uppercase;padding:4px 0;">R²</div>'
 
@@ -775,7 +882,8 @@ def render_portfolio_attribution(port_results, weights, available_factors, true_
         disp = np.std(vals)
         rc   = "#f87171" if disp > 0.5 else "#fbbf24" if disp > 0.2 else "#34d399"
         rl   = "HIGH" if disp > 0.5 else "MODERATE" if disp > 0.2 else "LOW"
-        risk_html += f'<div style="background:rgba(29,158,117,0.06);border:1px solid rgba(29,158,117,0.15);border-radius:8px;padding:12px 14px;min-width:100px;flex:1;"><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:4px;text-transform:uppercase;">{FACTOR_NAMES.get(f,f)}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;font-weight:600;color:{rc};">{rl}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#9FE1CB;margin-top:2px;">σ = {disp:.3f}</div></div>'
+        aqr_tag = ' <span class="aqr-badge">AQR</span>' if f in AQR_FACTOR_SET else ""
+        risk_html += f'<div style="background:rgba(29,158,117,0.06);border:1px solid rgba(29,158,117,0.15);border-radius:8px;padding:12px 14px;min-width:100px;flex:1;"><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:4px;text-transform:uppercase;">{FACTOR_NAMES.get(f,f)}{aqr_tag}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;font-weight:600;color:{rc};">{rl}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#9FE1CB;margin-top:2px;">σ = {disp:.3f}</div></div>'
     risk_html += '</div>'
     st.markdown(risk_html, unsafe_allow_html=True)
 
@@ -820,7 +928,7 @@ if "selected_factors" not in st.session_state:
 st.markdown("# Factor Regression")
 st.markdown(
     '<p style="font-family:\'JetBrains Mono\',monospace;color:#1D9E75;font-size:13px;letter-spacing:1px;">'
-    'FF5 + MOMENTUM · NEWEY-WEST ROBUST STANDARD ERRORS</p>',
+    'FF5 + MOMENTUM + AQR (QMJ · BAB) · NEWEY-WEST ROBUST STANDARD ERRORS</p>',
     unsafe_allow_html=True)
 st.markdown("---")
 
@@ -898,10 +1006,12 @@ with st.sidebar:
 
     st.markdown("---")
 
+    # ── Factor Selection ──────────────────────────────────────────────────────
     st.markdown("**Factor Selection**")
     st.markdown(
         '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:8px;">'
-        'Choose which factors to include in the regression.</div>',
+        'FF5 + Momentum factors loaded from Ken French\'s library.<br>'
+        '<span style="color:#fbbf24;">AQR</span> factors (QMJ, BAB) loaded from AQR\'s public data library.</div>',
         unsafe_allow_html=True
     )
     col_sel, col_desel = st.columns(2)
@@ -919,10 +1029,29 @@ with st.sidebar:
             st.rerun()
 
     new_selection = []
-    for f in ALL_FACTORS:
+    # FF factors group
+    st.markdown(
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1px;'
+        'text-transform:uppercase;color:#1D9E75;margin:6px 0 2px 0;">Fama-French + Momentum</div>',
+        unsafe_allow_html=True
+    )
+    for f in FF_FACTORS:
         checked = f in st.session_state["selected_factors"]
         if st.checkbox(FACTOR_NAMES.get(f, f), value=checked, key=f"chk_{f}"):
             new_selection.append(f)
+
+    # AQR factors group
+    st.markdown(
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1px;'
+        'text-transform:uppercase;color:#fbbf24;margin:10px 0 2px 0;">AQR Factors</div>',
+        unsafe_allow_html=True
+    )
+    for f in AQR_FACTORS:
+        checked = f in st.session_state["selected_factors"]
+        label   = f"{FACTOR_NAMES.get(f, f)} ⚡"
+        if st.checkbox(label, value=checked, key=f"chk_{f}"):
+            new_selection.append(f)
+
     if new_selection != st.session_state["selected_factors"]:
         st.session_state["selected_factors"] = new_selection
         st.session_state["single_stock_cache"] = None
@@ -985,7 +1114,7 @@ with st.sidebar:
 
     st.markdown(
         '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#1D9E75;">'
-        'Fama-French 5-Factor + Momentum · Monthly</div>',
+        'FF5 + Momentum · AQR QMJ + BAB · Monthly</div>',
         unsafe_allow_html=True)
 
 
@@ -1003,7 +1132,8 @@ if not st.session_state["run"] and not st.session_state["port_run"] \
             '<div class="interpret-box" style="margin-top:40px;text-align:center;">'
             '<b>Single Stock Mode</b><br><br>'
             '1. Enter a ticker<br>2. Set date range<br>'
-            '3. Select factors<br>4. Click <b>▶ RUN REGRESSION</b><br><br>'
+            '3. Select factors — including <span style="color:#fbbf24;">AQR QMJ &amp; BAB</span><br>'
+            '4. Click <b>▶ RUN REGRESSION</b><br><br>'
             '<span style="color:#1D9E75;font-size:13px;">Factor analysis runs only on statistically significant loadings (p&lt;0.05).</span>'
             '</div>', unsafe_allow_html=True)
     else:
@@ -1011,7 +1141,8 @@ if not st.session_state["run"] and not st.session_state["port_run"] \
             '<div class="interpret-box" style="margin-top:40px;text-align:center;">'
             '<b>Portfolio Attribution Mode</b><br><br>'
             '1. Add your holdings (ticker + amount)<br>2. Set date range<br>'
-            '3. Select factors<br>4. Click <b>▶ RUN PORTFOLIO ATTRIBUTION</b>'
+            '3. Select factors — including <span style="color:#fbbf24;">AQR QMJ &amp; BAB</span><br>'
+            '4. Click <b>▶ RUN PORTFOLIO ATTRIBUTION</b>'
             '</div>', unsafe_allow_html=True)
     st.stop()
 
@@ -1101,7 +1232,6 @@ if current_mode == "Portfolio Attribution":
 # ════════════════════════════════════════════
 
 def _render_ols_summary(ols_text):
-    """Render OLS summary in a styled monospace box."""
     escaped = ols_text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     st.markdown(
         f'<div class="ols-box"><pre>{escaped}</pre></div>',
@@ -1161,7 +1291,9 @@ if current_mode == "Single Stock":
     try:
         with st.spinner("Loading factor data..."):
             try:
-                ff_raw = load_factors()
+                ff_raw  = load_factors()
+                aqr_raw = load_aqr_factors()
+                ff_raw  = merge_all_factors(ff_raw, aqr_raw, sel_factors)
             except Exception as e:
                 st.markdown(f'<div class="error-box">Failed to load factor data: {e}</div>', unsafe_allow_html=True)
                 st.stop()
@@ -1174,9 +1306,28 @@ if current_mode == "Single Stock":
             st.markdown('<div class="error-box">None of the selected factors found in the dataset.</div>', unsafe_allow_html=True)
             st.stop()
 
-        ff[available] = ff[available].astype(float) / 100
+        # AQR factors are already in decimal; FF factors come in as pct so divide by 100
+        for col in available:
+            if col in FF_FACTORS:
+                ff[col] = ff[col].astype(float) / 100
+            else:
+                ff[col] = ff[col].astype(float)   # already decimal from load_aqr_factors
         if has_rf:
             ff["RF"] = ff["RF"].astype(float) / 100
+
+        # Notify user which AQR factors loaded successfully
+        loaded_aqr = [f for f in AQR_FACTORS if f in available]
+        missing_aqr = [f for f in sel_factors if f in AQR_FACTORS and f not in available]
+        if loaded_aqr:
+            st.markdown(
+                f'<div class="info-box">✓ AQR factors loaded: {", ".join(loaded_aqr)}</div>',
+                unsafe_allow_html=True
+            )
+        if missing_aqr:
+            st.markdown(
+                f'<div class="error-box">⚠ AQR factors unavailable (check network): {", ".join(missing_aqr)}</div>',
+                unsafe_allow_html=True
+            )
 
         with st.spinner(f"Downloading {ticker} price history..."):
             raw = yf.download(ticker, start=str(start_date), end=str(end_date), auto_adjust=True, progress=False)
@@ -1263,12 +1414,18 @@ if current_mode == "Single Stock":
             )
         st.markdown(_price_html, unsafe_allow_html=True)
 
-        active_labels = [FACTOR_NAMES.get(f, f) for f in sel_factors]
+        # Factor chips with AQR badge
+        active_chips = []
+        for f in sel_factors:
+            label = FACTOR_NAMES.get(f, f)
+            if f in AQR_FACTOR_SET:
+                label += ' <span class="aqr-badge">AQR</span>'
+            active_chips.append(label)
         st.markdown(
             f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;color:#5DCAA5;'
             f'margin-bottom:16px;padding:8px 12px;background:rgba(29,158,117,0.06);'
             f'border:1px solid rgba(29,158,117,0.15);border-radius:8px;">'
-            f'Regressing on: <span style="color:#e2e8f0;">{" · ".join(active_labels)}</span></div>',
+            f'Regressing on: <span style="color:#e2e8f0;">{" · ".join(active_chips)}</span></div>',
             unsafe_allow_html=True)
 
         _alpha_card = f"""
@@ -1310,9 +1467,11 @@ if current_mode == "Single Stock":
         factor_rows_html = []
         for name in ["const"] + available:
             b = model.params[name]; se = model.bse[name]; t = model.tvalues[name]; p = model.pvalues[name]
+            aqr_tag = ' <span class="aqr-badge">AQR</span>' if name in AQR_FACTOR_SET else ""
+            display_name = f"{FACTOR_NAMES.get(name, name)}{aqr_tag}"
             row_h = f"""
             <div class="{row_class(name, p)}">
-              <div style="color:#e2e8f0;font-weight:500">{FACTOR_NAMES.get(name, name)}</div>
+              <div style="color:#e2e8f0;font-weight:500">{display_name}</div>
               <div>{fmt_beta(b)}</div><div style="color:#9FE1CB">{se:.4f}</div>
               <div>{fmt_tstat(t)}</div><div>{fmt_pval(p)}</div><div>{sig_badge(p)}</div>
             </div>"""
@@ -1325,6 +1484,7 @@ if current_mode == "Single Stock":
             f'★★★ p&lt;0.01 · ★★ p&lt;0.05 · ★ p&lt;0.10 · n.s. not significant'
             f' | Newey-West SE, maxlags={hac_lags}'
             f' | <span style="color:#34d399;">{n_sig} of {len(available)} factors significant at p&lt;0.05</span>'
+            f' | <span style="color:#fbbf24;">AQR = Quality Minus Junk / Betting Against Beta</span>'
             f'</div>'
         )
         st.markdown(legend_html, unsafe_allow_html=True)
@@ -1364,7 +1524,8 @@ if current_mode == "Single Stock":
             lo = ci.loc[name, 0]; hi = ci.loc[name, 1]; b = model.params[name]
             spans_zero = lo < 0 < hi
             bar_color  = "#34d399" if b > 0 and not spans_zero else "#f87171" if b < 0 and not spans_zero else "#6b7280"
-            ci_html += f'<div style="background:rgba(29,158,117,0.06);border:1px solid rgba(29,158,117,0.15);border-radius:10px;padding:14px 16px;min-width:140px;flex:1;"><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:6px;">{FACTOR_NAMES.get(name, name)}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:14px;font-weight:600;color:{bar_color};">{b:+.4f}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#9FE1CB;margin-top:4px;">[{lo:+.4f}, {hi:+.4f}]</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#1D9E75;margin-top:6px;">{"spans zero" if spans_zero else "excl. zero"}</div></div>'
+            aqr_tag = ' <span class="aqr-badge">AQR</span>' if name in AQR_FACTOR_SET else ""
+            ci_html += f'<div style="background:rgba(29,158,117,0.06);border:1px solid rgba(29,158,117,0.15);border-radius:10px;padding:14px 16px;min-width:140px;flex:1;"><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:6px;">{FACTOR_NAMES.get(name, name)}{aqr_tag}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:14px;font-weight:600;color:{bar_color};">{b:+.4f}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#9FE1CB;margin-top:4px;">[{lo:+.4f}, {hi:+.4f}]</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#1D9E75;margin-top:6px;">{"spans zero" if spans_zero else "excl. zero"}</div></div>'
         ci_html += '</div>'
 
         diag_html = f'<div style="height:12px"></div><div class="diag-grid">{diag_card("Durbin-Watson",f"{dw:.4f}","Autocorrelation · ideal ≈ 2.0",dw_status)}{diag_card("Breusch-Pagan",f"p = {bp_p:.4f}",f"Heteroscedasticity · stat={bp_stat:.3f}",bp_status)}{diag_card("Jarque-Bera",f"p = {jb_p:.4f}",f"Residual normality · stat={jb_stat:.3f}",jb_status)}{diag_card("Condition Number",f"{cond:.1f}","Multicollinearity · ideal < 30",cn_status)}</div>'
@@ -1372,7 +1533,8 @@ if current_mode == "Single Stock":
         vif_html = '<div style="height:12px"></div><div style="display:flex;flex-wrap:wrap;gap:10px;">'
         for col, v in vif_data.items():
             vc = "#34d399" if v < 5 else "#fbbf24" if v < 10 else "#f87171"
-            vif_html += f'<div style="background:rgba(29,158,117,0.06);border:1px solid rgba(29,158,117,0.15);border-radius:10px;padding:14px 16px;min-width:100px;"><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:4px;">{FACTOR_NAMES.get(col, col)}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:18px;font-weight:600;color:{vc}">{v:.2f}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#9FE1CB;margin-top:2px;">{"OK" if v < 5 else "MODERATE" if v < 10 else "HIGH"}</div></div>'
+            aqr_tag = ' <span class="aqr-badge">AQR</span>' if col in AQR_FACTOR_SET else ""
+            vif_html += f'<div style="background:rgba(29,158,117,0.06);border:1px solid rgba(29,158,117,0.15);border-radius:10px;padding:14px 16px;min-width:100px;"><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:4px;">{FACTOR_NAMES.get(col, col)}{aqr_tag}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:18px;font-weight:600;color:{vc}">{v:.2f}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#9FE1CB;margin-top:2px;">{"OK" if v < 5 else "MODERATE" if v < 10 else "HIGH"}</div></div>'
         vif_html += '</div>'
 
         fit_html = f'<div style="height:12px"></div><div style="display:flex;flex-wrap:wrap;gap:10px;"><div class="diag-item" style="min-width:120px;"><div class="diag-name">AIC</div><div class="diag-val" style="color:#60a5fa;font-size:16px;">{aic:.2f}</div></div><div class="diag-item" style="min-width:120px;"><div class="diag-name">BIC</div><div class="diag-val" style="color:#60a5fa;font-size:16px;">{bic:.2f}</div></div><div class="diag-item" style="min-width:120px;"><div class="diag-name">Log-Likelihood</div><div class="diag-val" style="color:#60a5fa;font-size:16px;">{model.llf:.2f}</div></div><div class="diag-item" style="min-width:120px;"><div class="diag-name">Residual Std</div><div class="diag-val" style="color:#60a5fa;font-size:16px;">{resid.std():.4f}</div></div><div class="diag-item" style="min-width:120px;"><div class="diag-name">Skewness</div><div class="diag-val" style="color:#60a5fa;font-size:16px;">{float(stats.skew(resid)):.4f}</div></div><div class="diag-item" style="min-width:120px;"><div class="diag-name">Kurtosis</div><div class="diag-val" style="color:#60a5fa;font-size:16px;">{float(stats.kurtosis(resid)):.4f}</div></div></div>'
