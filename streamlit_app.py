@@ -25,7 +25,6 @@ def get_bg_base64():
 
 _BG = get_bg_base64()
 
-# Teal gradient background
 _BG_CSS = (
     f"""background-image:
         linear-gradient(rgba(4,52,44,0.88), rgba(4,52,44,0.88)),
@@ -61,21 +60,21 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
 .metric-card.blue {{ border-left-color: #60a5fa; }}
 .metric-card.gold {{ border-left-color: #fbbf24; }}
 .metric-card.gray {{ border-left-color: #6b7280; }}
-.metric-label {{ font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 1.5px; color: #5DCAA5; text-transform: uppercase; margin-bottom: 4px; }}
+.metric-label {{ font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 1px; color: #5DCAA5; text-transform: uppercase; margin-bottom: 4px; }}
 .metric-value {{ font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 600; color: #e2e8f0; }}
-.metric-sub {{ font-size: 11px; color: #9FE1CB; margin-top: 4px; font-family: 'JetBrains Mono', monospace; word-break: break-all; }}
+.metric-sub {{ font-size: 12px; color: #9FE1CB; margin-top: 4px; font-family: 'JetBrains Mono', monospace; word-break: break-all; }}
 
 /* === FACTOR ROWS — stack on mobile, grid on desktop === */
 .factor-row {{
     display: flex; flex-wrap: wrap; gap: 6px 12px;
     align-items: center; padding: 10px 12px; border-radius: 8px;
-    margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px;
     background: rgba(29,158,117,0.05); border: 1px solid rgba(29,158,117,0.12);
 }}
-.factor-row > div:first-child {{ width: 100%; font-size: 12px; color: #e2e8f0; font-weight: 500; }}
+.factor-row > div:first-child {{ width: 100%; font-size: 13px; color: #e2e8f0; font-weight: 500; }}
 .factor-row > div:not(:first-child) {{ flex: 1 1 60px; min-width: 55px; }}
 .factor-row:hover {{ background: rgba(29,158,117,0.09); }}
-.factor-row.header {{ background: transparent; border-color: transparent; font-size: 11px; letter-spacing: 1px; color: #5DCAA5; text-transform: uppercase; }}
+.factor-row.header {{ background: transparent; border-color: transparent; font-size: 12px; letter-spacing: 1px; color: #5DCAA5; text-transform: uppercase; }}
 .factor-row.header > div:first-child {{ width: 100%; }}
 .factor-row.sig   {{ border-left: 2px solid #34d399; }}
 .factor-row.marg  {{ border-left: 2px solid #fbbf24; }}
@@ -90,7 +89,7 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
 }}
 
 /* === SIG BADGES === */
-.sig-badge {{ display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 500; letter-spacing: 1px; }}
+.sig-badge {{ display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 12px; font-weight: 500; letter-spacing: 1px; }}
 .badge-001 {{ background: rgba(52,211,153,0.15); color: #34d399; }}
 .badge-01  {{ background: rgba(52,211,153,0.10); color: #6ee7b7; }}
 .badge-05  {{ background: rgba(251,191,36,0.12); color: #fbbf24; }}
@@ -99,7 +98,7 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
 
 /* === SECTION TITLES === */
 .section-title {{
-    font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 2px;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 2px;
     text-transform: uppercase; color: #5DCAA5; border-bottom: 1px solid rgba(29,158,117,0.2);
     padding-bottom: 8px; margin: 24px 0 14px 0;
 }}
@@ -108,10 +107,10 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
 .diag-grid {{ display: grid; grid-template-columns: 1fr; gap: 10px; }}
 @media (min-width: 500px) {{ .diag-grid {{ grid-template-columns: 1fr 1fr; }} }}
 .diag-item {{ background: rgba(29,158,117,0.06); border: 1px solid rgba(29,158,117,0.15); border-radius: 10px; padding: 14px 16px; }}
-.diag-name {{ font-size: 11px; color: #5DCAA5; font-family: 'JetBrains Mono', monospace; margin-bottom: 4px; }}
+.diag-name {{ font-size: 12px; color: #5DCAA5; font-family: 'JetBrains Mono', monospace; margin-bottom: 4px; }}
 .diag-val  {{ font-size: 16px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }}
 .diag-pass {{ color: #34d399; }} .diag-fail {{ color: #f87171; }} .diag-warn {{ color: #fbbf24; }}
-.diag-sub  {{ font-size: 11px; color: #9FE1CB; font-family: 'JetBrains Mono', monospace; margin-top: 3px; }}
+.diag-sub  {{ font-size: 12px; color: #9FE1CB; font-family: 'JetBrains Mono', monospace; margin-top: 3px; }}
 
 /* === INTERPRET / AI BOXES === */
 .interpret-box {{ background: rgba(29,158,117,0.06); border: 1px solid rgba(29,158,117,0.18); border-radius: 12px; padding: 18px 20px; font-size: 14px; line-height: 1.8; color: #9FE1CB; }}
@@ -127,13 +126,13 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
 .factor-insight-card.neutral  {{ border-left: 3px solid #6b7280; }}
 .fi-header {{ display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; }}
 .fi-name {{ font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: #e2e8f0; letter-spacing: 1px; }}
-.fi-beta {{ font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 2px 8px; border-radius: 4px; }}
+.fi-beta {{ font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 2px 8px; border-radius: 4px; }}
 .fi-beta.pos {{ background: rgba(52,211,153,0.12); color: #34d399; }}
 .fi-beta.neg {{ background: rgba(248,113,113,0.12); color: #f87171; }}
-.fi-sig-label {{ font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 1px; color: #5DCAA5; text-transform: uppercase; }}
+.fi-sig-label {{ font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 1px; color: #5DCAA5; text-transform: uppercase; }}
 .fi-outlook {{
     display: inline-block; padding: 2px 8px; border-radius: 4px;
-    font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600;
     letter-spacing: 1px; text-transform: uppercase; margin-left: auto;
 }}
 .fi-outlook.bullish  {{ background: rgba(52,211,153,0.1); color: #34d399; }}
@@ -141,8 +140,8 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
 .fi-outlook.neutral  {{ background: rgba(107,114,128,0.1); color: #6b7280; }}
 .fi-outlook.mixed    {{ background: rgba(251,191,36,0.1);  color: #fbbf24; }}
 .fi-body {{ font-size: 13px; color: #9FE1CB; line-height: 1.85; }}
-.fi-news {{ margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(29,158,117,0.15); font-size: 12px; color: #5DCAA5; font-family: 'JetBrains Mono', monospace; }}
-.fi-news-label {{ font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: #1D9E75; margin-bottom: 4px; }}
+.fi-news {{ margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(29,158,117,0.15); font-size: 13px; color: #5DCAA5; font-family: 'JetBrains Mono', monospace; }}
+.fi-news-label {{ font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: #1D9E75; margin-bottom: 4px; }}
 
 /* === AI SUMMARY BOXES === */
 .ai-summary-box {{
@@ -151,6 +150,25 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
     font-size: 13px; color: #9FE1CB; line-height: 1.8;
 }}
 .ai-summary-box b {{ color: #e2e8f0; }}
+
+/* === OLS SUMMARY BOX === */
+.ols-box {{
+    background: rgba(10,30,25,0.85);
+    border: 1px solid rgba(29,158,117,0.25);
+    border-radius: 12px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}}
+.ols-box pre {{
+    font-family: 'JetBrains Mono', 'Fira Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.75;
+    color: #9FE1CB;
+    margin: 0;
+    white-space: pre;
+    tab-size: 4;
+}}
 
 /* === INPUTS & BUTTONS === */
 .stTextInput > div > div > input {{
@@ -178,12 +196,12 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
 .error-box {{
     background: rgba(248,113,113,0.06); border: 1px solid rgba(248,113,113,0.2);
     border-radius: 8px; padding: 12px 14px;
-    font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #f87171;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #f87171;
 }}
 .info-box {{
     background: rgba(29,158,117,0.08); border: 1px solid rgba(29,158,117,0.25);
     border-radius: 8px; padding: 12px 14px;
-    font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #5DCAA5;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #5DCAA5;
 }}
 
 /* === PORTFOLIO === */
@@ -198,7 +216,7 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
     background: rgba(29,158,117,0.06); border: 1px solid rgba(29,158,117,0.15);
     border-radius: 8px; padding: 12px 14px;
 }}
-.port-attr-factor {{ font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5DCAA5; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }}
+.port-attr-factor {{ font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #5DCAA5; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }}
 .port-attr-beta {{ font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 600; }}
 .port-attr-beta.pos {{ color: #34d399; }}
 .port-attr-beta.neg {{ color: #f87171; }}
@@ -509,9 +527,9 @@ def render_ai_insight(ticker, insight_data):
 
     today_str = date.today().strftime("%B %d, %Y")
     st.markdown(
-        f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1.5px;'
+        f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;letter-spacing:1px;'
         f'text-transform:uppercase;color:#1D9E75;margin-bottom:16px;">'
-        f'✦ AI Factor Intelligence · {ticker} · As of {today_str} · Significant Factors Only</div>',
+        f'Factor Intelligence · {ticker} · {today_str} · Significant factors only</div>',
         unsafe_allow_html=True)
 
     if not factors:
@@ -536,20 +554,20 @@ def render_ai_insight(ticker, insight_data):
                 <div class="fi-outlook {outlook_cls}">{outlook_icon}</div>
               </div>
               <div class="fi-body">
-                <div style="margin-bottom:8px;"><span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#1D9E75;">WHAT IT MEANS FOR {ticker}</span><div style="margin-top:4px;">{what}</div></div>
-                <div style="margin-bottom:8px;"><span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#1D9E75;">CURRENT MACRO CONTEXT</span><div style="margin-top:4px;">{macro}</div></div>
-                {"" if not news else f'<div style="margin-bottom:8px;"><span style="font-family:JetBrains Mono,monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#1D9E75;">RECENT NEWS & CATALYSTS</span><div style="margin-top:4px;">{news}</div></div>'}
-                <div style="margin-bottom:8px;"><span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#1D9E75;">FORWARD FORECAST</span><div style="margin-top:4px;">{forecast}</div></div>
+                <div style="margin-bottom:8px;"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#1D9E75;">WHAT IT MEANS FOR {ticker}</span><div style="margin-top:4px;">{what}</div></div>
+                <div style="margin-bottom:8px;"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#1D9E75;">CURRENT MACRO CONTEXT</span><div style="margin-top:4px;">{macro}</div></div>
+                {"" if not news else f'<div style="margin-bottom:8px;"><span style="font-family:JetBrains Mono,monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#1D9E75;">RECENT NEWS & CATALYSTS</span><div style="margin-top:4px;">{news}</div></div>'}
+                <div style="margin-bottom:8px;"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#1D9E75;">FORWARD FORECAST</span><div style="margin-top:4px;">{forecast}</div></div>
                 <div class="fi-news"><div class="fi-news-label">⚠ KEY RISK</div>{risks}</div>
               </div>
             </div>""", unsafe_allow_html=True)
 
     if alpha_analysis:
-        st.markdown(f'<div class="ai-summary-box"><div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#1D9E75;margin-bottom:8px;">ALPHA PERSISTENCE ANALYSIS</div>{bold(alpha_analysis)}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="ai-summary-box"><div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#1D9E75;margin-bottom:8px;">ALPHA PERSISTENCE ANALYSIS</div>{bold(alpha_analysis)}</div>', unsafe_allow_html=True)
     if positioning_context:
-        st.markdown(f'<div class="ai-summary-box" style="border-color:rgba(52,211,153,0.2);color:#6ee7b7;background:rgba(52,211,153,0.05);"><div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#1D9E75;margin-bottom:8px;">POSITIONING & SENTIMENT</div>{bold(positioning_context)}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="ai-summary-box" style="border-color:rgba(52,211,153,0.2);color:#6ee7b7;background:rgba(52,211,153,0.05);"><div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#1D9E75;margin-bottom:8px;">POSITIONING & SENTIMENT</div>{bold(positioning_context)}</div>', unsafe_allow_html=True)
     if portfolio_verdict:
-        st.markdown(f'<div class="ai-summary-box" style="border-color:rgba(167,139,250,0.2);color:#c4b5fd;background:rgba(167,139,250,0.05);"><div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#7c3aed;margin-bottom:8px;">PORTFOLIO VERDICT</div>{bold(portfolio_verdict)}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="ai-summary-box" style="border-color:rgba(167,139,250,0.2);color:#c4b5fd;background:rgba(167,139,250,0.05);"><div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#7c3aed;margin-bottom:8px;">PORTFOLIO VERDICT</div>{bold(portfolio_verdict)}</div>', unsafe_allow_html=True)
 
 
 # ─────────────────────────────────────────────
@@ -664,42 +682,42 @@ def render_portfolio_attribution(port_results, weights, available_factors, true_
         port_r2        = true_port["r2"]
         port_mkt_beta  = true_port["mkt_beta"]
         port_betas     = true_port["betas"]
-        method_note    = "True portfolio regression (single model on blended returns)"
+        method_note    = "Single model fitted on blended portfolio returns"
     else:
         port_betas = {f: sum(weights[t] * port_results[t]["params"].get(f, 0.0) for t in tickers) for f in ["const"] + available_factors}
         port_alpha_ann = sum(weights[t] * port_results[t]["alpha_ann"] for t in tickers)
         port_alpha_p   = None
         port_r2        = np.mean([port_results[t]["r2"] for t in tickers])
         port_mkt_beta  = port_betas.get("Mkt-RF", 0.0)
-        method_note    = "Weighted average of individual regressions (fallback)"
+        method_note    = "Weighted average of individual regressions"
 
     alpha_color = "#34d399" if port_alpha_ann > 0 else "#f87171"
     alpha_p_str = f"p={port_alpha_p:.4f}" if port_alpha_p is not None else "n/a"
 
     st.markdown(f"""
     <div class="port-summary-card">
-      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#1D9E75;margin-bottom:14px;">
-        ◈ Portfolio-Level Factor Attribution · {n_stocks} Holdings
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#1D9E75;margin-bottom:14px;">
+        Portfolio Factor Attribution · {n_stocks} Holdings
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:16px 24px;align-items:baseline;">
         <div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#5DCAA5;margin-bottom:2px;">TRUE PORTFOLIO ALPHA (ANN)</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5DCAA5;margin-bottom:2px;">ANNUALIZED ALPHA</div>
           <div style="font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;color:{alpha_color};">{port_alpha_ann:+.2%}</div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#9FE1CB;margin-top:2px;">{alpha_p_str}</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#9FE1CB;margin-top:2px;">{alpha_p_str}</div>
         </div>
         <div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#5DCAA5;margin-bottom:2px;">PORTFOLIO R²</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5DCAA5;margin-bottom:2px;">PORTFOLIO R²</div>
           <div style="font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;color:#60a5fa;">{port_r2:.4f}</div>
         </div>
         <div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#5DCAA5;margin-bottom:2px;">MKT BETA (PORT)</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5DCAA5;margin-bottom:2px;">MARKET BETA</div>
           <div style="font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;color:#a78bfa;">{port_mkt_beta:+.3f}</div>
         </div>
       </div>
-      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#1D9E75;margin-top:10px;">{method_note}</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#1D9E75;margin-top:10px;">{method_note}</div>
     </div>""", unsafe_allow_html=True)
 
-    st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#5DCAA5;margin-bottom:10px;">PORTFOLIO FACTOR EXPOSURES (TRUE MODEL)</div>', unsafe_allow_html=True)
+    st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#5DCAA5;margin-bottom:10px;">Portfolio Factor Exposures</div>', unsafe_allow_html=True)
     grid_html = '<div class="port-attribution-grid">'
     for f in available_factors:
         b    = port_betas.get(f, 0)
@@ -708,60 +726,60 @@ def render_portfolio_attribution(port_results, weights, available_factors, true_
     grid_html += '</div>'
     st.markdown(grid_html, unsafe_allow_html=True)
 
-    st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#5DCAA5;margin:20px 0 10px 0;">FACTOR LOADING COMPARISON · PER STOCK vs PORTFOLIO</div>', unsafe_allow_html=True)
+    st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#5DCAA5;margin:20px 0 10px 0;">Factor Loadings by Holding</div>', unsafe_allow_html=True)
 
     all_betas_flat = [abs(port_results[t]["params"].get(f, 0)) for t in tickers for f in available_factors]
     max_abs = max(all_betas_flat) if all_betas_flat else 1
     grid_cols = f"80px 60px " + " ".join(["1fr"] * len(available_factors)) + " 80px 60px"
 
     rows_html = f'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><div style="display:grid;grid-template-columns:{grid_cols};gap:6px;min-width:600px;">'
-    rows_html += '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:1px;color:#1D9E75;text-transform:uppercase;padding:4px 0;">TICKER</div>'
-    rows_html += '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:1px;color:#1D9E75;text-transform:uppercase;padding:4px 0;">WT</div>'
+    rows_html += '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1px;color:#1D9E75;text-transform:uppercase;padding:4px 0;">TICKER</div>'
+    rows_html += '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1px;color:#1D9E75;text-transform:uppercase;padding:4px 0;">WT</div>'
     for f in available_factors:
         fc = FACTOR_COLORS.get(f, "#9FE1CB")
-        rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:1px;color:{fc};text-transform:uppercase;padding:4px 0;">{FACTOR_NAMES.get(f,f)}</div>'
-    rows_html += '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:1px;color:#a78bfa;text-transform:uppercase;padding:4px 0;">ANN α</div>'
-    rows_html += '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:1px;color:#60a5fa;text-transform:uppercase;padding:4px 0;">R²</div>'
+        rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1px;color:{fc};text-transform:uppercase;padding:4px 0;">{FACTOR_NAMES.get(f,f)}</div>'
+    rows_html += '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1px;color:#a78bfa;text-transform:uppercase;padding:4px 0;">ANN α</div>'
+    rows_html += '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1px;color:#60a5fa;text-transform:uppercase;padding:4px 0;">R²</div>'
 
     for tkr in tickers:
         res     = port_results[tkr]
         w       = weights[tkr]
         alpha_c = "#34d399" if res["alpha_ann"] > 0 else "#f87171"
         rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;font-weight:700;color:#e2e8f0;padding:8px 0;border-top:1px solid rgba(29,158,117,0.15);">{tkr}</div>'
-        rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#60a5fa;padding:8px 0;border-top:1px solid rgba(29,158,117,0.15);">{w:.0%}</div>'
+        rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#60a5fa;padding:8px 0;border-top:1px solid rgba(29,158,117,0.15);">{w:.0%}</div>'
         for f in available_factors:
             b   = res["params"].get(f, 0)
             bc  = "#34d399" if b >= 0 else "#f87171"
             pct = min(abs(b) / max_abs * 100, 100) if max_abs > 0 else 0
-            rows_html += f'<div style="padding:8px 0;border-top:1px solid rgba(29,158,117,0.15);"><div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:{bc};">{b:+.3f}</div><div style="height:3px;background:rgba(29,158,117,0.1);border-radius:2px;margin-top:3px;"><div style="width:{pct:.1f}%;height:100%;background:{bc};border-radius:2px;"></div></div></div>'
-        rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:{alpha_c};padding:8px 0;border-top:1px solid rgba(29,158,117,0.15);">{res["alpha_ann"]:+.2%}</div>'
-        rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#60a5fa;padding:8px 0;border-top:1px solid rgba(29,158,117,0.15);">{res["r2"]:.3f}</div>'
+            rows_html += f'<div style="padding:8px 0;border-top:1px solid rgba(29,158,117,0.15);"><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:{bc};">{b:+.3f}</div><div style="height:3px;background:rgba(29,158,117,0.1);border-radius:2px;margin-top:3px;"><div style="width:{pct:.1f}%;height:100%;background:{bc};border-radius:2px;"></div></div></div>'
+        rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:{alpha_c};padding:8px 0;border-top:1px solid rgba(29,158,117,0.15);">{res["alpha_ann"]:+.2%}</div>'
+        rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#60a5fa;padding:8px 0;border-top:1px solid rgba(29,158,117,0.15);">{res["r2"]:.3f}</div>'
 
     alpha_c = "#34d399" if port_alpha_ann > 0 else "#f87171"
     rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;font-weight:700;color:#a78bfa;padding:8px 0;border-top:2px solid rgba(167,139,250,0.3);">PORTFOLIO</div>'
-    rows_html += f'<div style="font-family:JetBrains Mono,monospace;font-size:11px;color:#a78bfa;padding:8px 0;border-top:2px solid rgba(167,139,250,0.3);">100%</div>'
+    rows_html += f'<div style="font-family:JetBrains Mono,monospace;font-size:12px;color:#a78bfa;padding:8px 0;border-top:2px solid rgba(167,139,250,0.3);">100%</div>'
     for f in available_factors:
         b   = port_betas.get(f, 0)
         bc  = "#34d399" if b >= 0 else "#f87171"
         pct = min(abs(b) / max_abs * 100, 100) if max_abs > 0 else 0
-        rows_html += f'<div style="padding:8px 0;border-top:2px solid rgba(167,139,250,0.3);"><div style="font-family:JetBrains Mono,monospace;font-size:11px;font-weight:600;color:{bc};">{b:+.3f}</div><div style="height:3px;background:rgba(29,158,117,0.1);border-radius:2px;margin-top:3px;"><div style="width:{pct:.1f}%;height:100%;background:{bc};border-radius:2px;"></div></div></div>'
-    rows_html += f'<div style="font-family:JetBrains Mono,monospace;font-size:11px;font-weight:600;color:{alpha_c};padding:8px 0;border-top:2px solid rgba(167,139,250,0.3);">{port_alpha_ann:+.2%}</div>'
-    rows_html += f'<div style="font-family:JetBrains Mono,monospace;font-size:11px;color:#60a5fa;padding:8px 0;border-top:2px solid rgba(167,139,250,0.3);">{port_r2:.3f}</div>'
+        rows_html += f'<div style="padding:8px 0;border-top:2px solid rgba(167,139,250,0.3);"><div style="font-family:JetBrains Mono,monospace;font-size:12px;font-weight:600;color:{bc};">{b:+.3f}</div><div style="height:3px;background:rgba(29,158,117,0.1);border-radius:2px;margin-top:3px;"><div style="width:{pct:.1f}%;height:100%;background:{bc};border-radius:2px;"></div></div></div>'
+    rows_html += f'<div style="font-family:JetBrains Mono,monospace;font-size:12px;font-weight:600;color:{alpha_c};padding:8px 0;border-top:2px solid rgba(167,139,250,0.3);">{port_alpha_ann:+.2%}</div>'
+    rows_html += f'<div style="font-family:JetBrains Mono,monospace;font-size:12px;color:#60a5fa;padding:8px 0;border-top:2px solid rgba(167,139,250,0.3);">{port_r2:.3f}</div>'
     rows_html += '</div></div>'
     st.markdown(f'<div style="background:rgba(29,158,117,0.04);border:1px solid rgba(29,158,117,0.15);border-radius:10px;padding:16px 18px;">{rows_html}</div>', unsafe_allow_html=True)
 
-    st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#5DCAA5;margin:20px 0 10px 0;">FACTOR CONCENTRATION RISK</div>', unsafe_allow_html=True)
+    st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#5DCAA5;margin:20px 0 10px 0;">Factor Concentration Risk</div>', unsafe_allow_html=True)
     risk_html = '<div style="display:flex;flex-wrap:wrap;gap:10px;">'
     for f in available_factors:
         vals = [port_results[t]["params"].get(f, 0) for t in tickers]
         disp = np.std(vals)
         rc   = "#f87171" if disp > 0.5 else "#fbbf24" if disp > 0.2 else "#34d399"
         rl   = "HIGH" if disp > 0.5 else "MODERATE" if disp > 0.2 else "LOW"
-        risk_html += f'<div style="background:rgba(29,158,117,0.06);border:1px solid rgba(29,158,117,0.15);border-radius:8px;padding:12px 14px;min-width:100px;flex:1;"><div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#5DCAA5;margin-bottom:4px;text-transform:uppercase;">{FACTOR_NAMES.get(f,f)}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;font-weight:600;color:{rc};">{rl}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#9FE1CB;margin-top:2px;">σ = {disp:.3f}</div></div>'
+        risk_html += f'<div style="background:rgba(29,158,117,0.06);border:1px solid rgba(29,158,117,0.15);border-radius:8px;padding:12px 14px;min-width:100px;flex:1;"><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:4px;text-transform:uppercase;">{FACTOR_NAMES.get(f,f)}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;font-weight:600;color:{rc};">{rl}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#9FE1CB;margin-top:2px;">σ = {disp:.3f}</div></div>'
     risk_html += '</div>'
     st.markdown(risk_html, unsafe_allow_html=True)
 
-    st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#5DCAA5;margin:20px 0 10px 0;">EXPORT</div>', unsafe_allow_html=True)
+    st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#5DCAA5;margin:20px 0 10px 0;">Export</div>', unsafe_allow_html=True)
     rows = []
     for tkr in tickers:
         res = port_results[tkr]
@@ -774,7 +792,7 @@ def render_portfolio_attribution(port_results, weights, available_factors, true_
     for f in available_factors:
         port_row[FACTOR_NAMES.get(f, f)] = port_betas.get(f, 0)
     rows.append(port_row)
-    st.download_button("⬇  Download Portfolio Attribution CSV", pd.DataFrame(rows).to_csv(index=False),
+    st.download_button("⬇  Download Attribution CSV", pd.DataFrame(rows).to_csv(index=False),
                        file_name="portfolio_factor_attribution.csv", mime="text/csv")
 
 
@@ -801,8 +819,8 @@ if "selected_factors" not in st.session_state:
 
 st.markdown("# Factor Regression")
 st.markdown(
-    '<p style="font-family:\'JetBrains Mono\',monospace;color:#1D9E75;font-size:12px;letter-spacing:1px;">'
-    'FF5 + MOMENTUM · HAC ROBUST STANDARD ERRORS · DATA AUTO-LOADED FROM GITHUB</p>',
+    '<p style="font-family:\'JetBrains Mono\',monospace;color:#1D9E75;font-size:13px;letter-spacing:1px;">'
+    'FF5 + MOMENTUM · NEWEY-WEST ROBUST STANDARD ERRORS</p>',
     unsafe_allow_html=True)
 st.markdown("---")
 
@@ -821,7 +839,7 @@ with st.sidebar:
     else:
         st.markdown("**Portfolio Holdings**")
         st.markdown(
-            '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#5DCAA5;margin-bottom:10px;">'
+            '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:10px;">'
             'Add stocks with ticker &amp; amount invested. Weights are auto-calculated.</div>',
             unsafe_allow_html=True
         )
@@ -865,7 +883,7 @@ with st.sidebar:
             ]
             if preview_lines:
                 st.markdown(
-                    '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#5DCAA5;'
+                    '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;'
                     'margin-top:8px;padding:8px 10px;background:rgba(29,158,117,0.06);border-radius:6px;'
                     'border:1px solid rgba(29,158,117,0.15);line-height:1.8;">'
                     + " &nbsp;|&nbsp; ".join(preview_lines) + '</div>',
@@ -882,7 +900,7 @@ with st.sidebar:
 
     st.markdown("**Factor Selection**")
     st.markdown(
-        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#5DCAA5;margin-bottom:8px;">'
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:8px;">'
         'Choose which factors to include in the regression.</div>',
         unsafe_allow_html=True
     )
@@ -913,7 +931,7 @@ with st.sidebar:
     if st.session_state["selected_factors"]:
         active_labels = [FACTOR_NAMES.get(f, f) for f in st.session_state["selected_factors"]]
         st.markdown(
-            '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#1D9E75;'
+            '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#1D9E75;'
             'margin-top:6px;padding:6px 8px;background:rgba(29,158,117,0.06);'
             'border-radius:6px;border:1px solid rgba(29,158,117,0.15);">'
             f'Active: {", ".join(active_labels)}</div>',
@@ -921,7 +939,7 @@ with st.sidebar:
         )
     else:
         st.markdown(
-            '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#f87171;margin-top:6px;">'
+            '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#f87171;margin-top:6px;">'
             '⚠ No factors selected.</div>', unsafe_allow_html=True
         )
 
@@ -966,8 +984,8 @@ with st.sidebar:
                     st.session_state["portfolio_cache"] = None
 
     st.markdown(
-        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#1D9E75;">'
-        'Factor data from:<br><span style="color:#5DCAA5;">github.com/lakshyaworkch-cell/Lakshy</span></div>',
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#1D9E75;">'
+        'Fama-French 5-Factor + Momentum · Monthly</div>',
         unsafe_allow_html=True)
 
 
@@ -986,7 +1004,7 @@ if not st.session_state["run"] and not st.session_state["port_run"] \
             '<b>Single Stock Mode</b><br><br>'
             '1. Enter a ticker<br>2. Set date range<br>'
             '3. Select factors<br>4. Click <b>▶ RUN REGRESSION</b><br><br>'
-            '<span style="color:#1D9E75;font-size:12px;">AI analysis runs only on statistically significant factors (p&lt;0.05).</span>'
+            '<span style="color:#1D9E75;font-size:13px;">Factor analysis runs only on statistically significant loadings (p&lt;0.05).</span>'
             '</div>', unsafe_allow_html=True)
     else:
         st.markdown(
@@ -1007,7 +1025,7 @@ if current_mode == "Portfolio Attribution":
         cache = st.session_state["portfolio_cache"]
         st.markdown("## Portfolio Factor Attribution")
         st.markdown(
-            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:20px;">'
+            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;color:#5DCAA5;margin-bottom:20px;">'
             f'{len(cache["weights"])} holdings · {len(cache["ordered_factors"])} factors · HAC SE · {cache["port_start"]} → {cache["port_end"]}'
             f'</div>', unsafe_allow_html=True)
         render_portfolio_attribution(
@@ -1032,7 +1050,7 @@ if current_mode == "Portfolio Attribution":
 
     st.markdown("## Portfolio Factor Attribution")
     st.markdown(
-        f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:20px;">'
+        f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;color:#5DCAA5;margin-bottom:20px;">'
         f'{len(weights)} holdings · {len(sel_factors)} factors · HAC SE · {port_start} → {port_end}</div>',
         unsafe_allow_html=True)
 
@@ -1065,7 +1083,7 @@ if current_mode == "Portfolio Attribution":
     common_factors  = list(avail_sets[0].intersection(*avail_sets[1:])) if len(avail_sets) > 1 else list(avail_sets[0])
     ordered_factors = [f for f in ALL_FACTORS if f in common_factors]
 
-    with st.spinner("Building true portfolio regression model…"):
+    with st.spinner("Building portfolio regression model…"):
         true_port = build_true_portfolio_model(port_results, valid_weights, ordered_factors, start_str, end_str, port_hac)
 
     st.session_state["portfolio_cache"] = {
@@ -1082,6 +1100,14 @@ if current_mode == "Portfolio Attribution":
 #  SINGLE STOCK MODE
 # ════════════════════════════════════════════
 
+def _render_ols_summary(ols_text):
+    """Render OLS summary in a styled monospace box."""
+    escaped = ols_text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    st.markdown(
+        f'<div class="ols-box"><pre>{escaped}</pre></div>',
+        unsafe_allow_html=True
+    )
+
 if current_mode == "Single Stock":
 
     if st.session_state["single_stock_cache"] is not None and not st.session_state["run"]:
@@ -1096,10 +1122,10 @@ if current_mode == "Single Stock":
         for row_html in c["factor_rows"]:
             st.markdown(row_html, unsafe_allow_html=True)
         st.markdown(c["factor_legend"], unsafe_allow_html=True)
-        st.markdown('<div class="section-title">AI Macro Intelligence · Significant Factors Only</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">Factor Intelligence · Significant Loadings</div>', unsafe_allow_html=True)
         st.markdown(c["ai_header"], unsafe_allow_html=True)
         if c.get("ai_error") and not c.get("ai_insight"):
-            st.markdown(f'<div class="error-box">AI Error: {c["ai_error"]}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="error-box">Analysis Error: {c["ai_error"]}</div>', unsafe_allow_html=True)
         elif c.get("ai_error") and c.get("ai_insight"):
             st.markdown(f'<div class="error-box" style="border-color:rgba(251,191,36,0.3);color:#fbbf24;">⚠ Some factors had errors: {c["ai_error"]}</div>', unsafe_allow_html=True)
         if c.get("ai_insight"):
@@ -1111,9 +1137,9 @@ if current_mode == "Single Stock":
         with tab4: st.markdown(c["fit_html"],  unsafe_allow_html=True)
         with tab5:
             if c.get("rolling_html"): st.markdown(c["rolling_html"], unsafe_allow_html=True)
-            else: st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;padding:20px 0;">Need at least 36 months of data and Mkt-RF selected.</div>', unsafe_allow_html=True)
-        with st.expander("Full OLS Summary (statsmodels)"):
-            st.text(c["ols_summary"])
+            else: st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;color:#5DCAA5;padding:20px 0;">Need at least 36 months of data and Mkt-RF selected.</div>', unsafe_allow_html=True)
+        with st.expander("Full OLS Summary"):
+            _render_ols_summary(c["ols_summary"])
         st.markdown('<div class="section-title">Export Results</div>', unsafe_allow_html=True)
         col_a, col_b = st.columns(2)
         with col_a:
@@ -1133,7 +1159,7 @@ if current_mode == "Single Stock":
     sel_factors= st.session_state["selected_factors"]
 
     try:
-        with st.spinner("Loading factor data from GitHub..."):
+        with st.spinner("Loading factor data..."):
             try:
                 ff_raw = load_factors()
             except Exception as e:
@@ -1145,14 +1171,14 @@ if current_mode == "Single Stock":
         has_rf    = "RF" in ff.columns
 
         if not available:
-            st.markdown('<div class="error-box">None of the selected factors found in the CSV.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="error-box">None of the selected factors found in the dataset.</div>', unsafe_allow_html=True)
             st.stop()
 
         ff[available] = ff[available].astype(float) / 100
         if has_rf:
             ff["RF"] = ff["RF"].astype(float) / 100
 
-        with st.spinner(f"Downloading {ticker} from Yahoo Finance..."):
+        with st.spinner(f"Downloading {ticker} price history..."):
             raw = yf.download(ticker, start=str(start_date), end=str(end_date), auto_adjust=True, progress=False)
 
         if raw.empty:
@@ -1215,7 +1241,7 @@ if current_mode == "Single Stock":
             cls = {"pass":"diag-pass","fail":"diag-fail","warn":"diag-warn"}.get(status,"diag-pass")
             return f'<div class="diag-item"><div class="diag-name">{name}</div><div class="diag-val {cls}">{val}</div><div class="diag-sub">{sub}</div></div>'
 
-        # ── Live price bar (mobile-friendly flex-wrap)
+        # ── Live price bar
         try:
             _live_price, _prev_close, _currency = get_live_price(ticker)
             _chg = _live_price - _prev_close; _chg_pct = (_chg / _prev_close) * 100
@@ -1226,20 +1252,20 @@ if current_mode == "Single Stock":
                 f'<span style="font-family:JetBrains Mono,monospace;font-size:18px;font-weight:700;color:#e2e8f0;">{ticker}</span>'
                 f'<span style="font-family:JetBrains Mono,monospace;font-size:22px;font-weight:700;color:{_clr};">{_currency} {_live_price:,.2f}</span>'
                 f'<span style="font-family:JetBrains Mono,monospace;font-size:13px;color:{_clr};">{_arrow} {abs(_chg):,.2f} ({abs(_chg_pct):.2f}%)</span>'
-                f'<span style="font-family:JetBrains Mono,monospace;font-size:11px;color:#5DCAA5;width:100%;">prev close {_currency} {_prev_close:,.2f}</span>'
+                f'<span style="font-family:JetBrains Mono,monospace;font-size:13px;color:#5DCAA5;width:100%;">prev close {_currency} {_prev_close:,.2f}</span>'
                 f'</div>'
             )
         except Exception:
             _price_html = (
                 f'<div style="padding:14px 16px;background:rgba(29,158,117,0.08);border:1px solid rgba(29,158,117,0.2);'
                 f'border-radius:12px;margin-bottom:20px;font-family:JetBrains Mono,monospace;'
-                f'font-size:18px;font-weight:700;color:#e2e8f0;">{ticker} <span style="font-size:12px;color:#5DCAA5;">· price unavailable</span></div>'
+                f'font-size:18px;font-weight:700;color:#e2e8f0;">{ticker} <span style="font-size:13px;color:#5DCAA5;">· price unavailable</span></div>'
             )
         st.markdown(_price_html, unsafe_allow_html=True)
 
         active_labels = [FACTOR_NAMES.get(f, f) for f in sel_factors]
         st.markdown(
-            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#5DCAA5;'
+            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;color:#5DCAA5;'
             f'margin-bottom:16px;padding:8px 12px;background:rgba(29,158,117,0.06);'
             f'border:1px solid rgba(29,158,117,0.15);border-radius:8px;">'
             f'Regressing on: <span style="color:#e2e8f0;">{" · ".join(active_labels)}</span></div>',
@@ -1295,20 +1321,20 @@ if current_mode == "Single Stock":
 
         n_sig = sum(1 for f in available if model.pvalues[f] < 0.05)
         legend_html = (
-            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#1D9E75;margin-top:6px;">'
+            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#1D9E75;margin-top:6px;">'
             f'★★★ p&lt;0.01 · ★★ p&lt;0.05 · ★ p&lt;0.10 · n.s. not significant'
-            f' | HAC Newey-West SE, maxlags={hac_lags}'
+            f' | Newey-West SE, maxlags={hac_lags}'
             f' | <span style="color:#34d399;">{n_sig} of {len(available)} factors significant at p&lt;0.05</span>'
-            f' — AI analysis runs on significant factors only</div>'
+            f'</div>'
         )
         st.markdown(legend_html, unsafe_allow_html=True)
 
-        st.markdown('<div class="section-title">AI Macro Intelligence · Significant Factors Only</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">Factor Intelligence · Significant Loadings</div>', unsafe_allow_html=True)
         today_display = date.today().strftime("%B %d, %Y")
         ai_header_html = (
-            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:12px;">'
-            f'AI analysis restricted to statistically significant factors (p&lt;0.05) · {n_sig} factor(s) qualify · {today_display}'
-            f'<br><span style="color:#1D9E75;">Powered by Groq · Llama 3.3 70b · Uses live price, P/E, margins, analyst targets, short interest</span>'
+            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;color:#5DCAA5;margin-bottom:12px;">'
+            f'Analysis restricted to statistically significant factors (p&lt;0.05) · {n_sig} factor(s) qualify · {today_display}'
+            f'<br><span style="color:#1D9E75;">Live price · fundamentals · analyst consensus · short interest</span>'
             f'</div>'
         )
         st.markdown(ai_header_html, unsafe_allow_html=True)
@@ -1324,7 +1350,7 @@ if current_mode == "Single Stock":
             st.session_state["ai_error"]   = error
 
         if st.session_state["ai_error"] and not st.session_state["ai_insight"]:
-            st.markdown(f'<div class="error-box">AI Error: {st.session_state["ai_error"]}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="error-box">Analysis Error: {st.session_state["ai_error"]}</div>', unsafe_allow_html=True)
         elif st.session_state["ai_error"] and st.session_state["ai_insight"]:
             st.markdown(f'<div class="error-box" style="border-color:rgba(251,191,36,0.3);color:#fbbf24;">⚠ Partial errors: {st.session_state["ai_error"]}</div>', unsafe_allow_html=True)
         if st.session_state["ai_insight"]:
@@ -1338,7 +1364,7 @@ if current_mode == "Single Stock":
             lo = ci.loc[name, 0]; hi = ci.loc[name, 1]; b = model.params[name]
             spans_zero = lo < 0 < hi
             bar_color  = "#34d399" if b > 0 and not spans_zero else "#f87171" if b < 0 and not spans_zero else "#6b7280"
-            ci_html += f'<div style="background:rgba(29,158,117,0.06);border:1px solid rgba(29,158,117,0.15);border-radius:10px;padding:14px 16px;min-width:140px;flex:1;"><div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#5DCAA5;margin-bottom:6px;">{FACTOR_NAMES.get(name, name)}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:14px;font-weight:600;color:{bar_color};">{b:+.4f}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#9FE1CB;margin-top:4px;">[{lo:+.4f}, {hi:+.4f}]</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:#1D9E75;margin-top:6px;">{"spans zero" if spans_zero else "excl. zero"}</div></div>'
+            ci_html += f'<div style="background:rgba(29,158,117,0.06);border:1px solid rgba(29,158,117,0.15);border-radius:10px;padding:14px 16px;min-width:140px;flex:1;"><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:6px;">{FACTOR_NAMES.get(name, name)}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:14px;font-weight:600;color:{bar_color};">{b:+.4f}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#9FE1CB;margin-top:4px;">[{lo:+.4f}, {hi:+.4f}]</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#1D9E75;margin-top:6px;">{"spans zero" if spans_zero else "excl. zero"}</div></div>'
         ci_html += '</div>'
 
         diag_html = f'<div style="height:12px"></div><div class="diag-grid">{diag_card("Durbin-Watson",f"{dw:.4f}","Autocorrelation · ideal ≈ 2.0",dw_status)}{diag_card("Breusch-Pagan",f"p = {bp_p:.4f}",f"Heteroscedasticity · stat={bp_stat:.3f}",bp_status)}{diag_card("Jarque-Bera",f"p = {jb_p:.4f}",f"Residual normality · stat={jb_stat:.3f}",jb_status)}{diag_card("Condition Number",f"{cond:.1f}","Multicollinearity · ideal < 30",cn_status)}</div>'
@@ -1346,7 +1372,7 @@ if current_mode == "Single Stock":
         vif_html = '<div style="height:12px"></div><div style="display:flex;flex-wrap:wrap;gap:10px;">'
         for col, v in vif_data.items():
             vc = "#34d399" if v < 5 else "#fbbf24" if v < 10 else "#f87171"
-            vif_html += f'<div style="background:rgba(29,158,117,0.06);border:1px solid rgba(29,158,117,0.15);border-radius:10px;padding:14px 16px;min-width:100px;"><div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#5DCAA5;margin-bottom:4px;">{FACTOR_NAMES.get(col, col)}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:18px;font-weight:600;color:{vc}">{v:.2f}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#9FE1CB;margin-top:2px;">{"OK" if v < 5 else "MODERATE" if v < 10 else "HIGH"}</div></div>'
+            vif_html += f'<div style="background:rgba(29,158,117,0.06);border:1px solid rgba(29,158,117,0.15);border-radius:10px;padding:14px 16px;min-width:100px;"><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:4px;">{FACTOR_NAMES.get(col, col)}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:18px;font-weight:600;color:{vc}">{v:.2f}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#9FE1CB;margin-top:2px;">{"OK" if v < 5 else "MODERATE" if v < 10 else "HIGH"}</div></div>'
         vif_html += '</div>'
 
         fit_html = f'<div style="height:12px"></div><div style="display:flex;flex-wrap:wrap;gap:10px;"><div class="diag-item" style="min-width:120px;"><div class="diag-name">AIC</div><div class="diag-val" style="color:#60a5fa;font-size:16px;">{aic:.2f}</div></div><div class="diag-item" style="min-width:120px;"><div class="diag-name">BIC</div><div class="diag-val" style="color:#60a5fa;font-size:16px;">{bic:.2f}</div></div><div class="diag-item" style="min-width:120px;"><div class="diag-name">Log-Likelihood</div><div class="diag-val" style="color:#60a5fa;font-size:16px;">{model.llf:.2f}</div></div><div class="diag-item" style="min-width:120px;"><div class="diag-name">Residual Std</div><div class="diag-val" style="color:#60a5fa;font-size:16px;">{resid.std():.4f}</div></div><div class="diag-item" style="min-width:120px;"><div class="diag-name">Skewness</div><div class="diag-val" style="color:#60a5fa;font-size:16px;">{float(stats.skew(resid)):.4f}</div></div><div class="diag-item" style="min-width:120px;"><div class="diag-name">Kurtosis</div><div class="diag-val" style="color:#60a5fa;font-size:16px;">{float(stats.kurtosis(resid)):.4f}</div></div></div>'
@@ -1374,10 +1400,10 @@ if current_mode == "Single Stock":
         with tab4: st.markdown(fit_html,  unsafe_allow_html=True)
         with tab5:
             if rolling_html: st.markdown(rolling_html, unsafe_allow_html=True)
-            else: st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;padding:20px 0;">Need at least 36 months and Mkt-RF selected.</div>', unsafe_allow_html=True)
+            else: st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;color:#5DCAA5;padding:20px 0;">Need at least 36 months and Mkt-RF selected.</div>', unsafe_allow_html=True)
 
-        with st.expander("Full OLS Summary (statsmodels)"):
-            st.text(model.summary().as_text())
+        with st.expander("Full OLS Summary"):
+            _render_ols_summary(model.summary().as_text())
 
         st.markdown('<div class="section-title">Export Results</div>', unsafe_allow_html=True)
         export_df = pd.DataFrame({
