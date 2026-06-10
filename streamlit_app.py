@@ -152,28 +152,23 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
 .ai-summary-box b {{ color: #e2e8f0; }}
 
 /* === OLS SUMMARY BOX === */
-.ols-box {
+.ols-box {{
     background: rgba(10,30,25,0.85);
     border: 1px solid rgba(29,158,117,0.25);
     border-radius: 12px;
     padding: 20px 24px;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    width: 100%;
-    box-sizing: border-box;
-}
-.ols-box pre {
-    font-family: 'JetBrains Mono', 'Courier New', monospace;
-    font-size: 12px;
-    line-height: 1.6;
+}}
+.ols-box pre {{
+    font-family: 'JetBrains Mono', 'Fira Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.75;
     color: #9FE1CB;
     margin: 0;
     white-space: pre;
-    word-wrap: normal;
-    overflow-x: auto;
     tab-size: 4;
-    -moz-tab-size: 4;
-}
+}}
 
 /* === INPUTS & BUTTONS === */
 .stTextInput > div > div > input {{
@@ -1106,10 +1101,10 @@ if current_mode == "Portfolio Attribution":
 # ════════════════════════════════════════════
 
 def _render_ols_summary(ols_text):
+    """Render OLS summary in a styled monospace box."""
     escaped = ols_text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     st.markdown(
-        f'<div class="ols-box" style="width:100%;max-width:900px;">'
-        f'<pre style="min-width:700px;">{escaped}</pre></div>',
+        f'<div class="ols-box"><pre>{escaped}</pre></div>',
         unsafe_allow_html=True
     )
 
