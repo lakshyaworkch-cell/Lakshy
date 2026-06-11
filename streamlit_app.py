@@ -3,8 +3,6 @@ import pandas as pd
 import numpy as np
 import yfinance as yf
 import statsmodels.api as sm
-from statsmodels.tsa.regime_switching.markov_regression import MarkovRegression
-from arch import arch_model
 from scipy import stats
 from groq import Groq
 from datetime import date
@@ -236,16 +234,6 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
 .port-attr-beta {{ font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 600; }}
 .port-attr-beta.pos {{ color: #34d399; }}
 .port-attr-beta.neg {{ color: #f87171; }}
-
-/* === REGIME BADGES === */
-.regime-badge {{
-    display: inline-block; padding: 2px 8px; border-radius: 4px;
-    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600;
-    letter-spacing: 1px; text-transform: uppercase;
-}}
-.regime-badge.low  {{ background: rgba(52,211,153,0.12); color: #34d399; }}
-.regime-badge.med  {{ background: rgba(251,191,36,0.12); color: #fbbf24; }}
-.regime-badge.high {{ background: rgba(248,113,113,0.12); color: #f87171; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -322,21 +310,6 @@ FACTOR_COLORS = {
     "const": "#94a3b8",
 }
 
-# Regime display config
-REGIME_LABELS_2 = {0: "Low Volatility", 1: "High Volatility"}
-REGIME_LABELS_3 = {0: "Low Volatility", 1: "Medium Volatility", 2: "High Volatility"}
-REGIME_COLORS   = {0: "#34d399", 1: "#fbbf24", 2: "#f87171"}
-REGIME_CSS_CLASS = {0: "low", 1: "med", 2: "high"}
-
-def regime_label(k, n_regimes):
-    if n_regimes == 2:
-        return REGIME_LABELS_2.get(k, f"Regime {k}")
-    return REGIME_LABELS_3.get(k, f"Regime {k}")
-
-def regime_css(k, n_regimes):
-    if n_regimes == 2:
-        return "low" if k == 0 else "high"
-    return REGIME_CSS_CLASS.get(k, "med")
 
 @st.cache_data(show_spinner=False)
 def load_factors():
@@ -695,6 +668,7 @@ def render_ai_insight(ticker, insight_data):
     if portfolio_verdict:
         st.markdown(f'<div class="ai-summary-box" style="border-color:rgba(167,139,250,0.2);color:#c4b5fd;background:rgba(167,139,250,0.05);"><div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#7c3aed;margin-bottom:8px;">PORTFOLIO VERDICT</div>{bold(portfolio_verdict)}</div>', unsafe_allow_html=True)
 
+
 # ─────────────────────────────────────────────
 #  Portfolio Attribution
 # ─────────────────────────────────────────────
@@ -931,385 +905,6 @@ def render_portfolio_attribution(port_results, weights, available_factors, true_
                        file_name="portfolio_factor_attribution.csv", mime="text/csv")
 
 
-# ─────────────────────────────────────────────
-#  Markov Regime-Switching EGARCH
-# ─────────────────────────────────────────────
-
-@st.cache_data(show_spinner=False)
-def fetch_daily_returns(ticker_sym, start_str, end_str):
-    try:
-        raw = yf.download(ticker_sym, start=start_str, end=end_str, auto_adjust=True, progress=False)
-        if raw.empty:
-            return None, f"No data for {ticker_sym}"
-        close = raw["Close"]
-        if isinstance(close, pd.DataFrame):
-            close = close.iloc[:, 0]
-        rets = 100 * close.pct_change().dropna()  # in percent for arch package numerical stability
-        rets.name = "ret"
-        return rets, None
-    except Exception as e:
-        return None, str(e)
-
-
-@st.cache_data(show_spinner=False)
-def run_markov_egarch(ticker_sym, start_str, end_str, n_regimes, p, o, q, dist):
-    """
-    Two-step approach:
-      1) Fit a Markov-switching mean/variance model (statsmodels MarkovRegression)
-         on daily returns to identify volatility regimes & transition dynamics.
-      2) Fit an EGARCH(p,o,q) model (arch package) on the full sample for
-         conditional-volatility forecasting, plus separate EGARCH fits on the
-         data belonging to each identified regime for regime-conditional vol.
-    """
-    try:
-        rets, err = fetch_daily_returns(ticker_sym, start_str, end_str)
-        if rets is None:
-            return None, err
-        if len(rets) < 250:
-            return None, f"Too few observations for {ticker_sym} ({len(rets)})"
-
-        rets_vals = rets.values.astype(float)
-
-        # 1) Markov-switching mean/variance model to identify regimes
-        ms_model = MarkovRegression(rets_vals, k_regimes=n_regimes, trend="c", switching_variance=True)
-        ms_res = ms_model.fit(disp=False, search_reps=20)
-
-        smoothed_probs = ms_res.smoothed_marginal_probabilities  # shape (n, k_regimes)
-        regime_assign = np.argmax(smoothed_probs, axis=1)
-
-        # Order regimes by variance (low -> high)
-        regime_var_raw = {k: ms_res.params[f"sigma2[{k}]"] for k in range(n_regimes)}
-        order = sorted(regime_var_raw, key=regime_var_raw.get)
-        regime_map = {old: new for new, old in enumerate(order)}
-        regime_assign_ordered = np.vectorize(regime_map.get)(regime_assign)
-
-        # Current regime (last observation)
-        current_regime = int(regime_assign_ordered[-1])
-        current_probs_raw = smoothed_probs[-1]
-        current_probs_ordered = [float(current_probs_raw[order[i]]) for i in range(n_regimes)]
-
-        # Transition matrix (regime_transition shape: k x k x 1, [to, from])
-        raw_trans = ms_res.regime_transition[:, :, 0]
-        trans_ordered = np.zeros((n_regimes, n_regimes))
-        for i_to in range(n_regimes):
-            for j_from in range(n_regimes):
-                trans_ordered[regime_map[i_to], regime_map[j_from]] = raw_trans[i_to, j_from]
-
-        # Expected duration (in days) of each regime = 1 / (1 - p_ii)
-        expected_duration = {}
-        for k in range(n_regimes):
-            p_stay = trans_ordered[k, k]
-            expected_duration[k] = 1.0 / (1.0 - p_stay) if p_stay < 0.999999 else float("inf")
-
-        # 2) Fit overall EGARCH on full series
-        am_full = arch_model(rets, mean="Constant", vol="EGARCH", p=p, o=o, q=q, dist=dist)
-        res_full = am_full.fit(disp="off")
-
-        cond_vol_full = res_full.conditional_volatility
-        ann_vol_full = float(cond_vol_full.iloc[-1] * np.sqrt(252) / 100)  # annualized decimal
-
-        # Forecast next 5 steps vol
-        fc = res_full.forecast(horizon=5, reindex=False)
-        fc_vol_daily = np.sqrt(fc.variance.values[-1]) / 100  # daily decimal vol forecasts
-
-        # 3) Fit EGARCH separately within each regime's data subset
-        regime_egarch = {}
-        for k in range(n_regimes):
-            mask = regime_assign_ordered == k
-            sub_rets = rets[mask]
-            if len(sub_rets) < 60:
-                regime_egarch[k] = None
-                continue
-            try:
-                am_k = arch_model(sub_rets.reset_index(drop=True), mean="Constant", vol="EGARCH", p=p, o=o, q=q, dist=dist)
-                res_k = am_k.fit(disp="off")
-                ann_vol_k = float(res_k.conditional_volatility.iloc[-1] * np.sqrt(252) / 100)
-                regime_egarch[k] = {
-                    "params": dict(res_k.params),
-                    "ann_vol_current": ann_vol_k,
-                    "loglik": res_k.loglikelihood,
-                    "aic": res_k.aic,
-                    "n_obs": int(len(sub_rets)),
-                    "mean_ret_ann": float(sub_rets.mean() * 252 / 100),
-                    "vol_ann_avg": float(sub_rets.std() * np.sqrt(252) / 100),
-                }
-            except Exception:
-                regime_egarch[k] = None
-
-        # leverage / asymmetry param from full model (gamma terms)
-        gamma_params = {pn: float(v) for pn, v in res_full.params.items() if "gamma" in pn.lower()}
-
-        regime_means_ann = [float(ms_res.params[f"const[{order[k]}]"] * 252 / 100) for k in range(n_regimes)]
-        regime_var_daily = [float(regime_var_raw[order[k]]) for k in range(n_regimes)]
-
-        return {
-            "ticker": ticker_sym,
-            "n_regimes": n_regimes,
-            "current_regime": current_regime,
-            "current_probs": current_probs_ordered,
-            "transition_matrix": trans_ordered,
-            "expected_duration": expected_duration,
-            "regime_means_ann": regime_means_ann,
-            "regime_var_daily": regime_var_daily,
-            "ann_vol_full": ann_vol_full,
-            "fc_vol_daily": fc_vol_daily,
-            "egarch_params_full": dict(res_full.params),
-            "gamma_params": gamma_params,
-            "regime_egarch": regime_egarch,
-            "ms_loglik": float(ms_res.llf),
-            "ms_aic": float(ms_res.aic),
-            "full_loglik": float(res_full.loglikelihood),
-            "full_aic": float(res_full.aic),
-            "rets": rets,
-            "regime_assign": regime_assign_ordered,
-            "smoothed_probs_ordered": smoothed_probs[:, order],
-            "n_obs": int(len(rets)),
-            "p": p, "o": o, "q": q, "dist": dist,
-        }, None
-    except Exception as e:
-        return None, str(e)
-
-
-def render_regime_egarch(result):
-    tkr = result["ticker"]
-    nk  = result["n_regimes"]
-    cur = result["current_regime"]
-    probs = result["current_probs"]
-
-    st.markdown(f'<div class="section-title">{tkr} · Markov Regime-Switching EGARCH</div>', unsafe_allow_html=True)
-
-    cur_color = REGIME_COLORS.get(cur, "#9FE1CB")
-    cur_label = regime_label(cur, nk)
-    cur_css   = regime_css(cur, nk)
-
-    fc_ann = float(np.mean(result["fc_vol_daily"]) * np.sqrt(252))
-
-    st.markdown(f"""
-    <div class="port-summary-card">
-      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#1D9E75;margin-bottom:14px;">
-        Current Regime · {tkr}
-      </div>
-      <div style="display:flex;flex-wrap:wrap;gap:16px 24px;align-items:baseline;">
-        <div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5DCAA5;margin-bottom:4px;">REGIME</div>
-          <div><span class="regime-badge {cur_css}" style="font-size:14px;padding:4px 10px;">{cur_label}</span></div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#9FE1CB;margin-top:6px;">P = {probs[cur]:.1%}</div>
-        </div>
-        <div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5DCAA5;margin-bottom:2px;">CURRENT ANN. VOL (FULL EGARCH)</div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;color:#60a5fa;">{result['ann_vol_full']:.1%}</div>
-        </div>
-        <div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5DCAA5;margin-bottom:2px;">5-DAY VOL FORECAST (ANN, AVG)</div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;color:#a78bfa;">{fc_ann:.1%}</div>
-        </div>
-      </div>
-    </div>""", unsafe_allow_html=True)
-
-    # Regime probability bars
-    st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#5DCAA5;margin:16px 0 8px 0;">Regime Probabilities (Smoothed, Current)</div>', unsafe_allow_html=True)
-    bars_html = '<div style="display:flex;flex-wrap:wrap;gap:10px;">'
-    for k in range(nk):
-        c = REGIME_COLORS.get(k if nk == 3 else (0 if k == 0 else 2), REGIME_COLORS.get(k, "#9FE1CB"))
-        lbl = regime_label(k, nk)
-        bars_html += f'''<div style="background:rgba(29,158,117,0.06);border:1px solid rgba(29,158,117,0.15);border-radius:10px;padding:12px 14px;min-width:140px;flex:1;">
-          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:{c};margin-bottom:4px;">{lbl}</div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600;color:#e2e8f0;">{probs[k]:.1%}</div>
-          <div style="height:4px;background:rgba(29,158,117,0.1);border-radius:2px;margin-top:6px;"><div style="width:{probs[k]*100:.1f}%;height:100%;background:{c};border-radius:2px;"></div></div>
-        </div>'''
-    bars_html += '</div>'
-    st.markdown(bars_html, unsafe_allow_html=True)
-
-    # Regime stats table
-    st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#5DCAA5;margin:16px 0 8px 0;">Regime Characteristics</div>', unsafe_allow_html=True)
-    st.markdown('<div class="factor-row header"><div>REGIME</div><div>ANN. RETURN</div><div>ANN. VOL (RAW)</div><div>EGARCH ANN. VOL</div><div>EXP. DURATION</div><div>N OBS</div></div>', unsafe_allow_html=True)
-    for k in range(nk):
-        c = REGIME_COLORS.get(k if nk == 3 else (0 if k == 0 else 2), "#9FE1CB")
-        lbl = regime_label(k, nk)
-        ret_ann = result["regime_means_ann"][k]
-        eg = result["regime_egarch"].get(k)
-        eg_vol = f"{eg['ann_vol_current']:.1%}" if eg else "n/a"
-        n_obs = eg['n_obs'] if eg else "—"
-        dur = result["expected_duration"][k]
-        dur_str = f"{dur:.1f} days" if np.isfinite(dur) else "∞"
-        raw_vol = float(np.sqrt(result["regime_var_daily"][k]) * np.sqrt(252) / 100)
-        ret_color = "#34d399" if ret_ann > 0 else "#f87171"
-        st.markdown(f'''<div class="factor-row" style="border-left:2px solid {c};">
-          <div style="color:#e2e8f0;font-weight:500">{lbl}</div>
-          <div style="color:{ret_color};font-weight:600">{ret_ann:+.1%}</div>
-          <div style="color:#9FE1CB">{raw_vol:.1%}</div>
-          <div style="color:#60a5fa;font-weight:600">{eg_vol}</div>
-          <div style="color:#9FE1CB">{dur_str}</div>
-          <div style="color:#9FE1CB">{n_obs}</div>
-        </div>''', unsafe_allow_html=True)
-
-    # Transition matrix
-    st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#5DCAA5;margin:16px 0 8px 0;">Transition Matrix (Daily, row → column)</div>', unsafe_allow_html=True)
-    tm = result["transition_matrix"]
-    grid_cols = " ".join(["110px"] * (nk + 1))
-    tm_html = f'<div style="display:grid;grid-template-columns:{grid_cols};gap:6px;max-width:{(nk+1)*120}px;overflow-x:auto;">'
-    tm_html += '<div></div>'
-    for k in range(nk):
-        c = REGIME_COLORS.get(k if nk == 3 else (0 if k == 0 else 2), "#9FE1CB")
-        tm_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:{c};text-align:center;text-transform:uppercase;">→ {regime_label(k, nk).split()[0][:4]}</div>'
-    for j in range(nk):
-        c_row = REGIME_COLORS.get(j if nk == 3 else (0 if j == 0 else 2), "#9FE1CB")
-        tm_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:{c_row};text-transform:uppercase;">{regime_label(j, nk).split()[0][:4]} →</div>'
-        for k in range(nk):
-            v = tm[k, j]
-            shade = "#34d399" if v > 0.9 else "#9FE1CB"
-            tm_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;color:{shade};text-align:center;background:rgba(29,158,117,0.06);border:1px solid rgba(29,158,117,0.12);border-radius:6px;padding:6px;">{v:.3f}</div>'
-    tm_html += '</div>'
-    st.markdown(tm_html, unsafe_allow_html=True)
-
-    # Full-sample EGARCH params
-    st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#5DCAA5;margin:16px 0 8px 0;">Full-Sample EGARCH Parameters</div>', unsafe_allow_html=True)
-    p_html = '<div style="display:flex;flex-wrap:wrap;gap:10px;">'
-    for pname, pval in result["egarch_params_full"].items():
-        p_html += f'''<div style="background:rgba(29,158,117,0.06);border:1px solid rgba(29,158,117,0.15);border-radius:8px;padding:10px 12px;min-width:90px;">
-          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#5DCAA5;">{pname}</div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:#e2e8f0;">{pval:.4f}</div>
-        </div>'''
-    p_html += '</div>'
-    st.markdown(p_html, unsafe_allow_html=True)
-    if result["gamma_params"]:
-        leverage_note = "Negative γ → negative shocks raise volatility more than positive shocks of the same size (the classic leverage effect)."
-        st.markdown(f'<div class="info-box" style="margin-top:8px;">Asymmetry (γ) terms: {", ".join(f"{k}={v:+.4f}" for k, v in result["gamma_params"].items())} — {leverage_note}</div>', unsafe_allow_html=True)
-
-    # Regime timeline chart — probability of being in highest-vol regime
-    smoothed = result["smoothed_probs_ordered"]
-    high_idx = nk - 1
-    series = smoothed[:, high_idx]
-    if len(series) > 2000:
-        step = len(series) // 2000
-        series_plot = series[::step]
-    else:
-        series_plot = series
-
-    st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#5DCAA5;margin:16px 0 8px 0;">Regime History — P(Highest-Vol Regime)</div>', unsafe_allow_html=True)
-    W, H = 800, 140
-    n_pts = len(series_plot)
-    pts = " ".join(f"{int(i/(n_pts-1)*W) if n_pts>1 else W//2},{int(H-(v*H))}" for i, v in enumerate(series_plot))
-    fill_pts = f"0,{H} " + pts + f" {W},{H}"
-    timeline_html = (
-        f'<svg viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg" '
-        f'style="background:rgba(29,158,117,0.05);border:1px solid rgba(29,158,117,0.15);border-radius:10px;width:100%;margin-bottom:8px;">'
-        f'<polygon points="{fill_pts}" fill="rgba(248,113,113,0.12)" stroke="none"/>'
-        f'<polyline points="{pts}" fill="none" stroke="#f87171" stroke-width="1.5"/>'
-        f'<line x1="0" y1="{int(H*0.5)}" x2="{W}" y2="{int(H*0.5)}" stroke="rgba(29,158,117,0.25)" stroke-width="1" stroke-dasharray="4,4"/>'
-        f'<text x="6" y="14" fill="#f87171" font-family="JetBrains Mono,monospace" font-size="10">P(High Vol) = 1.0</text>'
-        f'<text x="6" y="{H-6}" fill="#5DCAA5" font-family="JetBrains Mono,monospace" font-size="10">P(High Vol) = 0.0</text>'
-        f'</svg>'
-    )
-    st.markdown(timeline_html, unsafe_allow_html=True)
-
-    # Model fit comparison
-    st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#5DCAA5;margin:16px 0 8px 0;">Model Fit</div>', unsafe_allow_html=True)
-    fit_html = (
-        f'<div style="display:flex;flex-wrap:wrap;gap:10px;">'
-        f'<div class="diag-item" style="min-width:140px;"><div class="diag-name">Markov-Switching LogLik</div><div class="diag-val" style="color:#60a5fa;font-size:16px;">{result["ms_loglik"]:.2f}</div></div>'
-        f'<div class="diag-item" style="min-width:140px;"><div class="diag-name">Markov-Switching AIC</div><div class="diag-val" style="color:#60a5fa;font-size:16px;">{result["ms_aic"]:.2f}</div></div>'
-        f'<div class="diag-item" style="min-width:140px;"><div class="diag-name">EGARCH LogLik</div><div class="diag-val" style="color:#a78bfa;font-size:16px;">{result["full_loglik"]:.2f}</div></div>'
-        f'<div class="diag-item" style="min-width:140px;"><div class="diag-name">EGARCH AIC</div><div class="diag-val" style="color:#a78bfa;font-size:16px;">{result["full_aic"]:.2f}</div></div>'
-        f'<div class="diag-item" style="min-width:140px;"><div class="diag-name">N Observations</div><div class="diag-val" style="color:#9FE1CB;font-size:16px;">{result["n_obs"]}</div></div>'
-        f'<div class="diag-item" style="min-width:140px;"><div class="diag-name">EGARCH Spec</div><div class="diag-val" style="color:#9FE1CB;font-size:16px;">({result["p"]},{result["o"]},{result["q"]}) {result["dist"]}</div></div>'
-        f'</div>'
-    )
-    st.markdown(fit_html, unsafe_allow_html=True)
-
-    # Export
-    st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#5DCAA5;margin:16px 0 8px 0;">Export</div>', unsafe_allow_html=True)
-    export_rows = []
-    for k in range(nk):
-        eg = result["regime_egarch"].get(k)
-        export_rows.append({
-            "Regime": regime_label(k, nk),
-            "Current_Prob": probs[k],
-            "Ann_Return": result["regime_means_ann"][k],
-            "Raw_Ann_Vol": float(np.sqrt(result["regime_var_daily"][k]) * np.sqrt(252) / 100),
-            "EGARCH_Ann_Vol": eg["ann_vol_current"] if eg else np.nan,
-            "Expected_Duration_Days": result["expected_duration"][k],
-            "N_Obs": eg["n_obs"] if eg else 0,
-        })
-    st.download_button(
-        f"⬇  Download {tkr} Regime/EGARCH CSV",
-        pd.DataFrame(export_rows).to_csv(index=False),
-        file_name=f"{tkr}_markov_egarch.csv", mime="text/csv",
-        key=f"dl_regime_{tkr}"
-    )
-
-
-def render_portfolio_regime_summary(regime_results, weights):
-    """Aggregate cross-holding regime view for the portfolio."""
-    tickers = list(regime_results.keys())
-    n_regimes = regime_results[tickers[0]]["n_regimes"]
-
-    st.markdown('<div class="section-title">Portfolio Regime Overview</div>', unsafe_allow_html=True)
-
-    # Weighted average current annualized vol & blended high-vol probability
-    w_total = sum(weights[t] for t in tickers if t in weights)
-    weighted_vol = sum(weights.get(t, 0) * regime_results[t]["ann_vol_full"] for t in tickers) / (w_total or 1)
-    weighted_high_prob = sum(
-        weights.get(t, 0) * regime_results[t]["current_probs"][n_regimes - 1] for t in tickers
-    ) / (w_total or 1)
-
-    n_in_high = sum(1 for t in tickers if regime_results[t]["current_regime"] == n_regimes - 1)
-
-    st.markdown(f"""
-    <div class="port-summary-card">
-      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#1D9E75;margin-bottom:14px;">
-        Portfolio Volatility Regime Snapshot · {len(tickers)} Holdings
-      </div>
-      <div style="display:flex;flex-wrap:wrap;gap:16px 24px;align-items:baseline;">
-        <div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5DCAA5;margin-bottom:2px;">WEIGHTED ANN. VOL (EGARCH)</div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;color:#60a5fa;">{weighted_vol:.1%}</div>
-        </div>
-        <div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5DCAA5;margin-bottom:2px;">WEIGHTED P(HIGH-VOL REGIME)</div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;color:#f87171;">{weighted_high_prob:.1%}</div>
-        </div>
-        <div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5DCAA5;margin-bottom:2px;">HOLDINGS CURRENTLY IN HIGH-VOL</div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;color:#fbbf24;">{n_in_high} / {len(tickers)}</div>
-        </div>
-      </div>
-    </div>""", unsafe_allow_html=True)
-
-    st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#5DCAA5;margin:16px 0 10px 0;">Holdings · Current Regime</div>', unsafe_allow_html=True)
-    st.markdown('<div class="factor-row header"><div>TICKER</div><div>WT</div><div>REGIME</div><div>P(REGIME)</div><div>ANN. VOL</div><div>5D FCST VOL</div></div>', unsafe_allow_html=True)
-    for tkr in tickers:
-        res = regime_results[tkr]
-        cur = res["current_regime"]
-        css = regime_css(cur, n_regimes)
-        lbl = regime_label(cur, n_regimes)
-        c = REGIME_COLORS.get(cur if n_regimes == 3 else (0 if cur == 0 else 2), "#9FE1CB")
-        fc_ann = float(np.mean(res["fc_vol_daily"]) * np.sqrt(252))
-        st.markdown(f'''<div class="factor-row" style="border-left:2px solid {c};">
-          <div style="color:#e2e8f0;font-weight:500">{tkr}</div>
-          <div style="color:#60a5fa">{weights.get(tkr,0):.0%}</div>
-          <div><span class="regime-badge {css}">{lbl}</span></div>
-          <div style="color:#9FE1CB">{res["current_probs"][cur]:.1%}</div>
-          <div style="color:#60a5fa;font-weight:600">{res["ann_vol_full"]:.1%}</div>
-          <div style="color:#a78bfa;font-weight:600">{fc_ann:.1%}</div>
-        </div>''', unsafe_allow_html=True)
-
-    # Portfolio export
-    rows = []
-    for tkr in tickers:
-        res = regime_results[tkr]
-        cur = res["current_regime"]
-        rows.append({
-            "Ticker": tkr,
-            "Weight": weights.get(tkr, 0),
-            "Current_Regime": regime_label(cur, n_regimes),
-            "Regime_Probability": res["current_probs"][cur],
-            "Ann_Vol_EGARCH": res["ann_vol_full"],
-            "5D_Forecast_Vol_Ann": float(np.mean(res["fc_vol_daily"]) * np.sqrt(252)),
-        })
-    st.download_button("⬇  Download Portfolio Regime Summary CSV", pd.DataFrame(rows).to_csv(index=False),
-                       file_name="portfolio_regime_summary.csv", mime="text/csv", key="dl_port_regime_summary")
-
 # ════════════════════════════════════════════
 #  SESSION STATE INIT
 # ════════════════════════════════════════════
@@ -1319,7 +914,6 @@ for key, default in [
     ("port_run", False), ("port_results", None),
     ("single_stock_cache", None), ("portfolio_cache", None),
     ("active_mode", "Single Stock"),
-    ("regime_run", False), ("regime_results", None), ("regime_cache", None),
 ]:
     if key not in st.session_state:
         st.session_state[key] = default
@@ -1335,18 +929,14 @@ if "selected_factors" not in st.session_state:
 st.markdown("# Factor Regression")
 st.markdown(
     '<p style="font-family:\'JetBrains Mono\',monospace;color:#1D9E75;font-size:13px;letter-spacing:1px;">'
-    'FF5 + MOMENTUM + AQR (QMJ · BAB) · NEWEY-WEST ROBUST STANDARD ERRORS · MARKOV REGIME EGARCH</p>',
+    'FF5 + MOMENTUM + AQR (QMJ · BAB) · NEWEY-WEST ROBUST STANDARD ERRORS</p>',
     unsafe_allow_html=True)
 st.markdown("---")
 
 with st.sidebar:
     st.markdown("### Configuration")
 
-    mode = st.radio(
-        "Mode",
-        ["Single Stock", "Portfolio Attribution", "Markov Regime EGARCH"],
-        horizontal=True, key="mode_radio"
-    )
+    mode = st.radio("Mode", ["Single Stock", "Portfolio Attribution"], horizontal=True, key="mode_radio")
     if mode != st.session_state["active_mode"]:
         st.session_state["active_mode"] = mode
         st.rerun()
@@ -1354,9 +944,8 @@ with st.sidebar:
     st.markdown("---")
 
     if mode == "Single Stock":
-        ticker = st.text_input("Stock Ticker", "", placeholder="e.g. AAPL").upper().strip()
-
-    elif mode == "Portfolio Attribution":
+        ticker = st.text_input("Stock Ticker", "AVGO").upper().strip()
+    else:
         st.markdown("**Portfolio Holdings**")
         st.markdown(
             '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:10px;">'
@@ -1410,61 +999,6 @@ with st.sidebar:
                     unsafe_allow_html=True
                 )
 
-    else:  # Markov Regime EGARCH — reuse the same portfolio holdings UI
-        st.markdown("**Portfolio Holdings**")
-        st.markdown(
-            '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:10px;">'
-            'Add stocks with ticker &amp; amount invested. Each holding gets a 2/3-state '
-            'Markov Regime-Switching EGARCH volatility model.</div>',
-            unsafe_allow_html=True
-        )
-        if "port_holdings" not in st.session_state:
-            st.session_state["port_holdings"] = [
-                {"ticker": "AAPL", "amount": 30000},
-                {"ticker": "MSFT", "amount": 25000},
-                {"ticker": "NVDA", "amount": 25000},
-                {"ticker": "GOOGL", "amount": 20000},
-            ]
-        to_remove = None
-        for idx, holding in enumerate(st.session_state["port_holdings"]):
-            col_t, col_a, col_x = st.columns([2, 2, 0.6])
-            with col_t:
-                new_ticker = st.text_input(
-                    "Ticker", value=holding["ticker"],
-                    key=f"regime_ticker_{idx}", label_visibility="collapsed", placeholder="TICKER"
-                ).upper().strip()
-                st.session_state["port_holdings"][idx]["ticker"] = new_ticker
-            with col_a:
-                new_amount = st.number_input(
-                    "Amount", value=float(holding["amount"]), min_value=0.0, step=1000.0,
-                    key=f"regime_amount_{idx}", label_visibility="collapsed", format="%.0f"
-                )
-                st.session_state["port_holdings"][idx]["amount"] = new_amount
-            with col_x:
-                if st.button("×", key=f"regime_remove_{idx}", help="Remove"):
-                    to_remove = idx
-        if to_remove is not None:
-            st.session_state["port_holdings"].pop(to_remove)
-            st.rerun()
-        st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
-        if st.button("＋  Add Stock", use_container_width=True, key="regime_add"):
-            st.session_state["port_holdings"].append({"ticker": "", "amount": 10000})
-            st.rerun()
-        total_amt = sum(h["amount"] for h in st.session_state["port_holdings"] if h["amount"] > 0)
-        if total_amt > 0:
-            preview_lines = [
-                f'{h["ticker"]} · {h["amount"]/total_amt:.1%}'
-                for h in st.session_state["port_holdings"] if h["ticker"] and h["amount"] > 0
-            ]
-            if preview_lines:
-                st.markdown(
-                    '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;'
-                    'margin-top:8px;padding:8px 10px;background:rgba(29,158,117,0.06);border-radius:6px;'
-                    'border:1px solid rgba(29,158,117,0.15);line-height:1.8;">'
-                    + " &nbsp;|&nbsp; ".join(preview_lines) + '</div>',
-                    unsafe_allow_html=True
-                )
-
     st.markdown("---")
 
     st.markdown("**Date Range**")
@@ -1473,112 +1007,83 @@ with st.sidebar:
 
     st.markdown("---")
 
-    if mode in ("Single Stock", "Portfolio Attribution"):
-        # ── Factor Selection ──────────────────────────────────────────────────────
-        st.markdown("**Factor Selection**")
-        st.markdown(
-            '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:8px;">'
-            'FF5 + Momentum factors loaded from Ken French\'s library.<br>'
-            '<span style="color:#fbbf24;">AQR</span> factors (QMJ, BAB) loaded from AQR\'s public data library.</div>',
-            unsafe_allow_html=True
-        )
-        col_sel, col_desel = st.columns(2)
-        with col_sel:
-            if st.button("✓ All", use_container_width=True, key="select_all_factors"):
-                st.session_state["selected_factors"] = list(ALL_FACTORS)
-                st.session_state["single_stock_cache"] = None
-                st.session_state["portfolio_cache"]    = None
-                st.rerun()
-        with col_desel:
-            if st.button("✗ None", use_container_width=True, key="deselect_all_factors"):
-                st.session_state["selected_factors"] = []
-                st.session_state["single_stock_cache"] = None
-                st.session_state["portfolio_cache"]    = None
-                st.rerun()
-
-        new_selection = []
-        # FF factors group
-        st.markdown(
-            '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1px;'
-            'text-transform:uppercase;color:#1D9E75;margin:6px 0 2px 0;">Fama-French + Momentum</div>',
-            unsafe_allow_html=True
-        )
-        for f in FF_FACTORS:
-            checked = f in st.session_state["selected_factors"]
-            if st.checkbox(FACTOR_NAMES.get(f, f), value=checked, key=f"chk_{f}"):
-                new_selection.append(f)
-
-        # AQR factors group
-        st.markdown(
-            '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1px;'
-            'text-transform:uppercase;color:#fbbf24;margin:10px 0 2px 0;">AQR Factors</div>',
-            unsafe_allow_html=True
-        )
-        for f in AQR_FACTORS:
-            checked = f in st.session_state["selected_factors"]
-            label   = f"{FACTOR_NAMES.get(f, f)} ⚡"
-            if st.checkbox(label, value=checked, key=f"chk_{f}"):
-                new_selection.append(f)
-
-        if new_selection != st.session_state["selected_factors"]:
-            st.session_state["selected_factors"] = new_selection
+    # ── Factor Selection ──────────────────────────────────────────────────────
+    st.markdown("**Factor Selection**")
+    st.markdown(
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:8px;">'
+        'FF5 + Momentum factors loaded from Ken French\'s library.<br>'
+        '<span style="color:#fbbf24;">AQR</span> factors (QMJ, BAB) loaded from AQR\'s public data library.</div>',
+        unsafe_allow_html=True
+    )
+    col_sel, col_desel = st.columns(2)
+    with col_sel:
+        if st.button("✓ All", use_container_width=True, key="select_all_factors"):
+            st.session_state["selected_factors"] = list(ALL_FACTORS)
             st.session_state["single_stock_cache"] = None
             st.session_state["portfolio_cache"]    = None
+            st.rerun()
+    with col_desel:
+        if st.button("✗ None", use_container_width=True, key="deselect_all_factors"):
+            st.session_state["selected_factors"] = []
+            st.session_state["single_stock_cache"] = None
+            st.session_state["portfolio_cache"]    = None
+            st.rerun()
 
-        if st.session_state["selected_factors"]:
-            active_labels = [FACTOR_NAMES.get(f, f) for f in st.session_state["selected_factors"]]
-            st.markdown(
-                '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#1D9E75;'
-                'margin-top:6px;padding:6px 8px;background:rgba(29,158,117,0.06);'
-                'border-radius:6px;border:1px solid rgba(29,158,117,0.15);">'
-                f'Active: {", ".join(active_labels)}</div>',
-                unsafe_allow_html=True
-            )
-        else:
-            st.markdown(
-                '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#f87171;margin-top:6px;">'
-                '⚠ No factors selected.</div>', unsafe_allow_html=True
-            )
+    new_selection = []
+    # FF factors group
+    st.markdown(
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1px;'
+        'text-transform:uppercase;color:#1D9E75;margin:6px 0 2px 0;">Fama-French + Momentum</div>',
+        unsafe_allow_html=True
+    )
+    for f in FF_FACTORS:
+        checked = f in st.session_state["selected_factors"]
+        if st.checkbox(FACTOR_NAMES.get(f, f), value=checked, key=f"chk_{f}"):
+            new_selection.append(f)
 
-        st.markdown("---")
+    # AQR factors group
+    st.markdown(
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1px;'
+        'text-transform:uppercase;color:#fbbf24;margin:10px 0 2px 0;">AQR Factors</div>',
+        unsafe_allow_html=True
+    )
+    for f in AQR_FACTORS:
+        checked = f in st.session_state["selected_factors"]
+        label   = f"{FACTOR_NAMES.get(f, f)} ⚡"
+        if st.checkbox(label, value=checked, key=f"chk_{f}"):
+            new_selection.append(f)
 
-        st.markdown("**Regression Settings**")
-        hac_lags  = st.slider("HAC Max Lags", 1, 12, 3, help="Newey-West lags for HAC robust SE")
-        annualize = st.selectbox("Annualization", [12, 52, 252], help="12=monthly, 52=weekly, 252=daily")
+    if new_selection != st.session_state["selected_factors"]:
+        st.session_state["selected_factors"] = new_selection
+        st.session_state["single_stock_cache"] = None
+        st.session_state["portfolio_cache"]    = None
 
-        st.markdown("---")
-
-    else:
-        # Defaults so variables exist even if not used in this mode
-        hac_lags  = 3
-        annualize = 12
-
-        st.markdown("**Regime-Switching EGARCH Settings**")
-        n_regimes_sel = st.selectbox("Number of Regimes", [2, 3], index=0,
-                                      help="2 = Low/High volatility, 3 = Low/Medium/High volatility")
-        col_e1, col_e2, col_e3 = st.columns(3)
-        with col_e1:
-            egarch_p = st.number_input("EGARCH p", min_value=1, max_value=2, value=1, step=1, help="ARCH order")
-        with col_e2:
-            egarch_o = st.number_input("EGARCH o", min_value=0, max_value=2, value=1, step=1, help="Asymmetry order")
-        with col_e3:
-            egarch_q = st.number_input("EGARCH q", min_value=1, max_value=2, value=1, step=1, help="GARCH order")
-        dist_choice = st.selectbox("Error Distribution", ["t", "normal", "skewt"], index=0,
-                                    help="Student-t is recommended for fat-tailed daily equity returns")
-
+    if st.session_state["selected_factors"]:
+        active_labels = [FACTOR_NAMES.get(f, f) for f in st.session_state["selected_factors"]]
         st.markdown(
-            '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#1D9E75;margin-top:8px;">'
-            'Uses daily returns. Recommend at least 1-2 years of history for stable regime estimates.</div>',
+            '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#1D9E75;'
+            'margin-top:6px;padding:6px 8px;background:rgba(29,158,117,0.06);'
+            'border-radius:6px;border:1px solid rgba(29,158,117,0.15);">'
+            f'Active: {", ".join(active_labels)}</div>',
             unsafe_allow_html=True
         )
+    else:
+        st.markdown(
+            '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#f87171;margin-top:6px;">'
+            '⚠ No factors selected.</div>', unsafe_allow_html=True
+        )
 
-        st.markdown("---")
+    st.markdown("---")
+
+    st.markdown("**Regression Settings**")
+    hac_lags  = st.slider("HAC Max Lags", 1, 12, 3, help="Newey-West lags for HAC robust SE")
+    annualize = st.selectbox("Annualization", [12, 52, 252], help="12=monthly, 52=weekly, 252=daily")
+
+    st.markdown("---")
 
     if mode == "Single Stock":
         if st.button("▶  RUN REGRESSION", use_container_width=True):
-            if not ticker:
-                st.error("Enter a ticker.")
-            elif not st.session_state["selected_factors"]:
+            if not st.session_state["selected_factors"]:
                 st.error("Select at least one factor before running.")
             else:
                 st.session_state["run"]        = True
@@ -1590,8 +1095,7 @@ with st.sidebar:
                 st.session_state["ai_insight"] = None
                 st.session_state["ai_error"]   = None
                 st.session_state["single_stock_cache"] = None
-
-    elif mode == "Portfolio Attribution":
+    else:
         if st.button("▶  RUN PORTFOLIO ATTRIBUTION", use_container_width=True):
             if not st.session_state["selected_factors"]:
                 st.error("Select at least one factor before running.")
@@ -1608,33 +1112,10 @@ with st.sidebar:
                     st.session_state["port_run"]        = True
                     st.session_state["port_results"]    = None
                     st.session_state["portfolio_cache"] = None
-                else:
-                    st.error("Add at least one valid holding.")
-
-    else:  # Markov Regime EGARCH
-        if st.button("▶  RUN REGIME EGARCH", use_container_width=True):
-            holdings = st.session_state.get("port_holdings", [])
-            parsed   = [(h["ticker"], h["amount"]) for h in holdings if h["ticker"] and h["amount"] > 0]
-            if not parsed:
-                st.error("Add at least one valid holding.")
-            else:
-                total_w    = sum(w for _, w in parsed)
-                normalized = {tkr: w / total_w for tkr, w in parsed}
-                st.session_state["regime_weights"]    = normalized
-                st.session_state["regime_start"]      = start_date
-                st.session_state["regime_end"]        = end_date
-                st.session_state["regime_n"]          = n_regimes_sel
-                st.session_state["regime_egarch_p"]   = int(egarch_p)
-                st.session_state["regime_egarch_o"]   = int(egarch_o)
-                st.session_state["regime_egarch_q"]   = int(egarch_q)
-                st.session_state["regime_dist"]       = dist_choice
-                st.session_state["regime_run"]        = True
-                st.session_state["regime_results"]    = None
-                st.session_state["regime_cache"]      = None
 
     st.markdown(
         '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#1D9E75;">'
-        'FF5 + Momentum · AQR QMJ + BAB · Markov Regime EGARCH · Monthly/Daily</div>',
+        'FF5 + Momentum · AQR QMJ + BAB · Monthly</div>',
         unsafe_allow_html=True)
 
 
@@ -1644,10 +1125,9 @@ with st.sidebar:
 
 current_mode = st.session_state.get("active_mode", "Single Stock")
 
-if not st.session_state["run"] and not st.session_state["port_run"] and not st.session_state["regime_run"] \
+if not st.session_state["run"] and not st.session_state["port_run"] \
         and st.session_state["single_stock_cache"] is None \
-        and st.session_state["portfolio_cache"] is None \
-        and st.session_state["regime_cache"] is None:
+        and st.session_state["portfolio_cache"] is None:
     if current_mode == "Single Stock":
         st.markdown(
             '<div class="interpret-box" style="margin-top:40px;text-align:center;">'
@@ -1657,7 +1137,7 @@ if not st.session_state["run"] and not st.session_state["port_run"] and not st.s
             '4. Click <b>▶ RUN REGRESSION</b><br><br>'
             '<span style="color:#1D9E75;font-size:13px;">Factor analysis runs only on statistically significant loadings (p&lt;0.05).</span>'
             '</div>', unsafe_allow_html=True)
-    elif current_mode == "Portfolio Attribution":
+    else:
         st.markdown(
             '<div class="interpret-box" style="margin-top:40px;text-align:center;">'
             '<b>Portfolio Attribution Mode</b><br><br>'
@@ -1665,13 +1145,456 @@ if not st.session_state["run"] and not st.session_state["port_run"] and not st.s
             '3. Select factors — including <span style="color:#fbbf24;">AQR QMJ &amp; BAB</span><br>'
             '4. Click <b>▶ RUN PORTFOLIO ATTRIBUTION</b>'
             '</div>', unsafe_allow_html=True)
-    else:
-        st.markdown(
-            '<div class="interpret-box" style="margin-top:40px;text-align:center;">'
-            '<b>Markov Regime EGARCH Mode</b><br><br>'
-            '1. Add your holdings (ticker + amount)<br>2. Set date range (daily data, longer history recommended)<br>'
-            '3. Choose number of regimes (2 or 3) and EGARCH(p,o,q) settings<br>'
-            '4. Click <b>▶ RUN REGIME EGARCH</b><br><br>'
-            '<span style="color:#1D9E75;font-size:13px;">Identifies volatility regimes via Markov-switching, then fits EGARCH per regime for asymmetric vol forecasting.</span>'
-            '</div>', unsafe_allow_html=True)
     st.stop()
+
+
+# ════════════════════════════════════════════
+#  PORTFOLIO ATTRIBUTION MODE
+# ════════════════════════════════════════════
+
+if current_mode == "Portfolio Attribution":
+    if st.session_state["portfolio_cache"] is not None and not st.session_state.get("port_run"):
+        cache = st.session_state["portfolio_cache"]
+        st.markdown("## Portfolio Factor Attribution")
+        st.markdown(
+            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;color:#5DCAA5;margin-bottom:20px;">'
+            f'{len(cache["weights"])} holdings · {len(cache["ordered_factors"])} factors · HAC SE · {cache["port_start"]} → {cache["port_end"]}'
+            f'</div>', unsafe_allow_html=True)
+        render_portfolio_attribution(
+            cache["port_results"], cache["weights"], cache["ordered_factors"],
+            cache.get("true_port"), str(cache["port_start"])[:7], str(cache["port_end"])[:7],
+            cache.get("hac_lags", 3)
+        )
+        st.stop()
+
+    if not st.session_state.get("port_run"):
+        st.stop()
+
+    weights     = st.session_state.get("port_weights", {})
+    port_start  = st.session_state.get("port_start", start_date)
+    port_end    = st.session_state.get("port_end",   end_date)
+    port_hac    = st.session_state.get("port_hac",   hac_lags)
+    sel_factors = tuple(st.session_state["selected_factors"])
+
+    if not weights:
+        st.markdown('<div class="error-box">No valid tickers found.</div>', unsafe_allow_html=True)
+        st.stop()
+
+    st.markdown("## Portfolio Factor Attribution")
+    st.markdown(
+        f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;color:#5DCAA5;margin-bottom:20px;">'
+        f'{len(weights)} holdings · {len(sel_factors)} factors · HAC SE · {port_start} → {port_end}</div>',
+        unsafe_allow_html=True)
+
+    port_results = {}
+    errors       = []
+    progress_bar = st.progress(0, text="Running regressions…")
+    start_str    = str(port_start)[:7]
+    end_str      = str(port_end)[:7]
+
+    for i, (tkr, w) in enumerate(weights.items()):
+        progress_bar.progress(i / len(weights), text=f"Regressing {tkr}…")
+        res, err = run_single_regression(tkr, start_str, end_str, port_hac, f"{start_str}_{end_str}", sel_factors)
+        if res:
+            port_results[tkr] = res
+        else:
+            errors.append(f"{tkr}: {err}")
+    progress_bar.progress(1.0, text="Done.")
+
+    for e in errors:
+        st.markdown(f'<div class="error-box">⚠ {e}</div>', unsafe_allow_html=True)
+    if not port_results:
+        st.markdown('<div class="error-box">No stocks could be regressed.</div>', unsafe_allow_html=True)
+        st.stop()
+
+    valid_weights = {t: weights[t] for t in port_results}
+    total = sum(valid_weights.values())
+    valid_weights = {t: v / total for t, v in valid_weights.items()}
+
+    avail_sets      = [set(port_results[t]["available"]) for t in port_results]
+    common_factors  = list(avail_sets[0].intersection(*avail_sets[1:])) if len(avail_sets) > 1 else list(avail_sets[0])
+    ordered_factors = [f for f in ALL_FACTORS if f in common_factors]
+
+    with st.spinner("Building portfolio regression model…"):
+        true_port = build_true_portfolio_model(port_results, valid_weights, ordered_factors, start_str, end_str, port_hac)
+
+    st.session_state["portfolio_cache"] = {
+        "port_results": port_results, "weights": valid_weights,
+        "ordered_factors": ordered_factors, "port_start": port_start, "port_end": port_end,
+        "true_port": true_port, "hac_lags": port_hac,
+    }
+    st.session_state["port_run"] = False
+    render_portfolio_attribution(port_results, valid_weights, ordered_factors, true_port, start_str, end_str, port_hac)
+    st.stop()
+
+
+# ════════════════════════════════════════════
+#  SINGLE STOCK MODE
+# ════════════════════════════════════════════
+
+def _render_ols_summary(ols_text):
+    escaped = ols_text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    st.markdown(
+        f'<div class="ols-box"><pre>{escaped}</pre></div>',
+        unsafe_allow_html=True
+    )
+
+if current_mode == "Single Stock":
+
+    if st.session_state["single_stock_cache"] is not None and not st.session_state["run"]:
+        c = st.session_state["single_stock_cache"]
+        st.markdown(c["price_html"], unsafe_allow_html=True)
+        col1, col2, col3, col4 = st.columns(4)
+        with col1: st.markdown(c["metric_alpha"], unsafe_allow_html=True)
+        with col2: st.markdown(c["metric_r2"],    unsafe_allow_html=True)
+        with col3: st.markdown(c["metric_ir"],    unsafe_allow_html=True)
+        with col4: st.markdown(c["metric_f"],     unsafe_allow_html=True)
+        st.markdown('<div class="section-title">Factor Loadings</div>', unsafe_allow_html=True)
+        for row_html in c["factor_rows"]:
+            st.markdown(row_html, unsafe_allow_html=True)
+        st.markdown(c["factor_legend"], unsafe_allow_html=True)
+        st.markdown('<div class="section-title">Factor Intelligence · Significant Loadings</div>', unsafe_allow_html=True)
+        st.markdown(c["ai_header"], unsafe_allow_html=True)
+        if c.get("ai_error") and not c.get("ai_insight"):
+            st.markdown(f'<div class="error-box">Analysis Error: {c["ai_error"]}</div>', unsafe_allow_html=True)
+        elif c.get("ai_error") and c.get("ai_insight"):
+            st.markdown(f'<div class="error-box" style="border-color:rgba(251,191,36,0.3);color:#fbbf24;">⚠ Some factors had errors: {c["ai_error"]}</div>', unsafe_allow_html=True)
+        if c.get("ai_insight"):
+            render_ai_insight(c["ticker"], c["ai_insight"])
+        tab1, tab2, tab3, tab4, tab5 = st.tabs(["95% Confidence Intervals","Regression Diagnostics","Variance Inflation Factors","Model Fit","Rolling Market Beta"])
+        with tab1: st.markdown(c["ci_html"],   unsafe_allow_html=True)
+        with tab2: st.markdown(c["diag_html"], unsafe_allow_html=True)
+        with tab3: st.markdown(c["vif_html"],  unsafe_allow_html=True)
+        with tab4: st.markdown(c["fit_html"],  unsafe_allow_html=True)
+        with tab5:
+            if c.get("rolling_html"): st.markdown(c["rolling_html"], unsafe_allow_html=True)
+            else: st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;color:#5DCAA5;padding:20px 0;">Need at least 36 months of data and Mkt-RF selected.</div>', unsafe_allow_html=True)
+        with st.expander("Full OLS Summary"):
+            _render_ols_summary(c["ols_summary"])
+        st.markdown('<div class="section-title">Export Results</div>', unsafe_allow_html=True)
+        col_a, col_b = st.columns(2)
+        with col_a:
+            st.download_button("⬇  Download Results CSV", c["export_csv"], file_name=f"{c['ticker']}_factor_regression.csv", mime="text/csv", use_container_width=True)
+        with col_b:
+            st.download_button("⬇  Download Merged Data CSV", c["merged_csv"], file_name=f"{c['ticker']}_merged_data.csv", mime="text/csv", use_container_width=True)
+        st.stop()
+
+    if not st.session_state["run"]:
+        st.stop()
+
+    ticker     = st.session_state.get("ticker_ran", "AVGO")
+    start_date = st.session_state.get("start_ran", start_date)
+    end_date   = st.session_state.get("end_ran",   end_date)
+    hac_lags   = st.session_state.get("hac_ran",   hac_lags)
+    annualize  = st.session_state.get("ann_ran",   annualize)
+    sel_factors= st.session_state["selected_factors"]
+
+    try:
+        with st.spinner("Loading factor data..."):
+            try:
+                ff_raw  = load_factors()
+                aqr_raw = load_aqr_factors()
+                ff_raw  = merge_all_factors(ff_raw, aqr_raw, sel_factors)
+            except Exception as e:
+                st.markdown(f'<div class="error-box">Failed to load factor data: {e}</div>', unsafe_allow_html=True)
+                st.stop()
+
+        ff        = ff_raw.loc[str(start_date)[:7]: str(end_date)[:7]].copy()
+        available = [c for c in sel_factors if c in ff.columns]
+        has_rf    = "RF" in ff.columns
+
+        if not available:
+            st.markdown('<div class="error-box">None of the selected factors found in the dataset.</div>', unsafe_allow_html=True)
+            st.stop()
+
+        # AQR factors are already in decimal; FF factors come in as pct so divide by 100
+        for col in available:
+            if col in FF_FACTORS:
+                ff[col] = ff[col].astype(float) / 100
+            else:
+                ff[col] = ff[col].astype(float)   # already decimal from load_aqr_factors
+        if has_rf:
+            ff["RF"] = ff["RF"].astype(float) / 100
+
+        # Notify user which AQR factors loaded successfully
+        loaded_aqr = [f for f in AQR_FACTORS if f in available]
+        missing_aqr = [f for f in sel_factors if f in AQR_FACTORS and f not in available]
+        if loaded_aqr:
+            st.markdown(
+                f'<div class="info-box">✓ AQR factors loaded: {", ".join(loaded_aqr)}</div>',
+                unsafe_allow_html=True
+            )
+        if missing_aqr:
+            st.markdown(
+                f'<div class="error-box">⚠ AQR factors unavailable (check network): {", ".join(missing_aqr)}</div>',
+                unsafe_allow_html=True
+            )
+
+        with st.spinner(f"Downloading {ticker} price history..."):
+            raw = yf.download(ticker, start=str(start_date), end=str(end_date), auto_adjust=True, progress=False)
+
+        if raw.empty:
+            st.markdown(f'<div class="error-box">No price data found for: {ticker}</div>', unsafe_allow_html=True)
+            st.stop()
+
+        close   = raw["Close"]
+        if isinstance(close, pd.DataFrame):
+            close = close.iloc[:, 0]
+        monthly = close.resample("ME").last()
+        returns = monthly.pct_change().dropna()
+        returns.index = returns.index.to_period("M")
+
+        data = pd.DataFrame({"Stock": returns}).join(ff[available + (["RF"] if has_rf else [])], how="inner")
+        data = data.replace([np.inf, -np.inf], np.nan).dropna()
+
+
+        if len(data) < 24:
+            st.markdown(f'<div class="error-box">Too few observations ({len(data)}). Check date range.</div>', unsafe_allow_html=True)
+            st.stop()
+
+        data["Y"] = data["Stock"] - data["RF"] if has_rf else data["Stock"]
+
+        X = sm.add_constant(data[available])
+        y = data["Y"]
+        model = sm.OLS(y, X).fit(cov_type="HAC", cov_kwds={"maxlags": hac_lags})
+
+        alpha     = model.params["const"]
+        alpha_ann = (1 + alpha) ** annualize - 1
+        alpha_p   = model.pvalues["const"]
+        n         = int(model.nobs)
+        r2        = model.rsquared
+        r2_adj    = model.rsquared_adj
+        f_stat    = model.fvalue
+        f_p       = model.f_pvalue
+        aic       = model.aic
+        bic       = model.bic
+        resid     = model.resid
+        te        = resid.std() * np.sqrt(annualize)
+        ir        = alpha_ann / te if te > 0 else np.nan
+
+        bp_stat, bp_p, _, _ = sm.stats.diagnostic.het_breuschpagan(resid, X)
+        dw            = sm.stats.stattools.durbin_watson(resid)
+        jb_stat, jb_p = stats.jarque_bera(resid)[:2]
+        cond          = np.linalg.cond(X.values)
+
+        vif_data = {}
+        for col in available:
+            others = [c for c in available if c != col]
+            if others:
+                r2_vif = sm.OLS(X[col], sm.add_constant(X[others])).fit().rsquared
+                vif_data[col] = 1 / (1 - r2_vif) if r2_vif < 1 else np.inf
+            else:
+                vif_data[col] = 1.0
+
+        dw_status = "pass" if 1.5 < dw < 2.5 else "warn" if 1.2 < dw < 2.8 else "fail"
+        bp_status = "pass" if bp_p > 0.05 else "warn" if bp_p > 0.01 else "fail"
+        jb_status = "pass" if jb_p > 0.05 else "warn" if jb_p > 0.01 else "fail"
+        cn_status = "pass" if cond < 30 else "warn" if cond < 100 else "fail"
+
+        def diag_card(name, val, sub, status):
+            cls = {"pass":"diag-pass","fail":"diag-fail","warn":"diag-warn"}.get(status,"diag-pass")
+            return f'<div class="diag-item"><div class="diag-name">{name}</div><div class="diag-val {cls}">{val}</div><div class="diag-sub">{sub}</div></div>'
+
+        # ── Live price bar
+        try:
+            _live_price, _prev_close, _currency = get_live_price(ticker)
+            _chg = _live_price - _prev_close; _chg_pct = (_chg / _prev_close) * 100
+            _clr = "#34d399" if _chg >= 0 else "#f87171"; _arrow = "&#9650;" if _chg >= 0 else "&#9660;"
+            _price_html = (
+                f'<div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 16px;margin-bottom:20px;'
+                f'padding:14px 16px;background:rgba(29,158,117,0.08);border:1px solid rgba(29,158,117,0.2);border-radius:12px;">'
+                f'<span style="font-family:JetBrains Mono,monospace;font-size:18px;font-weight:700;color:#e2e8f0;">{ticker}</span>'
+                f'<span style="font-family:JetBrains Mono,monospace;font-size:22px;font-weight:700;color:{_clr};">{_currency} {_live_price:,.2f}</span>'
+                f'<span style="font-family:JetBrains Mono,monospace;font-size:13px;color:{_clr};">{_arrow} {abs(_chg):,.2f} ({abs(_chg_pct):.2f}%)</span>'
+                f'<span style="font-family:JetBrains Mono,monospace;font-size:13px;color:#5DCAA5;width:100%;">prev close {_currency} {_prev_close:,.2f}</span>'
+                f'</div>'
+            )
+        except Exception:
+            _price_html = (
+                f'<div style="padding:14px 16px;background:rgba(29,158,117,0.08);border:1px solid rgba(29,158,117,0.2);'
+                f'border-radius:12px;margin-bottom:20px;font-family:JetBrains Mono,monospace;'
+                f'font-size:18px;font-weight:700;color:#e2e8f0;">{ticker} <span style="font-size:13px;color:#5DCAA5;">· price unavailable</span></div>'
+            )
+        st.markdown(_price_html, unsafe_allow_html=True)
+
+        # Factor chips with AQR badge
+        active_chips = []
+        for f in sel_factors:
+            label = FACTOR_NAMES.get(f, f)
+            if f in AQR_FACTOR_SET:
+                label += ' <span class="aqr-badge">AQR</span>'
+            active_chips.append(label)
+        st.markdown(
+            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;color:#5DCAA5;'
+            f'margin-bottom:16px;padding:8px 12px;background:rgba(29,158,117,0.06);'
+            f'border:1px solid rgba(29,158,117,0.15);border-radius:8px;">'
+            f'Regressing on: <span style="color:#e2e8f0;">{" · ".join(active_chips)}</span></div>',
+            unsafe_allow_html=True)
+
+        _alpha_card = f"""
+        <div class="metric-card {'green' if alpha_ann > 0 else 'red'}">
+          <div class="metric-label">Annual Alpha</div>
+          <div class="metric-value" style="color:{'#34d399' if alpha_ann>0 else '#f87171'}">{alpha_ann:+.2%}</div>
+          <div class="metric-sub">Monthly: {alpha:+.4f} · p={alpha_p:.4f}</div>
+        </div>"""
+        _r2_card = f"""
+        <div class="metric-card blue">
+          <div class="metric-label">R² / Adj R²</div>
+          <div class="metric-value">{r2:.4f}</div>
+          <div class="metric-sub">Adj: {r2_adj:.4f}</div>
+        </div>"""
+        ir_color = "#34d399" if not np.isnan(ir) and ir > 0.5 else "#fbbf24" if not np.isnan(ir) and ir > 0 else "#f87171"
+        ir_str   = f"{ir:.3f}" if not np.isnan(ir) else "N/A"
+        _ir_card = f"""
+        <div class="metric-card gold">
+          <div class="metric-label">Information Ratio</div>
+          <div class="metric-value" style="color:{ir_color}">{ir_str}</div>
+          <div class="metric-sub">Ann. TE: {te:.2%}</div>
+        </div>"""
+        _f_card = f"""
+        <div class="metric-card gray">
+          <div class="metric-label">F-Stat / Obs</div>
+          <div class="metric-value">{f_stat:.2f}</div>
+          <div class="metric-sub">p={f_p:.4f} · N={n}</div>
+        </div>"""
+
+        c1, c2, c3, c4 = st.columns(4)
+        with c1: st.markdown(_alpha_card, unsafe_allow_html=True)
+        with c2: st.markdown(_r2_card,    unsafe_allow_html=True)
+        with c3: st.markdown(_ir_card,    unsafe_allow_html=True)
+        with c4: st.markdown(_f_card,     unsafe_allow_html=True)
+
+        st.markdown('<div class="section-title">Factor Loadings</div>', unsafe_allow_html=True)
+        st.markdown('<div class="factor-row header"><div>FACTOR</div><div>BETA</div><div>STD ERR</div><div>T-STAT</div><div>P-VALUE</div><div>SIG</div></div>', unsafe_allow_html=True)
+
+        factor_rows_html = []
+        for name in ["const"] + available:
+            b = model.params[name]; se = model.bse[name]; t = model.tvalues[name]; p = model.pvalues[name]
+            aqr_tag = ' <span class="aqr-badge">AQR</span>' if name in AQR_FACTOR_SET else ""
+            display_name = f"{FACTOR_NAMES.get(name, name)}{aqr_tag}"
+            row_h = f"""
+            <div class="{row_class(name, p)}">
+              <div style="color:#e2e8f0;font-weight:500">{display_name}</div>
+              <div>{fmt_beta(b)}</div><div style="color:#9FE1CB">{se:.4f}</div>
+              <div>{fmt_tstat(t)}</div><div>{fmt_pval(p)}</div><div>{sig_badge(p)}</div>
+            </div>"""
+            st.markdown(row_h, unsafe_allow_html=True)
+            factor_rows_html.append(row_h)
+
+        n_sig = sum(1 for f in available if model.pvalues[f] < 0.05)
+        legend_html = (
+            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#1D9E75;margin-top:6px;">'
+            f'★★★ p&lt;0.01 · ★★ p&lt;0.05 · ★ p&lt;0.10 · n.s. not significant'
+            f' | Newey-West SE, maxlags={hac_lags}'
+            f' | <span style="color:#34d399;">{n_sig} of {len(available)} factors significant at p&lt;0.05</span>'
+            f' | <span style="color:#fbbf24;">AQR = Quality Minus Junk / Betting Against Beta</span>'
+            f'</div>'
+        )
+        st.markdown(legend_html, unsafe_allow_html=True)
+
+        st.markdown('<div class="section-title">Factor Intelligence · Significant Loadings</div>', unsafe_allow_html=True)
+        today_display = date.today().strftime("%B %d, %Y")
+        ai_header_html = (
+            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;color:#5DCAA5;margin-bottom:12px;">'
+            f'Analysis restricted to statistically significant factors (p&lt;0.05) · {n_sig} factor(s) qualify · {today_display}'
+            f'<br><span style="color:#1D9E75;">Live price · fundamentals · analyst consensus · short interest</span>'
+            f'</div>'
+        )
+        st.markdown(ai_header_html, unsafe_allow_html=True)
+
+        _ai_key = f"{ticker}_{start_date}_{end_date}_{hac_lags}_{annualize}_{'_'.join(sel_factors)}"
+        if st.session_state.get("ai_run_key") != _ai_key:
+            st.session_state["ai_run_key"] = _ai_key
+            st.session_state["ai_insight"] = None
+            st.session_state["ai_error"]   = None
+            with st.spinner(f"Analyzing {n_sig} significant factor(s) for {ticker}..."):
+                insight, error = get_ai_insight(ticker, model, available, alpha_ann, alpha_p, r2, n, start_date, end_date)
+            st.session_state["ai_insight"] = insight
+            st.session_state["ai_error"]   = error
+
+        if st.session_state["ai_error"] and not st.session_state["ai_insight"]:
+            st.markdown(f'<div class="error-box">Analysis Error: {st.session_state["ai_error"]}</div>', unsafe_allow_html=True)
+        elif st.session_state["ai_error"] and st.session_state["ai_insight"]:
+            st.markdown(f'<div class="error-box" style="border-color:rgba(251,191,36,0.3);color:#fbbf24;">⚠ Partial errors: {st.session_state["ai_error"]}</div>', unsafe_allow_html=True)
+        if st.session_state["ai_insight"]:
+            render_ai_insight(ticker, st.session_state["ai_insight"])
+
+        tab1, tab2, tab3, tab4, tab5 = st.tabs(["95% Confidence Intervals","Regression Diagnostics","Variance Inflation Factors","Model Fit","Rolling Market Beta"])
+
+        ci = model.conf_int()
+        ci_html = '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;">'
+        for name in ["const"] + available:
+            lo = ci.loc[name, 0]; hi = ci.loc[name, 1]; b = model.params[name]
+            spans_zero = lo < 0 < hi
+            bar_color  = "#34d399" if b > 0 and not spans_zero else "#f87171" if b < 0 and not spans_zero else "#6b7280"
+            aqr_tag = ' <span class="aqr-badge">AQR</span>' if name in AQR_FACTOR_SET else ""
+            ci_html += f'<div style="background:rgba(29,158,117,0.06);border:1px solid rgba(29,158,117,0.15);border-radius:10px;padding:14px 16px;min-width:140px;flex:1;"><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:6px;">{FACTOR_NAMES.get(name, name)}{aqr_tag}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:14px;font-weight:600;color:{bar_color};">{b:+.4f}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#9FE1CB;margin-top:4px;">[{lo:+.4f}, {hi:+.4f}]</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#1D9E75;margin-top:6px;">{"spans zero" if spans_zero else "excl. zero"}</div></div>'
+        ci_html += '</div>'
+
+        diag_html = f'<div style="height:12px"></div><div class="diag-grid">{diag_card("Durbin-Watson",f"{dw:.4f}","Autocorrelation · ideal ≈ 2.0",dw_status)}{diag_card("Breusch-Pagan",f"p = {bp_p:.4f}",f"Heteroscedasticity · stat={bp_stat:.3f}",bp_status)}{diag_card("Jarque-Bera",f"p = {jb_p:.4f}",f"Residual normality · stat={jb_stat:.3f}",jb_status)}{diag_card("Condition Number",f"{cond:.1f}","Multicollinearity · ideal < 30",cn_status)}</div>'
+
+        vif_html = '<div style="height:12px"></div><div style="display:flex;flex-wrap:wrap;gap:10px;">'
+        for col, v in vif_data.items():
+            vc = "#34d399" if v < 5 else "#fbbf24" if v < 10 else "#f87171"
+            aqr_tag = ' <span class="aqr-badge">AQR</span>' if col in AQR_FACTOR_SET else ""
+            vif_html += f'<div style="background:rgba(29,158,117,0.06);border:1px solid rgba(29,158,117,0.15);border-radius:10px;padding:14px 16px;min-width:100px;"><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:4px;">{FACTOR_NAMES.get(col, col)}{aqr_tag}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:18px;font-weight:600;color:{vc}">{v:.2f}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#9FE1CB;margin-top:2px;">{"OK" if v < 5 else "MODERATE" if v < 10 else "HIGH"}</div></div>'
+        vif_html += '</div>'
+
+        fit_html = f'<div style="height:12px"></div><div style="display:flex;flex-wrap:wrap;gap:10px;"><div class="diag-item" style="min-width:120px;"><div class="diag-name">AIC</div><div class="diag-val" style="color:#60a5fa;font-size:16px;">{aic:.2f}</div></div><div class="diag-item" style="min-width:120px;"><div class="diag-name">BIC</div><div class="diag-val" style="color:#60a5fa;font-size:16px;">{bic:.2f}</div></div><div class="diag-item" style="min-width:120px;"><div class="diag-name">Log-Likelihood</div><div class="diag-val" style="color:#60a5fa;font-size:16px;">{model.llf:.2f}</div></div><div class="diag-item" style="min-width:120px;"><div class="diag-name">Residual Std</div><div class="diag-val" style="color:#60a5fa;font-size:16px;">{resid.std():.4f}</div></div><div class="diag-item" style="min-width:120px;"><div class="diag-name">Skewness</div><div class="diag-val" style="color:#60a5fa;font-size:16px;">{float(stats.skew(resid)):.4f}</div></div><div class="diag-item" style="min-width:120px;"><div class="diag-name">Kurtosis</div><div class="diag-val" style="color:#60a5fa;font-size:16px;">{float(stats.kurtosis(resid)):.4f}</div></div></div>'
+
+        rolling_html = None
+        if "Mkt-RF" in available and len(data) >= 36:
+            window = 24; roll_betas, roll_dates = [], []
+            for i in range(window, len(data) + 1):
+                sub = data.iloc[i - window: i]
+                try:
+                    rb = sm.OLS(sub["Y"], sm.add_constant(sub[["Mkt-RF"]])).fit().params["Mkt-RF"]
+                    roll_betas.append(rb); roll_dates.append(str(data.index[i - 1]))
+                except Exception:
+                    pass
+            if roll_betas:
+                mn, mx = min(roll_betas), max(roll_betas); rng = mx - mn if mx != mn else 1
+                W, H = 800, 140
+                pts = " ".join(f"{int(i/(len(roll_betas)-1)*W) if len(roll_betas)>1 else W//2},{int(H-((b-mn)/rng)*H)}" for i, b in enumerate(roll_betas))
+                one_y = int(H - ((1.0 - mn) / rng) * H)
+                rolling_html = f'<div style="margin-top:12px;"><svg viewBox="0 0 {W} {H+30}" xmlns="http://www.w3.org/2000/svg" style="background:rgba(29,158,117,0.05);border:1px solid rgba(29,158,117,0.15);border-radius:10px;width:100%;margin-bottom:8px;"><line x1="0" y1="{one_y}" x2="{W}" y2="{one_y}" stroke="rgba(29,158,117,0.25)" stroke-width="1" stroke-dasharray="4,4"/><polyline points="{pts}" fill="none" stroke="#34d399" stroke-width="2"/><text x="6" y="{H+20}" fill="#1D9E75" font-family="JetBrains Mono,monospace" font-size="10">{roll_dates[0]}</text><text x="{W-6}" y="{H+20}" fill="#1D9E75" text-anchor="end" font-family="JetBrains Mono,monospace" font-size="10">{roll_dates[-1]}</text><text x="{W//2}" y="18" fill="#5DCAA5" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10">Current β = {roll_betas[-1]:.3f}</text></svg></div>'
+
+        with tab1: st.markdown(ci_html,   unsafe_allow_html=True)
+        with tab2: st.markdown(diag_html, unsafe_allow_html=True)
+        with tab3: st.markdown(vif_html,  unsafe_allow_html=True)
+        with tab4: st.markdown(fit_html,  unsafe_allow_html=True)
+        with tab5:
+            if rolling_html: st.markdown(rolling_html, unsafe_allow_html=True)
+            else: st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;color:#5DCAA5;padding:20px 0;">Need at least 36 months and Mkt-RF selected.</div>', unsafe_allow_html=True)
+
+        with st.expander("Full OLS Summary"):
+            _render_ols_summary(model.summary().as_text())
+
+        st.markdown('<div class="section-title">Export Results</div>', unsafe_allow_html=True)
+        export_df = pd.DataFrame({
+            "Factor":   [FACTOR_NAMES.get(n, n) for n in model.params.index],
+            "Beta":     model.params.values, "Std_Err": model.bse.values,
+            "T_Stat":   model.tvalues.values, "P_Value": model.pvalues.values,
+            "CI_Lower": model.conf_int()[0].values, "CI_Upper": model.conf_int()[1].values,
+        })
+        data_export = data.copy(); data_export.index = data_export.index.astype(str)
+        col_a, col_b = st.columns(2)
+        with col_a:
+            st.download_button("⬇  Download Results CSV", export_df.to_csv(index=False), file_name=f"{ticker}_factor_regression.csv", mime="text/csv", use_container_width=True)
+        with col_b:
+            st.download_button("⬇  Download Merged Data CSV", data_export.to_csv(), file_name=f"{ticker}_merged_data.csv", mime="text/csv", use_container_width=True)
+
+        st.session_state["single_stock_cache"] = {
+            "ticker": ticker, "price_html": _price_html,
+            "metric_alpha": _alpha_card, "metric_r2": _r2_card, "metric_ir": _ir_card, "metric_f": _f_card,
+            "factor_rows": factor_rows_html, "factor_legend": legend_html,
+            "ai_header": ai_header_html, "ai_insight": st.session_state["ai_insight"], "ai_error": st.session_state["ai_error"],
+            "ci_html": ci_html, "diag_html": diag_html, "vif_html": vif_html, "fit_html": fit_html,
+            "rolling_html": rolling_html, "ols_summary": model.summary().as_text(),
+            "export_csv": export_df.to_csv(index=False), "merged_csv": data_export.to_csv(),
+        }
+        st.session_state["run"] = False
+
+    except Exception as e:
+        st.markdown(f'<div class="error-box">Error: {str(e)}</div>', unsafe_allow_html=True)
+        raise e
