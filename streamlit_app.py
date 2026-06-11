@@ -512,6 +512,7 @@ def _factor_prompt(ticker, factor_code, factor_name, beta, p_value, significant,
         "You have to check various news sources and check all the finance related developments and any investments decided."
         "Make use of prnewswire to get the latest quarterly results and 8-k announcements to use more numbers."
         "But dont explicitly keep saying 8-k or pnr. Make heavy use of cnbc to get the company developments."
+        "Analyze the War in Iran and take that into consideration also and its affect on the stock"
         + aqr_note
     )
     sig_word = "statistically significant (p<0.05)" if significant else f"not statistically significant (p={p_value:.3f})"
