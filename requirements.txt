@@ -6,4 +6,3 @@ statsmodels
 scipy
 groq
 openpyxl
-arch
