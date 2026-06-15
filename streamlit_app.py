@@ -57,7 +57,7 @@ html, body, [class*="css"] {{ font-family: 'Inter', sans-serif; }}
 
 /* ── SIDEBAR BACKGROUND (stable selector, works across domains) ── */
 [data-testid="stSidebar"] {{
-    background: linear-gradient(180deg, rgba(4,30,22,0.98) 0%, rgba(6,38,28,0.98) 100%) !important;
+    {_BG_CSS}
     border-right: 1px solid rgba(29, 158, 117, 0.2) !important;
 }}
 [data-testid="stSidebar"] > div:first-child {{
