@@ -14,8 +14,6 @@ warnings.filterwarnings("ignore")
 
 FF_URL = "https://raw.githubusercontent.com/lakshyaworkch-cell/Lakshy/main/F-F_Research_Data_5_Factors_2x3.csv"
 
-# AQR public data URLs (monthly, Global except US — using US proxy via their Excel files)
-# AQR hosts Excel files; we use a CSV mirror for QMJ and BAB
 AQR_QMJ_URL = "https://images.aqr.com/-/media/AQR/Documents/Insights/Data-Sets/Quality-Minus-Junk-Factors-Monthly.xlsx"
 AQR_BAB_URL = "https://images.aqr.com/-/media/AQR/Documents/Insights/Data-Sets/Betting-Against-Beta-Equity-Factors-Monthly.xlsx"
 
@@ -38,7 +36,7 @@ _BG_CSS = (
     background-position: center;
     background-attachment: fixed;"""
     if _BG else
-    """background: #1a0933;
+    """background: #04342c;
     background-image:
         radial-gradient(ellipse at 15% 0%, rgba(29,158,117,0.18) 0%, transparent 55%),
         radial-gradient(ellipse at 85% 100%, rgba(15,110,86,0.14) 0%, transparent 55%),
@@ -48,11 +46,89 @@ _BG_CSS = (
 st.markdown(f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
 html, body, [class*="css"] {{ font-family: 'Inter', sans-serif; }}
+
+/* ── APP BACKGROUND ── */
 .stApp {{
     {_BG_CSS}
     color: #e2e8f0;
 }}
+
+/* ── SIDEBAR BACKGROUND (stable selector, works across domains) ── */
+[data-testid="stSidebar"] {{
+    background: rgba(4, 42, 32, 0.97) !important;
+    border-right: 1px solid rgba(29, 158, 117, 0.2) !important;
+}}
+[data-testid="stSidebar"] > div:first-child {{
+    background: transparent !important;
+}}
+/* Sidebar inner scrollable container */
+[data-testid="stSidebar"] .stSidebarContent,
+[data-testid="stSidebarContent"] {{
+    background: transparent !important;
+}}
+/* Catch all generated emotion-cache sidebar classes */
+section[data-testid="stSidebar"] * {{
+    --background-color: transparent;
+}}
+
+/* ── SIDEBAR TEXT ── */
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] .stMarkdown,
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] span {{
+    color: #e2e8f0 !important;
+}}
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3 {{
+    color: #e2e8f0 !important;
+}}
+
+/* ── SIDEBAR INPUTS ── */
+[data-testid="stSidebar"] .stTextInput > div > div > input {{
+    background: rgba(29,158,117,0.08) !important;
+    border: 1px solid rgba(29,158,117,0.25) !important;
+    color: #e2e8f0 !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    border-radius: 8px !important;
+}}
+[data-testid="stSidebar"] .stSelectbox > div > div,
+[data-testid="stSidebar"] .stNumberInput > div > div > input {{
+    background: rgba(29,158,117,0.08) !important;
+    border: 1px solid rgba(29,158,117,0.25) !important;
+    color: #e2e8f0 !important;
+    border-radius: 8px !important;
+}}
+
+/* ── SIDEBAR BUTTONS ── */
+[data-testid="stSidebar"] .stButton > button {{
+    background: rgba(29,158,117,0.12) !important;
+    color: #9FE1CB !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-weight: 500 !important;
+    letter-spacing: 1px !important;
+    border: 1px solid rgba(29,158,117,0.3) !important;
+    border-radius: 8px !important;
+}}
+[data-testid="stSidebar"] .stButton > button:hover {{
+    background: rgba(52,211,153,0.15) !important;
+    border-color: rgba(52,211,153,0.5) !important;
+    color: #34d399 !important;
+}}
+
+/* ── SIDEBAR RADIO / CHECKBOX ── */
+[data-testid="stSidebar"] .stRadio label,
+[data-testid="stSidebar"] .stCheckbox label {{
+    color: #e2e8f0 !important;
+}}
+
+/* ── SIDEBAR SLIDER ── */
+[data-testid="stSidebar"] .stSlider [data-baseweb="slider"] {{
+    background: rgba(29,158,117,0.2) !important;
+}}
+
 h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacing: -0.5px; }}
 
 /* === METRIC CARDS === */
@@ -69,7 +145,7 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
 .metric-value {{ font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 600; color: #e2e8f0; }}
 .metric-sub {{ font-size: 12px; color: #9FE1CB; margin-top: 4px; font-family: 'JetBrains Mono', monospace; word-break: break-all; }}
 
-/* === FACTOR ROWS — stack on mobile, grid on desktop === */
+/* === FACTOR ROWS === */
 .factor-row {{
     display: flex; flex-wrap: wrap; gap: 6px 12px;
     align-items: center; padding: 10px 12px; border-radius: 8px;
@@ -108,7 +184,7 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
     padding-bottom: 8px; margin: 24px 0 14px 0;
 }}
 
-/* === DIAGNOSTICS GRID — 1 col mobile, 2 col desktop === */
+/* === DIAGNOSTICS GRID === */
 .diag-grid {{ display: grid; grid-template-columns: 1fr; gap: 10px; }}
 @media (min-width: 500px) {{ .diag-grid {{ grid-template-columns: 1fr 1fr; }} }}
 .diag-item {{ background: rgba(29,158,117,0.06); border: 1px solid rgba(29,158,117,0.15); border-radius: 10px; padding: 14px 16px; }}
@@ -184,7 +260,7 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
     tab-size: 4;
 }}
 
-/* === INPUTS & BUTTONS === */
+/* === MAIN AREA INPUTS & BUTTONS === */
 .stTextInput > div > div > input {{
     background: rgba(29,158,117,0.08) !important;
     border: 1px solid rgba(29,158,117,0.25) !important;
@@ -242,13 +318,9 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
 #  Helpers
 # ─────────────────────────────────────────────
 
-# FF5 + Momentum factors
 FF_FACTORS  = ["Mkt-RF", "SMB", "HML", "RMW", "CMA", "Mom"]
-# AQR factors
 AQR_FACTORS = ["QMJ", "BAB"]
 ALL_FACTORS = FF_FACTORS + AQR_FACTORS
-
-# Which factors come from AQR (used for badge rendering)
 AQR_FACTOR_SET = set(AQR_FACTORS)
 
 def sig_badge(p):
@@ -305,8 +377,8 @@ FACTOR_DESCRIPTIONS = {
 FACTOR_COLORS = {
     "Mkt-RF": "#60a5fa", "SMB": "#34d399", "HML": "#fbbf24",
     "RMW": "#a78bfa", "CMA": "#f97316", "Mom": "#ec4899",
-    "QMJ":  "#facc15",   # gold — AQR quality
-    "BAB":  "#38bdf8",   # sky blue — AQR BAB
+    "QMJ":  "#facc15",
+    "BAB":  "#38bdf8",
     "const": "#94a3b8",
 }
 
@@ -324,22 +396,12 @@ def load_factors():
 
 @st.cache_data(show_spinner=False)
 def load_aqr_factors():
-    """
-    Load QMJ and BAB monthly factor returns from AQR's public Excel files.
-    Returns a DataFrame indexed by Period("M") with columns QMJ and BAB (as decimals).
-    Falls back to empty DataFrame on any error.
-    """
-    import io
-
     results = {}
-
-    # ── QMJ ──────────────────────────────────────────────────────────────────
     try:
         resp_qmj = pd.read_excel(AQR_QMJ_URL, sheet_name="QMJ Factors", header=18, index_col=0)
         resp_qmj.index = pd.to_datetime(resp_qmj.index, errors="coerce")
         resp_qmj = resp_qmj[resp_qmj.index.notna()]
         resp_qmj.index = resp_qmj.index.to_period("M")
-        # AQR stores USA column; fall back to first numeric column
         if "USA" in resp_qmj.columns:
             qmj_series = pd.to_numeric(resp_qmj["USA"], errors="coerce").dropna()
         else:
@@ -348,7 +410,6 @@ def load_aqr_factors():
     except Exception as e:
         st.warning(f"Could not load AQR QMJ data: {e}. QMJ will be unavailable.")
 
-    # ── BAB ──────────────────────────────────────────────────────────────────
     try:
         resp_bab = pd.read_excel(AQR_BAB_URL, sheet_name="BAB Factors", header=18, index_col=0)
         resp_bab.index = pd.to_datetime(resp_bab.index, errors="coerce")
@@ -366,8 +427,6 @@ def load_aqr_factors():
         return pd.DataFrame()
 
     df = pd.DataFrame(results)
-    # AQR returns are already in decimal form in recent files;
-    # if values look like percentages (mean abs > 0.5) divide by 100
     for col in df.columns:
         if df[col].abs().mean() > 0.5:
             df[col] = df[col] / 100.0
@@ -375,9 +434,6 @@ def load_aqr_factors():
 
 
 def merge_all_factors(ff_df, aqr_df, selected_factors):
-    """
-    Merge FF and AQR factor DataFrames, return only the selected columns that exist.
-    """
     combined = ff_df.copy()
     for col in AQR_FACTORS:
         if col in selected_factors and col in aqr_df.columns:
@@ -643,7 +699,6 @@ def render_ai_insight(ticker, insight_data):
             what = bold(fac.get("what_it_means", "")); macro = bold(fac.get("current_macro_context", ""))
             news = bold(fac.get("recent_stock_news", "")); forecast = bold(fac.get("forward_forecast", ""))
             risks = bold(fac.get("key_risks", ""))
-            # AQR badge for QMJ/BAB
             aqr_tag = '<span class="aqr-badge">AQR</span>' if code in AQR_FACTOR_SET else ""
             st.markdown(f"""
             <div class="factor-insight-card {card_cls}">
@@ -915,6 +970,9 @@ for key, default in [
     ("port_run", False), ("port_results", None),
     ("single_stock_cache", None), ("portfolio_cache", None),
     ("active_mode", "Single Stock"),
+    # FIX: store the ticker input value in session state so it persists
+    # and is available when the run button is clicked
+    ("ticker_input", ""),
 ]:
     if key not in st.session_state:
         st.session_state[key] = default
@@ -945,7 +1003,20 @@ with st.sidebar:
     st.markdown("---")
 
     if mode == "Single Stock":
-        ticker = st.text_input("Stock Ticker", "AVGO").upper().strip()
+        # FIX 1: No default value ("AVGO" removed → blank placeholder instead)
+        # FIX 2: Use key= so the value is stored in session_state["ticker_input"]
+        #         and is immediately readable when the Run button is clicked
+        #         on the same script execution pass.
+        ticker_input = st.text_input(
+            "Stock Ticker",
+            value=st.session_state["ticker_input"],
+            placeholder="e.g. AAPL",
+            key="ticker_input_widget",
+        ).upper().strip()
+        # Mirror to session state immediately so the run handler below always
+        # has the freshest value regardless of widget re-render order.
+        st.session_state["ticker_input"] = ticker_input
+
     else:
         st.markdown("**Portfolio Holdings**")
         st.markdown(
@@ -1008,7 +1079,6 @@ with st.sidebar:
 
     st.markdown("---")
 
-    # ── Factor Selection ──────────────────────────────────────────────────────
     st.markdown("**Factor Selection**")
     st.markdown(
         '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:8px;">'
@@ -1031,7 +1101,6 @@ with st.sidebar:
             st.rerun()
 
     new_selection = []
-    # FF factors group
     st.markdown(
         '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1px;'
         'text-transform:uppercase;color:#1D9E75;margin:6px 0 2px 0;">Fama-French + Momentum</div>',
@@ -1042,7 +1111,6 @@ with st.sidebar:
         if st.checkbox(FACTOR_NAMES.get(f, f), value=checked, key=f"chk_{f}"):
             new_selection.append(f)
 
-    # AQR factors group
     st.markdown(
         '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1px;'
         'text-transform:uppercase;color:#fbbf24;margin:10px 0 2px 0;">AQR Factors</div>',
@@ -1083,12 +1151,20 @@ with st.sidebar:
     st.markdown("---")
 
     if mode == "Single Stock":
-        if st.button("▶  RUN REGRESSION", use_container_width=True):
-            if not st.session_state["selected_factors"]:
+        run_clicked = st.button("▶  RUN REGRESSION", use_container_width=True)
+        if run_clicked:
+            # FIX 3: Read ticker directly from session state (set above from the widget)
+            #         This avoids the "no ticker on first boot" bug where the widget
+            #         value isn't yet propagated through the normal flow on the first
+            #         script run after clicking the button.
+            _ticker_to_run = st.session_state["ticker_input"]
+            if not _ticker_to_run:
+                st.error("Please enter a stock ticker before running.")
+            elif not st.session_state["selected_factors"]:
                 st.error("Select at least one factor before running.")
             else:
                 st.session_state["run"]        = True
-                st.session_state["ticker_ran"] = ticker
+                st.session_state["ticker_ran"] = _ticker_to_run
                 st.session_state["start_ran"]  = start_date
                 st.session_state["end_ran"]    = end_date
                 st.session_state["hac_ran"]    = hac_lags
@@ -1133,7 +1209,7 @@ if not st.session_state["run"] and not st.session_state["port_run"] \
         st.markdown(
             '<div class="interpret-box" style="margin-top:40px;text-align:center;">'
             '<b>Single Stock Mode</b><br><br>'
-            '1. Enter a ticker<br>2. Set date range<br>'
+            '1. Enter a ticker in the left panel<br>2. Set date range<br>'
             '3. Select factors — including <span style="color:#fbbf24;">AQR QMJ &amp; BAB</span><br>'
             '4. Click <b>▶ RUN REGRESSION</b><br><br>'
             '<span style="color:#1D9E75;font-size:13px;">Factor analysis runs only on statistically significant loadings (p&lt;0.05).</span>'
@@ -1283,12 +1359,18 @@ if current_mode == "Single Stock":
     if not st.session_state["run"]:
         st.stop()
 
-    ticker     = st.session_state.get("ticker_ran", "AVGO")
+    ticker     = st.session_state.get("ticker_ran", "")
     start_date = st.session_state.get("start_ran", start_date)
     end_date   = st.session_state.get("end_ran",   end_date)
     hac_lags   = st.session_state.get("hac_ran",   hac_lags)
     annualize  = st.session_state.get("ann_ran",   annualize)
     sel_factors= st.session_state["selected_factors"]
+
+    # FIX 3 continued: guard against empty ticker making it this far
+    if not ticker:
+        st.markdown('<div class="error-box">No ticker specified. Please enter a ticker in the left panel and click Run.</div>', unsafe_allow_html=True)
+        st.session_state["run"] = False
+        st.stop()
 
     try:
         with st.spinner("Loading factor data..."):
@@ -1308,16 +1390,14 @@ if current_mode == "Single Stock":
             st.markdown('<div class="error-box">None of the selected factors found in the dataset.</div>', unsafe_allow_html=True)
             st.stop()
 
-        # AQR factors are already in decimal; FF factors come in as pct so divide by 100
         for col in available:
             if col in FF_FACTORS:
                 ff[col] = ff[col].astype(float) / 100
             else:
-                ff[col] = ff[col].astype(float)   # already decimal from load_aqr_factors
+                ff[col] = ff[col].astype(float)
         if has_rf:
             ff["RF"] = ff["RF"].astype(float) / 100
 
-        # Notify user which AQR factors loaded successfully
         loaded_aqr = [f for f in AQR_FACTORS if f in available]
         missing_aqr = [f for f in sel_factors if f in AQR_FACTORS and f not in available]
         if loaded_aqr:
@@ -1335,7 +1415,8 @@ if current_mode == "Single Stock":
             raw = yf.download(ticker, start=str(start_date), end=str(end_date), auto_adjust=True, progress=False)
 
         if raw.empty:
-            st.markdown(f'<div class="error-box">No price data found for: {ticker}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="error-box">No price data found for: <b>{ticker}</b>. Check the ticker symbol is valid.</div>', unsafe_allow_html=True)
+            st.session_state["run"] = False
             st.stop()
 
         close   = raw["Close"]
@@ -1347,7 +1428,6 @@ if current_mode == "Single Stock":
 
         data = pd.DataFrame({"Stock": returns}).join(ff[available + (["RF"] if has_rf else [])], how="inner")
         data = data.replace([np.inf, -np.inf], np.nan).dropna()
-
 
         if len(data) < 24:
             st.markdown(f'<div class="error-box">Too few observations ({len(data)}). Check date range.</div>', unsafe_allow_html=True)
@@ -1396,7 +1476,6 @@ if current_mode == "Single Stock":
             cls = {"pass":"diag-pass","fail":"diag-fail","warn":"diag-warn"}.get(status,"diag-pass")
             return f'<div class="diag-item"><div class="diag-name">{name}</div><div class="diag-val {cls}">{val}</div><div class="diag-sub">{sub}</div></div>'
 
-        # ── Live price bar
         try:
             _live_price, _prev_close, _currency = get_live_price(ticker)
             _chg = _live_price - _prev_close; _chg_pct = (_chg / _prev_close) * 100
@@ -1418,7 +1497,6 @@ if current_mode == "Single Stock":
             )
         st.markdown(_price_html, unsafe_allow_html=True)
 
-        # Factor chips with AQR badge
         active_chips = []
         for f in sel_factors:
             label = FACTOR_NAMES.get(f, f)
