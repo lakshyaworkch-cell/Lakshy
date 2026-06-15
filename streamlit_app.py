@@ -334,27 +334,26 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
 
 /* === FACTOR REGIME STRIP === */
 .regime-row {{
-    display: flex; flex-wrap: nowrap; gap: 8px; margin-bottom: 18px;
-    overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 6px;
+    display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px;
 }}
 .regime-card {{
     background: rgba(29,158,117,0.06); border: 1px solid rgba(29,158,117,0.15);
-    border-radius: 10px; padding: 10px 12px;
-    flex: 0 0 132px; width: 132px; box-sizing: border-box;
+    border-radius: 10px; padding: 10px 14px;
+    display: flex; align-items: center; gap: 12px;
 }}
 .regime-name {{
-    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #e2e8f0;
-    font-weight: 500; margin-bottom: 8px; white-space: nowrap;
-    overflow: hidden; text-overflow: ellipsis;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e2e8f0;
+    font-weight: 500; white-space: nowrap;
+    flex: 0 0 170px;
 }}
-.regime-cells {{ display: flex; gap: 4px; }}
+.regime-cells {{ display: flex; gap: 10px; flex: 1; }}
 .regime-cell {{ flex: 1 1 0; min-width: 0; text-align: center; }}
 .regime-label {{
-    font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.5px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.5px;
     color: #5DCAA5; margin-bottom: 2px; white-space: nowrap;
 }}
 .regime-val {{
-    font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600;
     white-space: nowrap;
 }}
 .regime-val.na {{ color: #6b7280; font-weight: 400; }}
