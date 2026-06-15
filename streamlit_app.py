@@ -331,6 +331,33 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
 .port-attr-beta {{ font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 600; }}
 .port-attr-beta.pos {{ color: #34d399; }}
 .port-attr-beta.neg {{ color: #f87171; }}
+
+/* === FACTOR REGIME STRIP === */
+.regime-row {{
+    display: flex; flex-wrap: nowrap; gap: 8px; margin-bottom: 18px;
+    overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 6px;
+}}
+.regime-card {{
+    background: rgba(29,158,117,0.06); border: 1px solid rgba(29,158,117,0.15);
+    border-radius: 10px; padding: 10px 12px;
+    flex: 0 0 132px; width: 132px; box-sizing: border-box;
+}}
+.regime-name {{
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #e2e8f0;
+    font-weight: 500; margin-bottom: 8px; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+}}
+.regime-cells {{ display: flex; gap: 4px; }}
+.regime-cell {{ flex: 1 1 0; min-width: 0; text-align: center; }}
+.regime-label {{
+    font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.5px;
+    color: #5DCAA5; margin-bottom: 2px; white-space: nowrap;
+}}
+.regime-val {{
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600;
+    white-space: nowrap;
+}}
+.regime-val.na {{ color: #6b7280; font-weight: 400; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -343,6 +370,9 @@ FF_FACTORS  = ["Mkt-RF", "SMB", "HML", "RMW", "CMA", "Mom"]
 AQR_FACTORS = ["QMJ", "BAB"]
 ALL_FACTORS = FF_FACTORS + AQR_FACTORS
 AQR_FACTOR_SET = set(AQR_FACTORS)
+
+# Fixed benchmark for "Active Exposure" comparisons.
+BENCHMARK_TICKER = "SPY"
 
 def sig_badge(p):
     if p < 0.001: return '<span class="sig-badge badge-001">★★★</span>'
@@ -777,6 +807,9 @@ def render_factor_regime_strip(ff_scaled, available_factors):
     """
     Renders trailing 1M / 3M / 12M realized returns for each selected factor,
     using an already-scaled (decimal) factor dataframe sliced to the analysis window.
+
+    Clean, fixed-width cards in a horizontally-scrollable row so values never
+    overflow or wrap, regardless of how many factors are selected.
     """
     if ff_scaled is None or ff_scaled.empty or not available_factors:
         return ""
@@ -793,29 +826,19 @@ def render_factor_regime_strip(ff_scaled, available_factors):
                 window_vals = series.iloc[-months:]
                 cumret = (1 + window_vals).prod() - 1
                 color = "#34d399" if cumret > 0 else "#f87171"
-                val_html = (
-                    f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;'
-                    f'font-weight:600;color:{color};white-space:nowrap;">{cumret:+.2%}</div>'
-                )
+                val_html = f'<div class="regime-val" style="color:{color};">{cumret:+.2%}</div>'
             else:
-                val_html = (
-                    '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;'
-                    'color:#6b7280;white-space:nowrap;">N/A</div>'
-                )
+                val_html = '<div class="regime-val na">N/A</div>'
             cells += (
-                f'<div style="text-align:center;flex:1 1 0;min-width:0;">'
-                f'<div style="font-size:9px;letter-spacing:0.5px;color:#5DCAA5;margin-bottom:2px;'
-                f'white-space:nowrap;">{label}</div>'
+                f'<div class="regime-cell">'
+                f'<div class="regime-label">{label}</div>'
                 f'{val_html}</div>'
             )
         aqr_tag = ' <span class="aqr-badge">AQR</span>' if f in AQR_FACTOR_SET else ""
         cards += (
-            f'<div style="background:rgba(29,158,117,0.06);border:1px solid rgba(29,158,117,0.15);'
-            f'border-radius:10px;padding:8px 10px;width:120px;flex:0 0 120px;box-sizing:border-box;">'
-            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#e2e8f0;'
-            f'font-weight:500;margin-bottom:6px;white-space:nowrap;overflow:hidden;'
-            f'text-overflow:ellipsis;">{FACTOR_NAMES.get(f, f)}{aqr_tag}</div>'
-            f'<div style="display:flex;gap:4px;">{cells}</div>'
+            f'<div class="regime-card">'
+            f'<div class="regime-name">{FACTOR_NAMES.get(f, f)}{aqr_tag}</div>'
+            f'<div class="regime-cells">{cells}</div>'
             f'</div>'
         )
 
@@ -827,19 +850,7 @@ def render_factor_regime_strip(ff_scaled, available_factors):
         '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:10px;">'
         'Realized factor returns over the most recent 1 / 3 / 12 months in the analysis window — '
         'shows whether each factor has recently been a tailwind or a headwind.</div>'
-        f'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;'
-        f'overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;">{cards}</div>'
-    )
-
-    if not cards:
-        return ""
-
-    return (
-        '<div class="section-title">Factor Regime · Trailing Returns</div>'
-        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:10px;">'
-        'Realized factor returns over the most recent 1 / 3 / 12 months in the analysis window — '
-        'shows whether each factor has recently been a tailwind or a headwind.</div>'
-        f'<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px;">{cards}</div>'
+        f'<div class="regime-row">{cards}</div>'
     )
 
 
@@ -1135,8 +1146,6 @@ for key, default in [
     # FIX: store the ticker input value in session state so it persists
     # and is available when the run button is clicked
     ("ticker_input", ""),
-    # Benchmark for active exposure comparisons
-    ("benchmark_ticker", "SPY"),
 ]:
     if key not in st.session_state:
         st.session_state[key] = default
@@ -1316,23 +1325,13 @@ with st.sidebar:
 
     st.markdown("**Benchmark (Active Exposure)**")
     st.markdown(
-        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:8px;">'
-        'Regression betas vs. this ticker over the same window show your '
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;">'
+        f'Regression betas vs. <span style="color:#fbbf24;">{BENCHMARK_TICKER}</span> over the same window show your '
         '<span style="color:#fbbf24;">active</span> factor bets.</div>',
         unsafe_allow_html=True
     )
-    benchmark_ticker = st.text_input(
-        "Benchmark Ticker",
-        value=st.session_state["benchmark_ticker"],
-        placeholder="e.g. SPY",
-        key="benchmark_ticker_widget",
-    ).upper().strip()
-    if not benchmark_ticker:
-        benchmark_ticker = "SPY"
-    if benchmark_ticker != st.session_state["benchmark_ticker"]:
-        st.session_state["benchmark_ticker"]   = benchmark_ticker
-        st.session_state["single_stock_cache"] = None
-        st.session_state["portfolio_cache"]    = None
+    # Benchmark is fixed to SPY — no text input needed.
+    benchmark_ticker = BENCHMARK_TICKER
 
     st.markdown("---")
 
@@ -1442,7 +1441,7 @@ if current_mode == "Portfolio Attribution":
     port_end    = st.session_state.get("port_end",   end_date)
     port_hac    = st.session_state.get("port_hac",   hac_lags)
     sel_factors = tuple(st.session_state["selected_factors"])
-    bench_ticker = st.session_state.get("benchmark_ticker", "SPY")
+    bench_ticker = BENCHMARK_TICKER
 
     if not weights:
         st.markdown('<div class="error-box">No valid tickers found.</div>', unsafe_allow_html=True)
@@ -1587,7 +1586,7 @@ if current_mode == "Single Stock":
     hac_lags   = st.session_state.get("hac_ran",   hac_lags)
     annualize  = st.session_state.get("ann_ran",   annualize)
     sel_factors= st.session_state["selected_factors"]
-    bench_ticker = st.session_state.get("benchmark_ticker", "SPY")
+    bench_ticker = BENCHMARK_TICKER
 
     # FIX 3 continued: guard against empty ticker making it this far
     if not ticker:
