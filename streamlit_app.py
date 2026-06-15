@@ -794,28 +794,42 @@ def render_factor_regime_strip(ff_scaled, available_factors):
                 cumret = (1 + window_vals).prod() - 1
                 color = "#34d399" if cumret > 0 else "#f87171"
                 val_html = (
-                    f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;'
-                    f'font-weight:600;color:{color};">{cumret:+.2%}</div>'
+                    f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;'
+                    f'font-weight:600;color:{color};white-space:nowrap;">{cumret:+.2%}</div>'
                 )
             else:
                 val_html = (
-                    '<div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;'
-                    'color:#6b7280;">N/A</div>'
+                    '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;'
+                    'color:#6b7280;white-space:nowrap;">N/A</div>'
                 )
             cells += (
-                f'<div style="text-align:center;flex:1;">'
-                f'<div style="font-size:10px;letter-spacing:1px;color:#5DCAA5;margin-bottom:2px;">{label}</div>'
+                f'<div style="text-align:center;flex:1 1 0;min-width:0;">'
+                f'<div style="font-size:9px;letter-spacing:0.5px;color:#5DCAA5;margin-bottom:2px;'
+                f'white-space:nowrap;">{label}</div>'
                 f'{val_html}</div>'
             )
         aqr_tag = ' <span class="aqr-badge">AQR</span>' if f in AQR_FACTOR_SET else ""
         cards += (
             f'<div style="background:rgba(29,158,117,0.06);border:1px solid rgba(29,158,117,0.15);'
-            f'border-radius:10px;padding:10px 14px;min-width:150px;flex:1;">'
-            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#e2e8f0;'
-            f'font-weight:500;margin-bottom:8px;">{FACTOR_NAMES.get(f, f)}{aqr_tag}</div>'
-            f'<div style="display:flex;gap:10px;">{cells}</div>'
+            f'border-radius:10px;padding:8px 10px;width:120px;flex:0 0 120px;box-sizing:border-box;">'
+            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#e2e8f0;'
+            f'font-weight:500;margin-bottom:6px;white-space:nowrap;overflow:hidden;'
+            f'text-overflow:ellipsis;">{FACTOR_NAMES.get(f, f)}{aqr_tag}</div>'
+            f'<div style="display:flex;gap:4px;">{cells}</div>'
             f'</div>'
         )
+
+    if not cards:
+        return ""
+
+    return (
+        '<div class="section-title">Factor Regime · Trailing Returns</div>'
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:10px;">'
+        'Realized factor returns over the most recent 1 / 3 / 12 months in the analysis window — '
+        'shows whether each factor has recently been a tailwind or a headwind.</div>'
+        f'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;'
+        f'overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;">{cards}</div>'
+    )
 
     if not cards:
         return ""
