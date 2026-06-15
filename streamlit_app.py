@@ -809,25 +809,21 @@ def render_ai_insight(ticker, insight_data):
 # ─────────────────────────────────────────────
 
 def render_factor_regime_strip(ff_scaled, available_factors, pvalues=None):
-    """
-    Renders trailing 1M / 3M / 12M realized returns for each selected factor,
-    using an already-scaled (decimal) factor dataframe sliced to the analysis window.
-
-    Cards stack vertically — factor name on the left, 1M/3M/12M values on the right.
-    If `pvalues` (a dict of factor -> p-value from the regression) is provided,
-    factors that are NOT statistically significant (p >= 0.05) for this ticker
-    have their name dimmed and tagged "n.s." — the realized-return values
-    themselves stay at full visibility since they're market data, not
-    stock-specific.
-    """
     if ff_scaled is None or ff_scaled.empty or not available_factors:
+        return ""
+
+    # Filter to only significant factors if pvalues provided
+    if pvalues is not None:
+        factors_to_show = [f for f in available_factors if f in ff_scaled.columns and pvalues.get(f, 1.0) < 0.05]
+    else:
+        factors_to_show = [f for f in available_factors if f in ff_scaled.columns]
+
+    if not factors_to_show:
         return ""
 
     windows = [("1M", 1), ("3M", 3), ("12M", 12)]
     cards = ""
-    for f in available_factors:
-        if f not in ff_scaled.columns:
-            continue
+    for f in factors_to_show:
         series = ff_scaled[f].dropna()
         cells = ""
         for label, months in windows:
@@ -844,25 +840,9 @@ def render_factor_regime_strip(ff_scaled, available_factors, pvalues=None):
                 f'{val_html}</div>'
             )
         aqr_tag = ' <span class="aqr-badge">AQR</span>' if f in AQR_FACTOR_SET else ""
-
-        is_significant = True
-        if pvalues is not None:
-            p = pvalues.get(f)
-            if p is not None:
-                is_significant = p < 0.05
-
-        if is_significant:
-            name_html = f'<div class="regime-name">{FACTOR_NAMES.get(f, f)}{aqr_tag}</div>'
-            card_cls = "regime-card"
-        else:
-            name_html = (
-                f'<div class="regime-name regime-name-dim">{FACTOR_NAMES.get(f, f)}{aqr_tag} '
-                f'<span class="regime-ns-tag">n.s.</span></div>'
-            )
-            card_cls = "regime-card regime-card-dim"
-
+        name_html = f'<div class="regime-name">{FACTOR_NAMES.get(f, f)}{aqr_tag}</div>'
         cards += (
-            f'<div class="{card_cls}">'
+            f'<div class="regime-card">'
             f'{name_html}'
             f'<div class="regime-cells">{cells}</div>'
             f'</div>'
@@ -874,13 +854,16 @@ def render_factor_regime_strip(ff_scaled, available_factors, pvalues=None):
     return (
         '<div class="section-title">Factor Regime · Trailing Returns</div>'
         '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:10px;">'
-        'Realized factor returns over the most recent 1 / 3 / 12 months in the analysis window — '
-        'shows whether each factor has recently been a tailwind or a headwind.</div>'
+        'Realized factor returns over the most recent 1 / 3 / 12 months — '
+        'significant factors only (p&lt;0.05).</div>'
         f'<div class="regime-row">{cards}</div>'
     )
 
 
-def render_active_exposure(entity_params, bench_params, available_factors, bench_ticker, entity_label="POSITION"):
+ddef render_active_exposure(entity_params, bench_params, available_factors, bench_ticker, entity_label="POSITION", sig_factors=None):
+    # Only show alpha (const) + significant factors
+    factors_to_show = ["const"] + (sig_factors if sig_factors is not None else available_factors)
+
     grid_cols = "160px 1fr 1fr 1fr"
     html = (
         f'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">'
@@ -891,7 +874,7 @@ def render_active_exposure(entity_params, bench_params, available_factors, bench
             f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1px;'
             f'color:#1D9E75;text-transform:uppercase;padding:4px 0;">{h}</div>'
         )
-    for f in ["const"] + available_factors:
+    for f in factors_to_show:
         eb = entity_params.get(f, 0.0)
         bb = bench_params.get(f, 0.0)
         active = eb - bb
@@ -905,22 +888,22 @@ def render_active_exposure(entity_params, bench_params, available_factors, bench
             f'font-weight:500;padding:8px 0;border-top:1px solid rgba(29,158,117,0.15);">{label}{aqr_tag}</div>'
         )
         html += (
-            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:{ec};'
+            f'<div style="font-family:JetBrains Mono,monospace;font-size:12px;color:{ec};'
             f'padding:8px 0;border-top:1px solid rgba(29,158,117,0.15);">{eb:+.4f}</div>'
         )
         html += (
-            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:{bc};'
+            f'<div style="font-family:JetBrains Mono,monospace;font-size:12px;color:{bc};'
             f'padding:8px 0;border-top:1px solid rgba(29,158,117,0.15);">{bb:+.4f}</div>'
         )
         html += (
-            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;font-weight:700;color:{ac};'
+            f'<div style="font-family:JetBrains Mono,monospace;font-size:12px;font-weight:700;color:{ac};'
             f'padding:8px 0;border-top:1px solid rgba(29,158,117,0.15);">{active:+.4f}</div>'
         )
     html += '</div></div>'
     return html
 
 
-def render_active_exposure_section(entity_params, bench_result, bench_err, available_factors, bench_ticker, entity_label="POSITION"):
+def render_active_exposure_section(entity_params, bench_result, bench_err, available_factors, bench_ticker, entity_label="POSITION", sig_factors=None):
     html = '<div class="section-title">Active Exposure vs Benchmark</div>'
     if bench_err or not bench_result:
         html += (
@@ -928,13 +911,14 @@ def render_active_exposure_section(entity_params, bench_result, bench_err, avail
             f'{bench_err or "no data returned"}</div>'
         )
         return html
+    display_factors = sig_factors if sig_factors is not None else available_factors
     html += (
         f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:10px;">'
-        f'Positive ACTIVE = more exposure than {bench_ticker} on that factor · negative = less. '
-        f'The Alpha (α) row shows excess alpha after netting out {bench_ticker}\'s own alpha over the same window '
+        f'Significant factors only (p&lt;0.05) · Positive ACTIVE = more exposure than {bench_ticker} · '
+        f'Alpha (α) row nets out {bench_ticker}\'s own alpha over the same window '
         f'({bench_result.get("nobs","?")} obs).</div>'
     )
-    html += render_active_exposure(entity_params, bench_result["params"], available_factors, bench_ticker, entity_label=entity_label)
+    html += render_active_exposure(entity_params, bench_result["params"], available_factors, bench_ticker, entity_label=entity_label, sig_factors=display_factors)
     return html
 
 
@@ -1532,9 +1516,12 @@ if current_mode == "Portfolio Attribution":
         bench_result, bench_err = run_single_regression(
             bench_ticker, start_str, end_str, port_hac, f"{start_str}_{end_str}_{bench_ticker}", tuple(ordered_factors)
         )
-    active_exposure_html = render_active_exposure_section(
-        entity_params, bench_result, bench_err, ordered_factors, bench_ticker, entity_label="PORTFOLIO"
-    )
+    sig_factors = [f for f in available if model.pvalues[f] < 0.05]
+active_exposure_html = render_active_exposure_section(
+    dict(model.params), bench_result, bench_err, available, bench_ticker,
+    entity_label=ticker, sig_factors=sig_factors
+)
+
     st.markdown(active_exposure_html, unsafe_allow_html=True)
 
     st.session_state["portfolio_cache"] = {
