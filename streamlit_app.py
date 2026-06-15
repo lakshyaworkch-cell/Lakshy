@@ -88,17 +88,17 @@ section[data-testid="stSidebar"] * {{
 
 /* ── SIDEBAR INPUTS ── */
 [data-testid="stSidebar"] .stTextInput > div > div > input {{
-    background: rgba(29,158,117,0.08) !important;
-    border: 1px solid rgba(29,158,117,0.25) !important;
-    color: #e2e8f0 !important;
+    background: rgba(255,255,255,0.92) !important;
+    border: 1px solid rgba(29,158,117,0.35) !important;
+    color: #111111 !important;
     font-family: 'JetBrains Mono', monospace !important;
     border-radius: 8px !important;
 }}
 [data-testid="stSidebar"] .stSelectbox > div > div,
 [data-testid="stSidebar"] .stNumberInput > div > div > input {{
-    background: rgba(29,158,117,0.08) !important;
-    border: 1px solid rgba(29,158,117,0.25) !important;
-    color: #e2e8f0 !important;
+    background: rgba(255,255,255,0.92) !important;
+    border: 1px solid rgba(29,158,117,0.35) !important;
+    color: #111111 !important;
     border-radius: 8px !important;
 }}
 
