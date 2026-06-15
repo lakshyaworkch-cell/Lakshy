@@ -36,7 +36,7 @@ _BG_CSS = (
     background-position: center;
     background-attachment: fixed;"""
     if _BG else
-    """background: #04342c;
+    """background: #1D9E75;
     background-image:
         radial-gradient(ellipse at 15% 0%, rgba(29,158,117,0.18) 0%, transparent 55%),
         radial-gradient(ellipse at 85% 100%, rgba(15,110,86,0.14) 0%, transparent 55%),
