@@ -76,7 +76,7 @@ html, body, [class*="css"] {{ font-family: 'Inter', sans-serif; }}
     background: transparent !important;
 }}
 
-/* ── SIDEBAR BACKGROUND (stable selector, works across domains) ── */
+/* ── SIDEBAR BACKGROUND ── */
 [data-testid="stSidebar"] {{
     {_BG_CSS}
     border-right: 1px solid rgba(29, 158, 117, 0.2) !important;
@@ -84,12 +84,10 @@ html, body, [class*="css"] {{ font-family: 'Inter', sans-serif; }}
 [data-testid="stSidebar"] > div:first-child {{
     background: transparent !important;
 }}
-/* Sidebar inner scrollable container */
 [data-testid="stSidebar"] .stSidebarContent,
 [data-testid="stSidebarContent"] {{
     background: transparent !important;
 }}
-/* Catch all generated emotion-cache sidebar classes */
 section[data-testid="stSidebar"] * {{
     --background-color: transparent;
 }}
@@ -357,12 +355,6 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
     white-space: nowrap;
 }}
 .regime-val.na {{ color: #6b7280; font-weight: 400; }}
-.regime-card-dim {{ opacity: 0.55; }}
-.regime-name-dim {{ color: #6b7280 !important; }}
-.regime-ns-tag {{
-    font-size: 10px; letter-spacing: 1px; color: #4a7c6f;
-    text-transform: uppercase; font-weight: 400;
-}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -376,7 +368,6 @@ AQR_FACTORS = ["QMJ", "BAB"]
 ALL_FACTORS = FF_FACTORS + AQR_FACTORS
 AQR_FACTOR_SET = set(AQR_FACTORS)
 
-# Fixed benchmark for "Active Exposure" comparisons.
 BENCHMARK_TICKER = "SPY"
 
 def sig_badge(p):
@@ -499,12 +490,6 @@ def merge_all_factors(ff_df, aqr_df, selected_factors):
 
 @st.cache_data(show_spinner=False)
 def get_scaled_factor_df(start_str, end_str, selected_factors_key):
-    """
-    Returns the factor dataframe sliced to [start_str, end_str], with FF5+Mom
-    factors converted from percent to decimal (consistent with how Single Stock
-    mode scales them) and AQR factors left as-is (already decimal).
-    Also returns RF in decimal form if present.
-    """
     ff_raw  = load_factors()
     aqr_raw = load_aqr_factors()
     ff_raw  = merge_all_factors(ff_raw, aqr_raw, list(selected_factors_key))
@@ -809,12 +794,20 @@ def render_ai_insight(ticker, insight_data):
 # ─────────────────────────────────────────────
 
 def render_factor_regime_strip(ff_scaled, available_factors, pvalues=None):
+    """
+    Renders trailing 1M / 3M / 12M realized returns for each selected factor.
+    If pvalues is provided, ONLY shows factors that are statistically significant (p < 0.05).
+    Insignificant factors are completely excluded — not dimmed, not shown at all.
+    """
     if ff_scaled is None or ff_scaled.empty or not available_factors:
         return ""
 
     # Filter to only significant factors if pvalues provided
     if pvalues is not None:
-        factors_to_show = [f for f in available_factors if f in ff_scaled.columns and pvalues.get(f, 1.0) < 0.05]
+        factors_to_show = [
+            f for f in available_factors
+            if f in ff_scaled.columns and pvalues.get(f, 1.0) < 0.05
+        ]
     else:
         factors_to_show = [f for f in available_factors if f in ff_scaled.columns]
 
@@ -860,9 +853,14 @@ def render_factor_regime_strip(ff_scaled, available_factors, pvalues=None):
     )
 
 
-ddef render_active_exposure(entity_params, bench_params, available_factors, bench_ticker, entity_label="POSITION", sig_factors=None):
-    # Only show alpha (const) + significant factors
-    factors_to_show = ["const"] + (sig_factors if sig_factors is not None else available_factors)
+def render_active_exposure(entity_params, bench_params, available_factors, bench_ticker,
+                           entity_label="POSITION", sig_factors=None):
+    """
+    Renders the active exposure grid.
+    Always shows Alpha (const) row.
+    For factor rows: if sig_factors is provided, shows only those; otherwise shows all available_factors.
+    """
+    factors_to_show = sig_factors if sig_factors is not None else available_factors
 
     grid_cols = "160px 1fr 1fr 1fr"
     html = (
@@ -874,7 +872,8 @@ ddef render_active_exposure(entity_params, bench_params, available_factors, benc
             f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1px;'
             f'color:#1D9E75;text-transform:uppercase;padding:4px 0;">{h}</div>'
         )
-    for f in factors_to_show:
+    # Always include alpha row + only significant factors
+    for f in ["const"] + factors_to_show:
         eb = entity_params.get(f, 0.0)
         bb = bench_params.get(f, 0.0)
         active = eb - bb
@@ -903,7 +902,8 @@ ddef render_active_exposure(entity_params, bench_params, available_factors, benc
     return html
 
 
-def render_active_exposure_section(entity_params, bench_result, bench_err, available_factors, bench_ticker, entity_label="POSITION", sig_factors=None):
+def render_active_exposure_section(entity_params, bench_result, bench_err, available_factors,
+                                   bench_ticker, entity_label="POSITION", sig_factors=None):
     html = '<div class="section-title">Active Exposure vs Benchmark</div>'
     if bench_err or not bench_result:
         html += (
@@ -911,14 +911,21 @@ def render_active_exposure_section(entity_params, bench_result, bench_err, avail
             f'{bench_err or "no data returned"}</div>'
         )
         return html
+
     display_factors = sig_factors if sig_factors is not None else available_factors
+    n_shown = len(display_factors)
+    sig_note = f"Significant factors only (p&lt;0.05) · {n_shown} factor(s)" if sig_factors is not None else f"{n_shown} factor(s)"
+
     html += (
         f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:10px;">'
-        f'Significant factors only (p&lt;0.05) · Positive ACTIVE = more exposure than {bench_ticker} · '
-        f'Alpha (α) row nets out {bench_ticker}\'s own alpha over the same window '
+        f'{sig_note} · Positive ACTIVE = more exposure than {bench_ticker} · '
+        f'Alpha (α) row nets out {bench_ticker}\'s own alpha '
         f'({bench_result.get("nobs","?")} obs).</div>'
     )
-    html += render_active_exposure(entity_params, bench_result["params"], available_factors, bench_ticker, entity_label=entity_label, sig_factors=display_factors)
+    html += render_active_exposure(
+        entity_params, bench_result["params"], available_factors,
+        bench_ticker, entity_label=entity_label, sig_factors=sig_factors
+    )
     return html
 
 
@@ -1009,6 +1016,7 @@ def build_true_portfolio_model(port_results, weights, available_factors, start_s
             "r2":         model.rsquared,
             "mkt_beta":   model.params.get("Mkt-RF", 0.0),
             "betas":      dict(model.params),
+            "pvalues":    dict(model.pvalues),
             "nobs":       int(model.nobs),
         }
     except Exception as e:
@@ -1153,8 +1161,6 @@ for key, default in [
     ("port_run", False), ("port_results", None),
     ("single_stock_cache", None), ("portfolio_cache", None),
     ("active_mode", "Single Stock"),
-    # FIX: store the ticker input value in session state so it persists
-    # and is available when the run button is clicked
     ("ticker_input", ""),
 ]:
     if key not in st.session_state:
@@ -1186,18 +1192,12 @@ with st.sidebar:
     st.markdown("---")
 
     if mode == "Single Stock":
-        # FIX 1: No default value ("AVGO" removed → blank placeholder instead)
-        # FIX 2: Use key= so the value is stored in session_state["ticker_input"]
-        #         and is immediately readable when the Run button is clicked
-        #         on the same script execution pass.
         ticker_input = st.text_input(
             "Stock Ticker",
             value=st.session_state["ticker_input"],
             placeholder="e.g. AAPL",
             key="ticker_input_widget",
         ).upper().strip()
-        # Mirror to session state immediately so the run handler below always
-        # has the freshest value regardless of widget re-render order.
         st.session_state["ticker_input"] = ticker_input
 
     else:
@@ -1340,7 +1340,6 @@ with st.sidebar:
         '<span style="color:#fbbf24;">active</span> factor bets.</div>',
         unsafe_allow_html=True
     )
-    # Benchmark is fixed to SPY — no text input needed.
     benchmark_ticker = BENCHMARK_TICKER
 
     st.markdown("---")
@@ -1348,10 +1347,6 @@ with st.sidebar:
     if mode == "Single Stock":
         run_clicked = st.button("▶  RUN REGRESSION", use_container_width=True)
         if run_clicked:
-            # FIX 3: Read ticker directly from session state (set above from the widget)
-            #         This avoids the "no ticker on first boot" bug where the widget
-            #         value isn't yet propagated through the normal flow on the first
-            #         script run after clicking the button.
             _ticker_to_run = st.session_state["ticker_input"]
             if not _ticker_to_run:
                 st.error("Please enter a stock ticker before running.")
@@ -1495,33 +1490,36 @@ if current_mode == "Portfolio Attribution":
     with st.spinner("Building portfolio regression model…"):
         true_port = build_true_portfolio_model(port_results, valid_weights, ordered_factors, start_str, end_str, port_hac)
 
-    # ── Factor Regime Strip (trailing factor returns over the analysis window) ──
+    # ── Factor Regime Strip — portfolio mode shows all factors (no single p-value set) ──
     ff_regime, regime_available = get_scaled_factor_df(start_str, end_str, tuple(ordered_factors))
     regime_html = render_factor_regime_strip(ff_regime, regime_available)
     if regime_html:
         st.markdown(regime_html, unsafe_allow_html=True)
 
-    # ── Render attribution, then compute entity betas for active exposure ──
     port_betas, port_alpha_ann = render_portfolio_attribution(
         port_results, valid_weights, ordered_factors, true_port, start_str, end_str, port_hac
     )
 
     # ── Benchmark regression + Active Exposure ──
+    # Portfolio: use true_port betas; filter to sig factors if true_port has pvalues
     if true_port:
         entity_params = true_port["betas"]
+        port_pvalues  = true_port.get("pvalues", {})
+        port_sig_factors = [f for f in ordered_factors if port_pvalues.get(f, 1.0) < 0.05] if port_pvalues else None
     else:
-        entity_params = port_betas
+        entity_params    = port_betas
+        port_sig_factors = None  # fallback: show all
 
     with st.spinner(f"Regressing benchmark {bench_ticker}…"):
         bench_result, bench_err = run_single_regression(
             bench_ticker, start_str, end_str, port_hac, f"{start_str}_{end_str}_{bench_ticker}", tuple(ordered_factors)
         )
-    sig_factors = [f for f in available if model.pvalues[f] < 0.05]
-active_exposure_html = render_active_exposure_section(
-    dict(model.params), bench_result, bench_err, available, bench_ticker,
-    entity_label=ticker, sig_factors=sig_factors
-)
 
+    # ── FIX 5: pass sig_factors so only significant portfolio factors appear ──
+    active_exposure_html = render_active_exposure_section(
+        entity_params, bench_result, bench_err, ordered_factors, bench_ticker,
+        entity_label="PORTFOLIO", sig_factors=port_sig_factors
+    )
     st.markdown(active_exposure_html, unsafe_allow_html=True)
 
     st.session_state["portfolio_cache"] = {
@@ -1601,7 +1599,6 @@ if current_mode == "Single Stock":
     sel_factors= st.session_state["selected_factors"]
     bench_ticker = BENCHMARK_TICKER
 
-    # FIX 3 continued: guard against empty ticker making it this far
     if not ticker:
         st.markdown('<div class="error-box">No ticker specified. Please enter a ticker in the left panel and click Run.</div>', unsafe_allow_html=True)
         st.session_state["run"] = False
@@ -1732,7 +1729,10 @@ if current_mode == "Single Stock":
             f'Regressing on: <span style="color:#e2e8f0;">{" · ".join(active_chips)}</span></div>',
             unsafe_allow_html=True)
 
-        # ── Factor Regime Strip (trailing factor returns over the analysis window) ──
+        # ── Compute significant factors once — used by both Regime and Active Exposure ──
+        sig_factors = [f for f in available if model.pvalues[f] < 0.05]
+
+        # ── Factor Regime Strip — significant factors only ──
         regime_html = render_factor_regime_strip(ff, available, pvalues=dict(model.pvalues))
         if regime_html:
             st.markdown(regime_html, unsafe_allow_html=True)
@@ -1787,7 +1787,7 @@ if current_mode == "Single Stock":
             st.markdown(row_h, unsafe_allow_html=True)
             factor_rows_html.append(row_h)
 
-        n_sig = sum(1 for f in available if model.pvalues[f] < 0.05)
+        n_sig = len(sig_factors)
         legend_html = (
             f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#1D9E75;margin-top:6px;">'
             f'★★★ p&lt;0.01 · ★★ p&lt;0.05 · ★ p&lt;0.10 · n.s. not significant'
@@ -1798,14 +1798,17 @@ if current_mode == "Single Stock":
         )
         st.markdown(legend_html, unsafe_allow_html=True)
 
-        # ── Benchmark regression + Active Exposure ──
+        # ── Benchmark regression + Active Exposure — significant factors only ──
         with st.spinner(f"Regressing benchmark {bench_ticker}…"):
             bench_result, bench_err = run_single_regression(
                 bench_ticker, str(start_date)[:7], str(end_date)[:7], hac_lags,
                 f"{start_date}_{end_date}_{bench_ticker}", tuple(available)
             )
+
+        # ── FIX 4: pass sig_factors so only significant factors appear in active exposure ──
         active_exposure_html = render_active_exposure_section(
-            dict(model.params), bench_result, bench_err, available, bench_ticker, entity_label=ticker
+            dict(model.params), bench_result, bench_err, available, bench_ticker,
+            entity_label=ticker, sig_factors=sig_factors
         )
         st.markdown(active_exposure_html, unsafe_allow_html=True)
 
