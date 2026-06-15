@@ -36,11 +36,11 @@ _BG_CSS = (
     background-position: center;
     background-attachment: fixed;"""
     if _BG else
-    """background: #1a0933;
+    """background: #0a1f1a;
     background-image:
         radial-gradient(ellipse at 15% 0%, rgba(29,158,117,0.18) 0%, transparent 55%),
         radial-gradient(ellipse at 85% 100%, rgba(15,110,86,0.14) 0%, transparent 55%),
-        radial-gradient(ellipse at 50% 50%, rgba(4,52,44,0.95) 0%, transparent 100%);"""
+        radial-gradient(ellipse at 50% 50%, rgba(4,52,44,0.92) 0%, transparent 100%);"""
 )
 
 st.markdown(f"""
@@ -57,7 +57,7 @@ html, body, [class*="css"] {{ font-family: 'Inter', sans-serif; }}
 
 /* ── SIDEBAR BACKGROUND (stable selector, works across domains) ── */
 [data-testid="stSidebar"] {{
-    background: rgba(26, 9, 51, 0.97) !important;
+    background: linear-gradient(180deg, rgba(4,30,22,0.98) 0%, rgba(6,38,28,0.98) 100%) !important;
     border-right: 1px solid rgba(29, 158, 117, 0.2) !important;
 }}
 [data-testid="stSidebar"] > div:first-child {{
