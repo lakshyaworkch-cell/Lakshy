@@ -355,30 +355,6 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
     white-space: nowrap;
 }}
 .regime-val.na {{ color: #6b7280; font-weight: 400; }}
-
-@media (max-width: 480px) {{
-    .regime-card {{
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-        padding: 10px 12px;
-    }}
-    .regime-name {{
-        flex: none;
-        width: 100%;
-        white-space: normal;
-    }}
-    .regime-cells {{
-        gap: 6px;
-    }}
-    .regime-label {{
-        font-size: 9px;
-    }}
-    .regime-val {{
-        font-size: 12px;
-    }}
-}}
-
 </style>
 """, unsafe_allow_html=True)
 
