@@ -357,6 +357,12 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
     white-space: nowrap;
 }}
 .regime-val.na {{ color: #6b7280; font-weight: 400; }}
+.regime-card-dim {{ opacity: 0.55; }}
+.regime-name-dim {{ color: #6b7280 !important; }}
+.regime-ns-tag {{
+    font-size: 10px; letter-spacing: 1px; color: #4a7c6f;
+    text-transform: uppercase; font-weight: 400;
+}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -802,13 +808,17 @@ def render_ai_insight(ticker, insight_data):
 #  Factor Regime Strip & Benchmark Active Exposure
 # ─────────────────────────────────────────────
 
-def render_factor_regime_strip(ff_scaled, available_factors):
+def render_factor_regime_strip(ff_scaled, available_factors, pvalues=None):
     """
     Renders trailing 1M / 3M / 12M realized returns for each selected factor,
     using an already-scaled (decimal) factor dataframe sliced to the analysis window.
 
-    Clean, fixed-width cards in a horizontally-scrollable row so values never
-    overflow or wrap, regardless of how many factors are selected.
+    Cards stack vertically — factor name on the left, 1M/3M/12M values on the right.
+    If `pvalues` (a dict of factor -> p-value from the regression) is provided,
+    factors that are NOT statistically significant (p >= 0.05) for this ticker
+    have their name dimmed and tagged "n.s." — the realized-return values
+    themselves stay at full visibility since they're market data, not
+    stock-specific.
     """
     if ff_scaled is None or ff_scaled.empty or not available_factors:
         return ""
@@ -834,9 +844,26 @@ def render_factor_regime_strip(ff_scaled, available_factors):
                 f'{val_html}</div>'
             )
         aqr_tag = ' <span class="aqr-badge">AQR</span>' if f in AQR_FACTOR_SET else ""
+
+        is_significant = True
+        if pvalues is not None:
+            p = pvalues.get(f)
+            if p is not None:
+                is_significant = p < 0.05
+
+        if is_significant:
+            name_html = f'<div class="regime-name">{FACTOR_NAMES.get(f, f)}{aqr_tag}</div>'
+            card_cls = "regime-card"
+        else:
+            name_html = (
+                f'<div class="regime-name regime-name-dim">{FACTOR_NAMES.get(f, f)}{aqr_tag} '
+                f'<span class="regime-ns-tag">n.s.</span></div>'
+            )
+            card_cls = "regime-card regime-card-dim"
+
         cards += (
-            f'<div class="regime-card">'
-            f'<div class="regime-name">{FACTOR_NAMES.get(f, f)}{aqr_tag}</div>'
+            f'<div class="{card_cls}">'
+            f'{name_html}'
             f'<div class="regime-cells">{cells}</div>'
             f'</div>'
         )
@@ -1719,7 +1746,7 @@ if current_mode == "Single Stock":
             unsafe_allow_html=True)
 
         # ── Factor Regime Strip (trailing factor returns over the analysis window) ──
-        regime_html = render_factor_regime_strip(ff, available)
+        regime_html = render_factor_regime_strip(ff, available, pvalues=dict(model.pvalues))
         if regime_html:
             st.markdown(regime_html, unsafe_allow_html=True)
 
