@@ -55,6 +55,27 @@ html, body, [class*="css"] {{ font-family: 'Inter', sans-serif; }}
     color: #e2e8f0;
 }}
 
+/* ── KILL THE WHITE TOP BANNER ── */
+[data-testid="stHeader"] {{
+    background: transparent !important;
+    background-color: transparent !important;
+}}
+[data-testid="stHeader"] * {{
+    background: transparent !important;
+    background-color: transparent !important;
+}}
+[data-testid="stDecoration"] {{
+    background: transparent !important;
+    background-image: none !important;
+}}
+[data-testid="stToolbar"] {{
+    background: transparent !important;
+    right: 1rem;
+}}
+[data-testid="stStatusWidget"] {{
+    background: transparent !important;
+}}
+
 /* ── SIDEBAR BACKGROUND (stable selector, works across domains) ── */
 [data-testid="stSidebar"] {{
     {_BG_CSS}
@@ -441,6 +462,29 @@ def merge_all_factors(ff_df, aqr_df, selected_factors):
     return combined
 
 
+@st.cache_data(show_spinner=False)
+def get_scaled_factor_df(start_str, end_str, selected_factors_key):
+    """
+    Returns the factor dataframe sliced to [start_str, end_str], with FF5+Mom
+    factors converted from percent to decimal (consistent with how Single Stock
+    mode scales them) and AQR factors left as-is (already decimal).
+    Also returns RF in decimal form if present.
+    """
+    ff_raw  = load_factors()
+    aqr_raw = load_aqr_factors()
+    ff_raw  = merge_all_factors(ff_raw, aqr_raw, list(selected_factors_key))
+    ff = ff_raw.loc[start_str:end_str].copy()
+    available = [c for c in selected_factors_key if c in ff.columns]
+    for col in available:
+        if col in FF_FACTORS:
+            ff[col] = ff[col].astype(float) / 100
+        else:
+            ff[col] = ff[col].astype(float)
+    if "RF" in ff.columns:
+        ff["RF"] = ff["RF"].astype(float) / 100
+    return ff, available
+
+
 def get_live_price(ticker_symbol):
     t = yf.Ticker(ticker_symbol)
     try:
@@ -726,6 +770,124 @@ def render_ai_insight(ticker, insight_data):
 
 
 # ─────────────────────────────────────────────
+#  Factor Regime Strip & Benchmark Active Exposure
+# ─────────────────────────────────────────────
+
+def render_factor_regime_strip(ff_scaled, available_factors):
+    """
+    Renders trailing 1M / 3M / 12M realized returns for each selected factor,
+    using an already-scaled (decimal) factor dataframe sliced to the analysis window.
+    """
+    if ff_scaled is None or ff_scaled.empty or not available_factors:
+        return ""
+
+    windows = [("1M", 1), ("3M", 3), ("12M", 12)]
+    cards = ""
+    for f in available_factors:
+        if f not in ff_scaled.columns:
+            continue
+        series = ff_scaled[f].dropna()
+        cells = ""
+        for label, months in windows:
+            if len(series) >= months:
+                window_vals = series.iloc[-months:]
+                cumret = (1 + window_vals).prod() - 1
+                color = "#34d399" if cumret > 0 else "#f87171"
+                val_html = (
+                    f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;'
+                    f'font-weight:600;color:{color};">{cumret:+.2%}</div>'
+                )
+            else:
+                val_html = (
+                    '<div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;'
+                    'color:#6b7280;">N/A</div>'
+                )
+            cells += (
+                f'<div style="text-align:center;flex:1;">'
+                f'<div style="font-size:10px;letter-spacing:1px;color:#5DCAA5;margin-bottom:2px;">{label}</div>'
+                f'{val_html}</div>'
+            )
+        aqr_tag = ' <span class="aqr-badge">AQR</span>' if f in AQR_FACTOR_SET else ""
+        cards += (
+            f'<div style="background:rgba(29,158,117,0.06);border:1px solid rgba(29,158,117,0.15);'
+            f'border-radius:10px;padding:10px 14px;min-width:150px;flex:1;">'
+            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#e2e8f0;'
+            f'font-weight:500;margin-bottom:8px;">{FACTOR_NAMES.get(f, f)}{aqr_tag}</div>'
+            f'<div style="display:flex;gap:10px;">{cells}</div>'
+            f'</div>'
+        )
+
+    if not cards:
+        return ""
+
+    return (
+        '<div class="section-title">Factor Regime · Trailing Returns</div>'
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:10px;">'
+        'Realized factor returns over the most recent 1 / 3 / 12 months in the analysis window — '
+        'shows whether each factor has recently been a tailwind or a headwind.</div>'
+        f'<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px;">{cards}</div>'
+    )
+
+
+def render_active_exposure(entity_params, bench_params, available_factors, bench_ticker, entity_label="POSITION"):
+    grid_cols = "160px 1fr 1fr 1fr"
+    html = (
+        f'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">'
+        f'<div style="display:grid;grid-template-columns:{grid_cols};gap:6px;min-width:520px;">'
+    )
+    for h in ["FACTOR", entity_label, bench_ticker, "ACTIVE (DIFF)"]:
+        html += (
+            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:1px;'
+            f'color:#1D9E75;text-transform:uppercase;padding:4px 0;">{h}</div>'
+        )
+    for f in ["const"] + available_factors:
+        eb = entity_params.get(f, 0.0)
+        bb = bench_params.get(f, 0.0)
+        active = eb - bb
+        ec = "#34d399" if eb >= 0 else "#f87171"
+        bc = "#34d399" if bb >= 0 else "#f87171"
+        ac = "#34d399" if active >= 0 else "#f87171"
+        aqr_tag = ' <span class="aqr-badge">AQR</span>' if f in AQR_FACTOR_SET else ""
+        label = FACTOR_NAMES.get(f, f)
+        html += (
+            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#e2e8f0;'
+            f'font-weight:500;padding:8px 0;border-top:1px solid rgba(29,158,117,0.15);">{label}{aqr_tag}</div>'
+        )
+        html += (
+            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:{ec};'
+            f'padding:8px 0;border-top:1px solid rgba(29,158,117,0.15);">{eb:+.4f}</div>'
+        )
+        html += (
+            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:{bc};'
+            f'padding:8px 0;border-top:1px solid rgba(29,158,117,0.15);">{bb:+.4f}</div>'
+        )
+        html += (
+            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;font-weight:700;color:{ac};'
+            f'padding:8px 0;border-top:1px solid rgba(29,158,117,0.15);">{active:+.4f}</div>'
+        )
+    html += '</div></div>'
+    return html
+
+
+def render_active_exposure_section(entity_params, bench_result, bench_err, available_factors, bench_ticker, entity_label="POSITION"):
+    html = '<div class="section-title">Active Exposure vs Benchmark</div>'
+    if bench_err or not bench_result:
+        html += (
+            f'<div class="error-box">Benchmark regression unavailable for {bench_ticker}: '
+            f'{bench_err or "no data returned"}</div>'
+        )
+        return html
+    html += (
+        f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:10px;">'
+        f'Positive ACTIVE = more exposure than {bench_ticker} on that factor · negative = less. '
+        f'The Alpha (α) row shows excess alpha after netting out {bench_ticker}\'s own alpha over the same window '
+        f'({bench_result.get("nobs","?")} obs).</div>'
+    )
+    html += render_active_exposure(entity_params, bench_result["params"], available_factors, bench_ticker, entity_label=entity_label)
+    return html
+
+
+# ─────────────────────────────────────────────
 #  Portfolio Attribution
 # ─────────────────────────────────────────────
 
@@ -750,17 +912,8 @@ def fetch_monthly_returns(ticker_sym, start_str, end_str):
 @st.cache_data(show_spinner=False)
 def run_single_regression(ticker_sym, start_str, end_str, hac_lags, ff_key, selected_factors_key):
     try:
-        ff_raw  = load_factors()
-        aqr_raw = load_aqr_factors()
-        ff_raw  = merge_all_factors(ff_raw, aqr_raw, list(selected_factors_key))
-
-        ff = ff_raw.loc[start_str:end_str].copy()
-        selected  = list(selected_factors_key)
-        available = [c for c in selected if c in ff.columns]
-        has_rf    = "RF" in ff.columns
-        ff[available] = ff[available].astype(float)
-        if has_rf:
-            ff["RF"] = ff["RF"].astype(float)
+        ff, available = get_scaled_factor_df(start_str, end_str, selected_factors_key)
+        has_rf = "RF" in ff.columns
 
         returns, err = fetch_monthly_returns(ticker_sym, start_str, end_str)
         if returns is None:
@@ -794,15 +947,8 @@ def run_single_regression(ticker_sym, start_str, end_str, hac_lags, ff_key, sele
 
 def build_true_portfolio_model(port_results, weights, available_factors, start_str, end_str, hac_lags):
     try:
-        ff_raw  = load_factors()
-        aqr_raw = load_aqr_factors()
-        ff_raw  = merge_all_factors(ff_raw, aqr_raw, available_factors)
-
-        ff = ff_raw.loc[start_str:end_str].copy()
+        ff, _ = get_scaled_factor_df(start_str, end_str, tuple(available_factors))
         has_rf = "RF" in ff.columns
-        ff[available_factors] = ff[available_factors].astype(float)
-        if has_rf:
-            ff["RF"] = ff["RF"].astype(float)
 
         all_returns = {}
         for tkr, res in port_results.items():
@@ -960,6 +1106,8 @@ def render_portfolio_attribution(port_results, weights, available_factors, true_
     st.download_button("⬇  Download Attribution CSV", pd.DataFrame(rows).to_csv(index=False),
                        file_name="portfolio_factor_attribution.csv", mime="text/csv")
 
+    return port_betas, port_alpha_ann
+
 
 # ════════════════════════════════════════════
 #  SESSION STATE INIT
@@ -973,6 +1121,8 @@ for key, default in [
     # FIX: store the ticker input value in session state so it persists
     # and is available when the run button is clicked
     ("ticker_input", ""),
+    # Benchmark for active exposure comparisons
+    ("benchmark_ticker", "SPY"),
 ]:
     if key not in st.session_state:
         st.session_state[key] = default
@@ -1150,6 +1300,28 @@ with st.sidebar:
 
     st.markdown("---")
 
+    st.markdown("**Benchmark (Active Exposure)**")
+    st.markdown(
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:8px;">'
+        'Regression betas vs. this ticker over the same window show your '
+        '<span style="color:#fbbf24;">active</span> factor bets.</div>',
+        unsafe_allow_html=True
+    )
+    benchmark_ticker = st.text_input(
+        "Benchmark Ticker",
+        value=st.session_state["benchmark_ticker"],
+        placeholder="e.g. SPY",
+        key="benchmark_ticker_widget",
+    ).upper().strip()
+    if not benchmark_ticker:
+        benchmark_ticker = "SPY"
+    if benchmark_ticker != st.session_state["benchmark_ticker"]:
+        st.session_state["benchmark_ticker"]   = benchmark_ticker
+        st.session_state["single_stock_cache"] = None
+        st.session_state["portfolio_cache"]    = None
+
+    st.markdown("---")
+
     if mode == "Single Stock":
         run_clicked = st.button("▶  RUN REGRESSION", use_container_width=True)
         if run_clicked:
@@ -1237,11 +1409,15 @@ if current_mode == "Portfolio Attribution":
             f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;color:#5DCAA5;margin-bottom:20px;">'
             f'{len(cache["weights"])} holdings · {len(cache["ordered_factors"])} factors · HAC SE · {cache["port_start"]} → {cache["port_end"]}'
             f'</div>', unsafe_allow_html=True)
+        if cache.get("regime_html"):
+            st.markdown(cache["regime_html"], unsafe_allow_html=True)
         render_portfolio_attribution(
             cache["port_results"], cache["weights"], cache["ordered_factors"],
             cache.get("true_port"), str(cache["port_start"])[:7], str(cache["port_end"])[:7],
             cache.get("hac_lags", 3)
         )
+        if cache.get("active_exposure_html"):
+            st.markdown(cache["active_exposure_html"], unsafe_allow_html=True)
         st.stop()
 
     if not st.session_state.get("port_run"):
@@ -1252,6 +1428,7 @@ if current_mode == "Portfolio Attribution":
     port_end    = st.session_state.get("port_end",   end_date)
     port_hac    = st.session_state.get("port_hac",   hac_lags)
     sel_factors = tuple(st.session_state["selected_factors"])
+    bench_ticker = st.session_state.get("benchmark_ticker", "SPY")
 
     if not weights:
         st.markdown('<div class="error-box">No valid tickers found.</div>', unsafe_allow_html=True)
@@ -1295,13 +1472,40 @@ if current_mode == "Portfolio Attribution":
     with st.spinner("Building portfolio regression model…"):
         true_port = build_true_portfolio_model(port_results, valid_weights, ordered_factors, start_str, end_str, port_hac)
 
+    # ── Factor Regime Strip (trailing factor returns over the analysis window) ──
+    ff_regime, regime_available = get_scaled_factor_df(start_str, end_str, tuple(ordered_factors))
+    regime_html = render_factor_regime_strip(ff_regime, regime_available)
+    if regime_html:
+        st.markdown(regime_html, unsafe_allow_html=True)
+
+    # ── Render attribution, then compute entity betas for active exposure ──
+    port_betas, port_alpha_ann = render_portfolio_attribution(
+        port_results, valid_weights, ordered_factors, true_port, start_str, end_str, port_hac
+    )
+
+    # ── Benchmark regression + Active Exposure ──
+    if true_port:
+        entity_params = true_port["betas"]
+    else:
+        entity_params = port_betas
+
+    with st.spinner(f"Regressing benchmark {bench_ticker}…"):
+        bench_result, bench_err = run_single_regression(
+            bench_ticker, start_str, end_str, port_hac, f"{start_str}_{end_str}_{bench_ticker}", tuple(ordered_factors)
+        )
+    active_exposure_html = render_active_exposure_section(
+        entity_params, bench_result, bench_err, ordered_factors, bench_ticker, entity_label="PORTFOLIO"
+    )
+    st.markdown(active_exposure_html, unsafe_allow_html=True)
+
     st.session_state["portfolio_cache"] = {
         "port_results": port_results, "weights": valid_weights,
         "ordered_factors": ordered_factors, "port_start": port_start, "port_end": port_end,
         "true_port": true_port, "hac_lags": port_hac,
+        "regime_html": regime_html, "active_exposure_html": active_exposure_html,
+        "bench_ticker": bench_ticker,
     }
     st.session_state["port_run"] = False
-    render_portfolio_attribution(port_results, valid_weights, ordered_factors, true_port, start_str, end_str, port_hac)
     st.stop()
 
 
@@ -1321,6 +1525,8 @@ if current_mode == "Single Stock":
     if st.session_state["single_stock_cache"] is not None and not st.session_state["run"]:
         c = st.session_state["single_stock_cache"]
         st.markdown(c["price_html"], unsafe_allow_html=True)
+        if c.get("regime_html"):
+            st.markdown(c["regime_html"], unsafe_allow_html=True)
         col1, col2, col3, col4 = st.columns(4)
         with col1: st.markdown(c["metric_alpha"], unsafe_allow_html=True)
         with col2: st.markdown(c["metric_r2"],    unsafe_allow_html=True)
@@ -1330,6 +1536,8 @@ if current_mode == "Single Stock":
         for row_html in c["factor_rows"]:
             st.markdown(row_html, unsafe_allow_html=True)
         st.markdown(c["factor_legend"], unsafe_allow_html=True)
+        if c.get("active_exposure_html"):
+            st.markdown(c["active_exposure_html"], unsafe_allow_html=True)
         st.markdown('<div class="section-title">Factor Intelligence · Significant Loadings</div>', unsafe_allow_html=True)
         st.markdown(c["ai_header"], unsafe_allow_html=True)
         if c.get("ai_error") and not c.get("ai_insight"):
@@ -1365,6 +1573,7 @@ if current_mode == "Single Stock":
     hac_lags   = st.session_state.get("hac_ran",   hac_lags)
     annualize  = st.session_state.get("ann_ran",   annualize)
     sel_factors= st.session_state["selected_factors"]
+    bench_ticker = st.session_state.get("benchmark_ticker", "SPY")
 
     # FIX 3 continued: guard against empty ticker making it this far
     if not ticker:
@@ -1375,28 +1584,15 @@ if current_mode == "Single Stock":
     try:
         with st.spinner("Loading factor data..."):
             try:
-                ff_raw  = load_factors()
-                aqr_raw = load_aqr_factors()
-                ff_raw  = merge_all_factors(ff_raw, aqr_raw, sel_factors)
+                ff, available = get_scaled_factor_df(str(start_date)[:7], str(end_date)[:7], tuple(sel_factors))
+                has_rf = "RF" in ff.columns
             except Exception as e:
                 st.markdown(f'<div class="error-box">Failed to load factor data: {e}</div>', unsafe_allow_html=True)
                 st.stop()
 
-        ff        = ff_raw.loc[str(start_date)[:7]: str(end_date)[:7]].copy()
-        available = [c for c in sel_factors if c in ff.columns]
-        has_rf    = "RF" in ff.columns
-
         if not available:
             st.markdown('<div class="error-box">None of the selected factors found in the dataset.</div>', unsafe_allow_html=True)
             st.stop()
-
-        for col in available:
-            if col in FF_FACTORS:
-                ff[col] = ff[col].astype(float) / 100
-            else:
-                ff[col] = ff[col].astype(float)
-        if has_rf:
-            ff["RF"] = ff["RF"].astype(float) / 100
 
         loaded_aqr = [f for f in AQR_FACTORS if f in available]
         missing_aqr = [f for f in sel_factors if f in AQR_FACTORS and f not in available]
@@ -1510,6 +1706,11 @@ if current_mode == "Single Stock":
             f'Regressing on: <span style="color:#e2e8f0;">{" · ".join(active_chips)}</span></div>',
             unsafe_allow_html=True)
 
+        # ── Factor Regime Strip (trailing factor returns over the analysis window) ──
+        regime_html = render_factor_regime_strip(ff, available)
+        if regime_html:
+            st.markdown(regime_html, unsafe_allow_html=True)
+
         _alpha_card = f"""
         <div class="metric-card {'green' if alpha_ann > 0 else 'red'}">
           <div class="metric-label">Annual Alpha</div>
@@ -1570,6 +1771,17 @@ if current_mode == "Single Stock":
             f'</div>'
         )
         st.markdown(legend_html, unsafe_allow_html=True)
+
+        # ── Benchmark regression + Active Exposure ──
+        with st.spinner(f"Regressing benchmark {bench_ticker}…"):
+            bench_result, bench_err = run_single_regression(
+                bench_ticker, str(start_date)[:7], str(end_date)[:7], hac_lags,
+                f"{start_date}_{end_date}_{bench_ticker}", tuple(available)
+            )
+        active_exposure_html = render_active_exposure_section(
+            dict(model.params), bench_result, bench_err, available, bench_ticker, entity_label=ticker
+        )
+        st.markdown(active_exposure_html, unsafe_allow_html=True)
 
         st.markdown('<div class="section-title">Factor Intelligence · Significant Loadings</div>', unsafe_allow_html=True)
         today_display = date.today().strftime("%B %d, %Y")
@@ -1664,9 +1876,10 @@ if current_mode == "Single Stock":
             st.download_button("⬇  Download Merged Data CSV", data_export.to_csv(), file_name=f"{ticker}_merged_data.csv", mime="text/csv", use_container_width=True)
 
         st.session_state["single_stock_cache"] = {
-            "ticker": ticker, "price_html": _price_html,
+            "ticker": ticker, "price_html": _price_html, "regime_html": regime_html,
             "metric_alpha": _alpha_card, "metric_r2": _r2_card, "metric_ir": _ir_card, "metric_f": _f_card,
             "factor_rows": factor_rows_html, "factor_legend": legend_html,
+            "active_exposure_html": active_exposure_html,
             "ai_header": ai_header_html, "ai_insight": st.session_state["ai_insight"], "ai_error": st.session_state["ai_error"],
             "ci_html": ci_html, "diag_html": diag_html, "vif_html": vif_html, "fit_html": fit_html,
             "rolling_html": rolling_html, "ols_summary": model.summary().as_text(),
