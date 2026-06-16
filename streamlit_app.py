@@ -75,7 +75,33 @@ html, body, [class*="css"] {{ font-family: 'Inter', sans-serif; }}
 [data-testid="stStatusWidget"] {{
     background: transparent !important;
 }}
-
+/* ── SIDEBAR COLLAPSE / EXPAND ARROW ── */
+[data-testid="collapsedControl"],
+[data-testid="stSidebarCollapseButton"],
+button[kind="header"] {{
+    background: rgba(29,158,117,0.15) !important;
+    border-radius: 8px !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}}
+[data-testid="collapsedControl"] svg,
+[data-testid="stSidebarCollapseButton"] svg,
+button[kind="header"] svg {{
+    fill: #9FE1CB !important;
+    color: #9FE1CB !important;
+    opacity: 1 !important;
+}}
+[data-testid="collapsedControl"]:hover,
+[data-testid="stSidebarCollapseButton"]:hover,
+button[kind="header"]:hover {{
+    background: rgba(52,211,153,0.2) !important;
+}}
+[data-testid="collapsedControl"]:hover svg,
+[data-testid="stSidebarCollapseButton"]:hover svg,
+button[kind="header"]:hover svg {{
+    fill: #34d399 !important;
+    color: #34d399 !important;
+}}
 /* ── SIDEBAR BACKGROUND ── */
 [data-testid="stSidebar"] {{
     {_BG_CSS}
