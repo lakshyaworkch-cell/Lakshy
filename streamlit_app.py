@@ -17,7 +17,7 @@ FF_URL = "https://raw.githubusercontent.com/lakshyaworkch-cell/Lakshy/main/F-F_R
 AQR_QMJ_URL = "https://images.aqr.com/-/media/AQR/Documents/Insights/Data-Sets/Quality-Minus-Junk-Factors-Monthly.xlsx"
 AQR_BAB_URL = "https://images.aqr.com/-/media/AQR/Documents/Insights/Data-Sets/Betting-Against-Beta-Equity-Factors-Monthly.xlsx"
 
-st.set_page_config(page_title="Factor Regression", page_icon="📈", layout="wide")
+st.set_page_config(page_title="Factor Regression", page_icon="📈", layout="wide", initial_sidebar_state="expanded")
 
 def get_bg_base64():
     try:
@@ -72,8 +72,14 @@ html, body, [class*="css"] {{ font-family: 'Inter', sans-serif; }}
     background: transparent !important;
     right: 1rem;
 }}
-[data-testid="stStatusWidget"] {{
-    background: transparent !important;
+
+/* ── PERMANENTLY HIDE SIDEBAR COLLAPSE/EXPAND CONTROLS ── */
+[data-testid="collapsedControl"],
+[data-testid="stSidebarCollapsedControl"],
+[data-testid="stSidebarCollapseButton"],
+button[kind="header"] {{
+    display: none !important;
+    visibility: hidden !important;
 }}
 
 /* ── SIDEBAR BACKGROUND ── */
