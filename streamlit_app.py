@@ -148,6 +148,59 @@ section[data-testid="stSidebar"] * {{
     background: rgba(29,158,117,0.2) !important;
 }}
 
+/* ── SIDEBAR COLLAPSE / EXPAND TOGGLE ARROW ── */
+[data-testid="collapsedControl"] {{
+    background: rgba(29,158,117,0.15) !important;
+    border: 1px solid rgba(29,158,117,0.35) !important;
+    border-left: none !important;
+    border-radius: 0 8px 8px 0 !important;
+    color: #34d399 !important;
+}}
+[data-testid="collapsedControl"]:hover {{
+    background: rgba(52,211,153,0.25) !important;
+    border-color: rgba(52,211,153,0.6) !important;
+}}
+[data-testid="collapsedControl"] svg {{
+    fill: #34d399 !important;
+    color: #34d399 !important;
+    stroke: #34d399 !important;
+}}
+[data-testid="collapsedControl"] button {{
+    background: transparent !important;
+    color: #34d399 !important;
+}}
+[data-testid="collapsedControl"] button:hover {{
+    background: transparent !important;
+}}
+/* The expand arrow pill that floats when sidebar is closed */
+section[data-testid="stSidebarCollapsedControl"] {{
+    background: rgba(29,158,117,0.15) !important;
+    border: 1px solid rgba(29,158,117,0.35) !important;
+    border-radius: 0 8px 8px 0 !important;
+}}
+section[data-testid="stSidebarCollapsedControl"] button {{
+    background: transparent !important;
+    color: #34d399 !important;
+}}
+section[data-testid="stSidebarCollapsedControl"] svg {{
+    fill: #34d399 !important;
+    color: #34d399 !important;
+    stroke: #34d399 !important;
+}}
+/* Inline collapse arrow inside open sidebar */
+button[data-testid="baseButton-header"] {{
+    background: rgba(29,158,117,0.1) !important;
+    color: #34d399 !important;
+    border-radius: 6px !important;
+}}
+button[data-testid="baseButton-header"]:hover {{
+    background: rgba(52,211,153,0.2) !important;
+}}
+button[data-testid="baseButton-header"] svg {{
+    fill: #34d399 !important;
+    stroke: #34d399 !important;
+}}
+
 h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacing: -0.5px; }}
 
 /* === METRIC CARDS === */
@@ -280,49 +333,31 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
 }}
 
 /* === OLS SUMMARY TABLES === */
-.ols-table-wrap {{
-    margin-bottom: 22px;
-}}
-.ols-table-wrap:last-child {{
-    margin-bottom: 0;
-}}
+.ols-table-wrap {{ margin-bottom: 22px; }}
+.ols-table-wrap:last-child {{ margin-bottom: 0; }}
 .ols-table-title {{
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
     color: #5DCAA5; margin-bottom: 8px;
 }}
 .ols-table {{
-    width: 100%;
-    border-collapse: collapse;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12.5px;
-    color: #9FE1CB;
+    width: 100%; border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: #9FE1CB;
 }}
 .ols-table th, .ols-table td {{
-    padding: 7px 14px;
-    border-bottom: 1px solid rgba(29,158,117,0.12);
-    text-align: right;
-    white-space: nowrap;
+    padding: 7px 14px; border-bottom: 1px solid rgba(29,158,117,0.12);
+    text-align: right; white-space: nowrap;
 }}
 .ols-table th {{
-    color: #1D9E75;
-    font-size: 11px;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    border-bottom: 1px solid rgba(29,158,117,0.3);
+    color: #1D9E75; font-size: 11px; letter-spacing: 0.5px;
+    text-transform: uppercase; border-bottom: 1px solid rgba(29,158,117,0.3);
 }}
 .ols-table th:first-child, .ols-table td:first-child {{
-    text-align: left;
-    color: #e2e8f0;
-    font-weight: 500;
+    text-align: left; color: #e2e8f0; font-weight: 500;
 }}
 .ols-table tr:hover {{ background: rgba(29,158,117,0.06); }}
-.ols-table.kv td:nth-child(odd) {{
-    color: #5DCAA5; text-align: left; font-weight: 500;
-}}
-.ols-table.kv td:nth-child(even) {{
-    text-align: left; color: #e2e8f0;
-}}
+.ols-table.kv td:nth-child(odd) {{ color: #5DCAA5; text-align: left; font-weight: 500; }}
+.ols-table.kv td:nth-child(even) {{ text-align: left; color: #e2e8f0; }}
 
 /* === MAIN AREA INPUTS & BUTTONS === */
 .stTextInput > div > div > input {{
@@ -376,9 +411,7 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
 .port-attr-beta.neg {{ color: #f87171; }}
 
 /* === FACTOR REGIME STRIP === */
-.regime-row {{
-    display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px;
-}}
+.regime-row {{ display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }}
 .regime-card {{
     background: rgba(29,158,117,0.06); border: 1px solid rgba(29,158,117,0.15);
     border-radius: 10px; padding: 10px 14px;
@@ -386,8 +419,7 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
 }}
 .regime-name {{
     font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e2e8f0;
-    font-weight: 500; white-space: nowrap;
-    flex: 0 0 170px;
+    font-weight: 500; white-space: nowrap; flex: 0 0 170px;
 }}
 .regime-cells {{ display: flex; gap: 10px; flex: 1; }}
 .regime-cell {{ flex: 1 1 0; min-width: 0; text-align: center; }}
@@ -395,32 +427,14 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
     font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.5px;
     color: #5DCAA5; margin-bottom: 2px; white-space: nowrap;
 }}
-.regime-val {{
-    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600;
-    white-space: nowrap;
-}}
+.regime-val {{ font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; white-space: nowrap; }}
 .regime-val.na {{ color: #6b7280; font-weight: 400; }}
 @media (max-width: 480px) {{
-    .regime-card {{
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-        padding: 10px 12px;
-    }}
-    .regime-name {{
-        flex: none;
-        width: 100%;
-        white-space: normal;
-    }}
-    .regime-cells {{
-        gap: 6px;
-    }}
-    .regime-label {{
-        font-size: 9px;
-    }}
-    .regime-val {{
-        font-size: 12px;
-    }}
+    .regime-card {{ flex-direction: column; align-items: stretch; gap: 8px; padding: 10px 12px; }}
+    .regime-name {{ flex: none; width: 100%; white-space: normal; }}
+    .regime-cells {{ gap: 6px; }}
+    .regime-label {{ font-size: 9px; }}
+    .regime-val {{ font-size: 12px; }}
 }}
 
 </style>
