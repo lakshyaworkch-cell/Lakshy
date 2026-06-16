@@ -279,6 +279,51 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
     tab-size: 4;
 }}
 
+/* === OLS SUMMARY TABLES === */
+.ols-table-wrap {{
+    margin-bottom: 22px;
+}}
+.ols-table-wrap:last-child {{
+    margin-bottom: 0;
+}}
+.ols-table-title {{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: #5DCAA5; margin-bottom: 8px;
+}}
+.ols-table {{
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: #9FE1CB;
+}}
+.ols-table th, .ols-table td {{
+    padding: 7px 14px;
+    border-bottom: 1px solid rgba(29,158,117,0.12);
+    text-align: right;
+    white-space: nowrap;
+}}
+.ols-table th {{
+    color: #1D9E75;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border-bottom: 1px solid rgba(29,158,117,0.3);
+}}
+.ols-table th:first-child, .ols-table td:first-child {{
+    text-align: left;
+    color: #e2e8f0;
+    font-weight: 500;
+}}
+.ols-table tr:hover {{ background: rgba(29,158,117,0.06); }}
+.ols-table.kv td:nth-child(odd) {{
+    color: #5DCAA5; text-align: left; font-weight: 500;
+}}
+.ols-table.kv td:nth-child(even) {{
+    text-align: left; color: #e2e8f0;
+}}
+
 /* === MAIN AREA INPUTS & BUTTONS === */
 .stTextInput > div > div > input {{
     background: rgba(29,158,117,0.08) !important;
@@ -1560,12 +1605,59 @@ if current_mode == "Portfolio Attribution":
 #  SINGLE STOCK MODE
 # ════════════════════════════════════════════
 
-def _render_ols_summary(ols_text):
-    escaped = ols_text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-    st.markdown(
-        f'<div class="ols-box"><pre>{escaped}</pre></div>',
-        unsafe_allow_html=True
-    )
+def _build_ols_summary_html(model):
+    """
+    Builds a themed HTML table version of statsmodels' OLS summary, instead of
+    dumping model.summary().as_text() as one big monospace paragraph.
+    statsmodels' Summary object exposes 3 sub-tables:
+      [0] model overview (key/value pairs)
+      [1] coefficients (header row + one row per regressor)
+      [2] residual diagnostics (key/value pairs)
+    """
+    try:
+        tables = model.summary().tables
+    except Exception as e:
+        return f'<div class="error-box">Could not build OLS summary: {e}</div>'
+
+    def _clean(cell):
+        return str(cell).strip().replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+    def kv_table(table_data, title):
+        rows_html = ""
+        for row in table_data:
+            cells = [_clean(c) for c in row]
+            rows_html += "<tr>" + "".join(f"<td>{c}</td>" for c in cells) + "</tr>"
+        return (
+            f'<div class="ols-table-wrap"><div class="ols-table-title">{title}</div>'
+            f'<table class="ols-table kv"><tbody>{rows_html}</tbody></table></div>'
+        )
+
+    def coef_table(table_data, title):
+        header_cells = [_clean(c) for c in table_data[0]]
+        head_html = "".join(f"<th>{h if h else 'Factor'}</th>" for h in header_cells)
+        rows_html = ""
+        for row in table_data[1:]:
+            cells = [_clean(c) for c in row]
+            rows_html += "<tr>" + "".join(f"<td>{c}</td>" for c in cells) + "</tr>"
+        return (
+            f'<div class="ols-table-wrap"><div class="ols-table-title">{title}</div>'
+            f'<table class="ols-table"><thead><tr>{head_html}</tr></thead>'
+            f'<tbody>{rows_html}</tbody></table></div>'
+        )
+
+    html = ""
+    if len(tables) > 0:
+        html += kv_table(tables[0].data, "Model Overview")
+    if len(tables) > 1:
+        html += coef_table(tables[1].data, "Coefficients")
+    if len(tables) > 2:
+        html += kv_table(tables[2].data, "Residual Diagnostics")
+
+    return f'<div class="ols-box">{html}</div>'
+
+
+def _render_ols_summary(ols_html):
+    st.markdown(ols_html, unsafe_allow_html=True)
 
 if current_mode == "Single Stock":
 
@@ -1910,8 +2002,9 @@ if current_mode == "Single Stock":
             if rolling_html: st.markdown(rolling_html, unsafe_allow_html=True)
             else: st.markdown('<div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;color:#5DCAA5;padding:20px 0;">Need at least 36 months and Mkt-RF selected.</div>', unsafe_allow_html=True)
 
+        ols_summary_html = _build_ols_summary_html(model)
         with st.expander("Full OLS Summary"):
-            _render_ols_summary(model.summary().as_text())
+            _render_ols_summary(ols_summary_html)
 
         st.markdown('<div class="section-title">Export Results</div>', unsafe_allow_html=True)
         export_df = pd.DataFrame({
@@ -1934,7 +2027,7 @@ if current_mode == "Single Stock":
             "active_exposure_html": active_exposure_html,
             "ai_header": ai_header_html, "ai_insight": st.session_state["ai_insight"], "ai_error": st.session_state["ai_error"],
             "ci_html": ci_html, "diag_html": diag_html, "vif_html": vif_html, "fit_html": fit_html,
-            "rolling_html": rolling_html, "ols_summary": model.summary().as_text(),
+            "rolling_html": rolling_html, "ols_summary": ols_summary_html,
             "export_csv": export_df.to_csv(index=False), "merged_csv": data_export.to_csv(),
         }
         st.session_state["run"] = False
