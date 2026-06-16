@@ -130,7 +130,33 @@ section[data-testid="stSidebar"] * {{
 [data-testid="stSidebar"] h3 {{
     color: #e2e8f0 !important;
 }}
-
+/* ── SIDEBAR COLLAPSE / EXPAND ARROW — full chain ── */
+[data-testid="stSidebarCollapsedControl"],
+div[data-testid="stSidebarCollapsedControl"] {{
+    background: rgba(29,158,117,0.18) !important;
+    border-radius: 8px !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: flex !important;
+    z-index: 999999 !important;
+    position: relative !important;
+}}
+[data-testid="stSidebarCollapsedControl"] * {{
+    background: transparent !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}}
+[data-testid="stSidebarCollapsedControl"] svg {{
+    fill: #9FE1CB !important;
+    stroke: #9FE1CB !important;
+    color: #9FE1CB !important;
+    opacity: 1 !important;
+}}
+[data-testid="stSidebarCollapsedControl"]:hover svg {{
+    fill: #34d399 !important;
+    stroke: #34d399 !important;
+    color: #34d399 !important;
+}}
 /* ── SIDEBAR INPUTS ── */
 [data-testid="stSidebar"] .stTextInput > div > div > input {{
     background: rgba(255,255,255,0.92) !important;
