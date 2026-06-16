@@ -422,7 +422,23 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
         font-size: 12px;
     }}
 }}
+/* ── ALWAYS SHOW SIDEBAR TOGGLE BUTTON ── */
+[data-testid="collapsedControl"] {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: fixed !important;
+    top: 14px !important;
+    left: 14px !important;
+    z-index: 999999 !important;
+    background: rgba(29,158,117,0.15) !important;
+    border: 1px solid rgba(29,158,117,0.35) !important;
+    border-radius: 8px !important;
+}
 
+[data-testid="collapsedControl"] svg {
+    fill: #34d399 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
