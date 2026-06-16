@@ -1331,12 +1331,7 @@ with st.sidebar:
     st.markdown("---")
 
     st.markdown("**Factor Selection**")
-    st.markdown(
-        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:8px;">'
-        'FF5 + Momentum factors loaded from Ken French\'s library.<br>'
-        '<span style="color:#fbbf24;">AQR</span> factors (QMJ, BAB) loaded from AQR\'s public data library.</div>',
-        unsafe_allow_html=True
-    )
+    
     col_sel, col_desel = st.columns(2)
     with col_sel:
         if st.button("✓ All", use_container_width=True, key="select_all_factors"):
