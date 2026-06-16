@@ -134,7 +134,7 @@ section[data-testid="stSidebar"] * {{
 [data-testid="stSidebar"] .stButton > button:hover {{
     background: rgba(52,211,153,0.15) !important;
     border-color: rgba(52,211,153,0.5) !important;
-    color: #34d399 !important;
+    color: #4a7c6f !important;
 }}
 
 /* ── SIDEBAR RADIO / CHECKBOX ── */
@@ -153,7 +153,7 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
 /* === METRIC CARDS === */
 .metric-card {{
     background: rgba(29,158,117,0.08); border: 1px solid rgba(29,158,117,0.18);
-    border-left: 2px solid #34d399; border-radius: 12px; padding: 14px 16px;
+    border-left: 2px solid #4a7c6f; border-radius: 12px; padding: 14px 16px;
     margin-bottom: 10px;
 }}
 .metric-card.red  {{ border-left-color: #f87171; }}
@@ -176,7 +176,7 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
 .factor-row:hover {{ background: rgba(29,158,117,0.09); }}
 .factor-row.header {{ background: transparent; border-color: transparent; font-size: 12px; letter-spacing: 1px; color: #5DCAA5; text-transform: uppercase; }}
 .factor-row.header > div:first-child {{ width: 100%; }}
-.factor-row.sig   {{ border-left: 2px solid #34d399; }}
+.factor-row.sig   {{ border-left: 2px solid #4a7c6f; }}
 .factor-row.marg  {{ border-left: 2px solid #fbbf24; }}
 .factor-row.insig {{ border-left: 2px solid rgba(29,158,117,0.2); }}
 .factor-row.alpha {{ border-left: 2px solid #a78bfa; }}
@@ -190,7 +190,7 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
 
 /* === SIG BADGES === */
 .sig-badge {{ display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 12px; font-weight: 500; letter-spacing: 1px; }}
-.badge-001 {{ background: rgba(52,211,153,0.15); color: #34d399; }}
+.badge-001 {{ background: rgba(52,211,153,0.15); color: #4a7c6f; }}
 .badge-01  {{ background: rgba(52,211,153,0.10); color: #6ee7b7; }}
 .badge-05  {{ background: rgba(251,191,36,0.12); color: #fbbf24; }}
 .badge-10  {{ background: rgba(255,255,255,0.05); color: #6b7280; }}
@@ -209,7 +209,7 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
 .diag-item {{ background: rgba(29,158,117,0.06); border: 1px solid rgba(29,158,117,0.15); border-radius: 10px; padding: 14px 16px; }}
 .diag-name {{ font-size: 12px; color: #5DCAA5; font-family: 'JetBrains Mono', monospace; margin-bottom: 4px; }}
 .diag-val  {{ font-size: 16px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }}
-.diag-pass {{ color: #34d399; }} .diag-fail {{ color: #f87171; }} .diag-warn {{ color: #fbbf24; }}
+.diag-pass {{ color: #4a7c6f; }} .diag-fail {{ color: #f87171; }} .diag-warn {{ color: #fbbf24; }}
 .diag-sub  {{ font-size: 12px; color: #9FE1CB; font-family: 'JetBrains Mono', monospace; margin-top: 3px; }}
 
 /* === INTERPRET / AI BOXES === */
@@ -221,13 +221,13 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
     background: rgba(29,158,117,0.05); border: 1px solid rgba(29,158,117,0.15);
     border-radius: 10px; padding: 14px 16px; margin-bottom: 12px;
 }}
-.factor-insight-card.positive {{ border-left: 3px solid #34d399; }}
+.factor-insight-card.positive {{ border-left: 3px solid #4a7c6f; }}
 .factor-insight-card.negative {{ border-left: 3px solid #f87171; }}
 .factor-insight-card.neutral  {{ border-left: 3px solid #6b7280; }}
 .fi-header {{ display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; }}
 .fi-name {{ font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: #e2e8f0; letter-spacing: 1px; }}
 .fi-beta {{ font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 2px 8px; border-radius: 4px; }}
-.fi-beta.pos {{ background: rgba(52,211,153,0.12); color: #34d399; }}
+.fi-beta.pos {{ background: rgba(52,211,153,0.12); color: #4a7c6f; }}
 .fi-beta.neg {{ background: rgba(248,113,113,0.12); color: #f87171; }}
 .fi-sig-label {{ font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 1px; color: #5DCAA5; text-transform: uppercase; }}
 .fi-outlook {{
@@ -235,7 +235,7 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
     font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600;
     letter-spacing: 1px; text-transform: uppercase; margin-left: auto;
 }}
-.fi-outlook.bullish  {{ background: rgba(52,211,153,0.1); color: #34d399; }}
+.fi-outlook.bullish  {{ background: rgba(52,211,153,0.1); color: #4a7c6f; }}
 .fi-outlook.bearish  {{ background: rgba(248,113,113,0.1); color: #f87171; }}
 .fi-outlook.neutral  {{ background: rgba(107,114,128,0.1); color: #6b7280; }}
 .fi-outlook.mixed    {{ background: rgba(251,191,36,0.1);  color: #fbbf24; }}
@@ -345,7 +345,7 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
 .stButton > button:hover {{
     background: rgba(52,211,153,0.15) !important;
     border-color: rgba(52,211,153,0.5) !important;
-    color: #34d399 !important;
+    color: #4a7c6f !important;
 }}
 .error-box {{
     background: rgba(248,113,113,0.06); border: 1px solid rgba(248,113,113,0.2);
@@ -372,7 +372,7 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
 }}
 .port-attr-factor {{ font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #5DCAA5; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }}
 .port-attr-beta {{ font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 600; }}
-.port-attr-beta.pos {{ color: #34d399; }}
+.port-attr-beta.pos {{ color: #4a7c6f; }}
 .port-attr-beta.neg {{ color: #f87171; }}
 
 /* === FACTOR REGIME STRIP === */
@@ -452,18 +452,18 @@ def row_class(name, p):
     return "factor-row insig"
 
 def fmt_beta(v):
-    color = "#34d399" if v > 0 else "#f87171"
+    color = "#4a7c6f" if v > 0 else "#f87171"
     return f'<span style="color:{color};font-weight:600">{v:+.4f}</span>'
 
 def fmt_pval(p):
-    if p < 0.001: color = "#34d399"
+    if p < 0.001: color = "#4a7c6f"
     elif p < 0.05: color = "#6ee7b7"
     elif p < 0.10: color = "#fbbf24"
     else: color = "#5DCAA5"
     return f'<span style="color:{color}">{p:.4f}</span>'
 
 def fmt_tstat(t):
-    color = "#34d399" if abs(t) > 1.96 else "#5DCAA5"
+    color = "#4a7c6f" if abs(t) > 1.96 else "#5DCAA5"
     return f'<span style="color:{color}">{t:+.3f}</span>'
 
 FACTOR_NAMES = {
@@ -490,7 +490,7 @@ FACTOR_DESCRIPTIONS = {
 }
 
 FACTOR_COLORS = {
-    "Mkt-RF": "#60a5fa", "SMB": "#34d399", "HML": "#fbbf24",
+    "Mkt-RF": "#60a5fa", "SMB": "#4a7c6f", "HML": "#fbbf24",
     "RMW": "#a78bfa", "CMA": "#f97316", "Mom": "#ec4899",
     "QMJ":  "#facc15",
     "BAB":  "#38bdf8",
@@ -891,7 +891,7 @@ def render_factor_regime_strip(ff_scaled, available_factors, pvalues=None):
             if len(series) >= months:
                 window_vals = series.iloc[-months:]
                 cumret = (1 + window_vals).prod() - 1
-                color = "#34d399" if cumret > 0 else "#f87171"
+                color = "#4a7c6f" if cumret > 0 else "#f87171"
                 val_html = f'<div class="regime-val" style="color:{color};">{cumret:+.2%}</div>'
             else:
                 val_html = '<div class="regime-val na">N/A</div>'
@@ -945,9 +945,9 @@ def render_active_exposure(entity_params, bench_params, available_factors, bench
         eb = entity_params.get(f, 0.0)
         bb = bench_params.get(f, 0.0)
         active = eb - bb
-        ec = "#34d399" if eb >= 0 else "#f87171"
-        bc = "#34d399" if bb >= 0 else "#f87171"
-        ac = "#34d399" if active >= 0 else "#f87171"
+        ec = "#4a7c6f" if eb >= 0 else "#f87171"
+        bc = "#4a7c6f" if bb >= 0 else "#f87171"
+        ac = "#4a7c6f" if active >= 0 else "#f87171"
         aqr_tag = ' <span class="aqr-badge">AQR</span>' if f in AQR_FACTOR_SET else ""
         label = FACTOR_NAMES.get(f, f)
         html += (
@@ -1110,7 +1110,7 @@ def render_portfolio_attribution(port_results, weights, available_factors, true_
         port_mkt_beta  = port_betas.get("Mkt-RF", 0.0)
         method_note    = "Weighted average of individual regressions"
 
-    alpha_color = "#34d399" if port_alpha_ann > 0 else "#f87171"
+    alpha_color = "#4a7c6f" if port_alpha_ann > 0 else "#f87171"
     alpha_p_str = f"p={port_alpha_p:.4f}" if port_alpha_p is not None else "n/a"
 
     st.markdown(f"""
@@ -1165,23 +1165,23 @@ def render_portfolio_attribution(port_results, weights, available_factors, true_
     for tkr in tickers:
         res     = port_results[tkr]
         w       = weights[tkr]
-        alpha_c = "#34d399" if res["alpha_ann"] > 0 else "#f87171"
+        alpha_c = "#4a7c6f" if res["alpha_ann"] > 0 else "#f87171"
         rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;font-weight:700;color:#e2e8f0;padding:8px 0;border-top:1px solid rgba(29,158,117,0.15);">{tkr}</div>'
         rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#60a5fa;padding:8px 0;border-top:1px solid rgba(29,158,117,0.15);">{w:.0%}</div>'
         for f in available_factors:
             b   = res["params"].get(f, 0)
-            bc  = "#34d399" if b >= 0 else "#f87171"
+            bc  = "#4a7c6f" if b >= 0 else "#f87171"
             pct = min(abs(b) / max_abs * 100, 100) if max_abs > 0 else 0
             rows_html += f'<div style="padding:8px 0;border-top:1px solid rgba(29,158,117,0.15);"><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:{bc};">{b:+.3f}</div><div style="height:3px;background:rgba(29,158,117,0.1);border-radius:2px;margin-top:3px;"><div style="width:{pct:.1f}%;height:100%;background:{bc};border-radius:2px;"></div></div></div>'
         rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:{alpha_c};padding:8px 0;border-top:1px solid rgba(29,158,117,0.15);">{res["alpha_ann"]:+.2%}</div>'
         rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#60a5fa;padding:8px 0;border-top:1px solid rgba(29,158,117,0.15);">{res["r2"]:.3f}</div>'
 
-    alpha_c = "#34d399" if port_alpha_ann > 0 else "#f87171"
+    alpha_c = "#4a7c6f" if port_alpha_ann > 0 else "#f87171"
     rows_html += f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;font-weight:700;color:#a78bfa;padding:8px 0;border-top:2px solid rgba(167,139,250,0.3);">PORTFOLIO</div>'
     rows_html += f'<div style="font-family:JetBrains Mono,monospace;font-size:12px;color:#a78bfa;padding:8px 0;border-top:2px solid rgba(167,139,250,0.3);">100%</div>'
     for f in available_factors:
         b   = port_betas.get(f, 0)
-        bc  = "#34d399" if b >= 0 else "#f87171"
+        bc  = "#4a7c6f" if b >= 0 else "#f87171"
         pct = min(abs(b) / max_abs * 100, 100) if max_abs > 0 else 0
         rows_html += f'<div style="padding:8px 0;border-top:2px solid rgba(167,139,250,0.3);"><div style="font-family:JetBrains Mono,monospace;font-size:12px;font-weight:600;color:{bc};">{b:+.3f}</div><div style="height:3px;background:rgba(29,158,117,0.1);border-radius:2px;margin-top:3px;"><div style="width:{pct:.1f}%;height:100%;background:{bc};border-radius:2px;"></div></div></div>'
     rows_html += f'<div style="font-family:JetBrains Mono,monospace;font-size:12px;font-weight:600;color:{alpha_c};padding:8px 0;border-top:2px solid rgba(167,139,250,0.3);">{port_alpha_ann:+.2%}</div>'
@@ -1194,7 +1194,7 @@ def render_portfolio_attribution(port_results, weights, available_factors, true_
     for f in available_factors:
         vals = [port_results[t]["params"].get(f, 0) for t in tickers]
         disp = np.std(vals)
-        rc   = "#f87171" if disp > 0.5 else "#fbbf24" if disp > 0.2 else "#34d399"
+        rc   = "#f87171" if disp > 0.5 else "#fbbf24" if disp > 0.2 else "#4a7c6f"
         rl   = "HIGH" if disp > 0.5 else "MODERATE" if disp > 0.2 else "LOW"
         aqr_tag = ' <span class="aqr-badge">AQR</span>' if f in AQR_FACTOR_SET else ""
         risk_html += f'<div style="background:rgba(29,158,117,0.06);border:1px solid rgba(29,158,117,0.15);border-radius:8px;padding:12px 14px;min-width:100px;flex:1;"><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:4px;text-transform:uppercase;">{FACTOR_NAMES.get(f,f)}{aqr_tag}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;font-weight:600;color:{rc};">{rl}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#9FE1CB;margin-top:2px;">σ = {disp:.3f}</div></div>'
@@ -1808,7 +1808,7 @@ if current_mode == "Single Stock":
         try:
             _live_price, _prev_close, _currency = get_live_price(ticker)
             _chg = _live_price - _prev_close; _chg_pct = (_chg / _prev_close) * 100
-            _clr = "#34d399" if _chg >= 0 else "#f87171"; _arrow = "&#9650;" if _chg >= 0 else "&#9660;"
+            _clr = "#4a7c6f" if _chg >= 0 else "#f87171"; _arrow = "&#9650;" if _chg >= 0 else "&#9660;"
             _price_html = (
                 f'<div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 16px;margin-bottom:20px;'
                 f'padding:14px 16px;background:rgba(29,158,117,0.08);border:1px solid rgba(29,158,117,0.2);border-radius:12px;">'
@@ -1850,7 +1850,7 @@ if current_mode == "Single Stock":
         _alpha_card = f"""
         <div class="metric-card {'green' if alpha_ann > 0 else 'red'}">
           <div class="metric-label">Annual Alpha</div>
-          <div class="metric-value" style="color:{'#34d399' if alpha_ann>0 else '#f87171'}">{alpha_ann:+.2%}</div>
+          <div class="metric-value" style="color:{'#4a7c6f' if alpha_ann>0 else '#f87171'}">{alpha_ann:+.2%}</div>
           <div class="metric-sub">Monthly: {alpha:+.4f} · p={alpha_p:.4f}</div>
         </div>"""
         _r2_card = f"""
@@ -1859,7 +1859,7 @@ if current_mode == "Single Stock":
           <div class="metric-value">{r2:.4f}</div>
           <div class="metric-sub">Adj: {r2_adj:.4f}</div>
         </div>"""
-        ir_color = "#34d399" if not np.isnan(ir) and ir > 0.5 else "#fbbf24" if not np.isnan(ir) and ir > 0 else "#f87171"
+        ir_color = "#4a7c6f" if not np.isnan(ir) and ir > 0.5 else "#fbbf24" if not np.isnan(ir) and ir > 0 else "#f87171"
         ir_str   = f"{ir:.3f}" if not np.isnan(ir) else "N/A"
         _ir_card = f"""
         <div class="metric-card gold">
@@ -1902,7 +1902,7 @@ if current_mode == "Single Stock":
             f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#1D9E75;margin-top:6px;">'
             f'★★★ p&lt;0.01 · ★★ p&lt;0.05 · ★ p&lt;0.10 · n.s. not significant'
             f' | Newey-West SE, maxlags={hac_lags}'
-            f' | <span style="color:#34d399;">{n_sig} of {len(available)} factors significant at p&lt;0.05</span>'
+            f' | <span style="color:#4a7c6f;">{n_sig} of {len(available)} factors significant at p&lt;0.05</span>'
             f' | <span style="color:#fbbf24;">AQR = Quality Minus Junk / Betting Against Beta</span>'
             f'</div>'
         )
@@ -1956,7 +1956,7 @@ if current_mode == "Single Stock":
         for name in ["const"] + available:
             lo = ci.loc[name, 0]; hi = ci.loc[name, 1]; b = model.params[name]
             spans_zero = lo < 0 < hi
-            bar_color  = "#34d399" if b > 0 and not spans_zero else "#f87171" if b < 0 and not spans_zero else "#6b7280"
+            bar_color  = "#4a7c6f" if b > 0 and not spans_zero else "#f87171" if b < 0 and not spans_zero else "#6b7280"
             aqr_tag = ' <span class="aqr-badge">AQR</span>' if name in AQR_FACTOR_SET else ""
             ci_html += f'<div style="background:rgba(29,158,117,0.06);border:1px solid rgba(29,158,117,0.15);border-radius:10px;padding:14px 16px;min-width:140px;flex:1;"><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:6px;">{FACTOR_NAMES.get(name, name)}{aqr_tag}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:14px;font-weight:600;color:{bar_color};">{b:+.4f}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#9FE1CB;margin-top:4px;">[{lo:+.4f}, {hi:+.4f}]</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#1D9E75;margin-top:6px;">{"spans zero" if spans_zero else "excl. zero"}</div></div>'
         ci_html += '</div>'
@@ -1965,7 +1965,7 @@ if current_mode == "Single Stock":
 
         vif_html = '<div style="height:12px"></div><div style="display:flex;flex-wrap:wrap;gap:10px;">'
         for col, v in vif_data.items():
-            vc = "#34d399" if v < 5 else "#fbbf24" if v < 10 else "#f87171"
+            vc = "#4a7c6f" if v < 5 else "#fbbf24" if v < 10 else "#f87171"
             aqr_tag = ' <span class="aqr-badge">AQR</span>' if col in AQR_FACTOR_SET else ""
             vif_html += f'<div style="background:rgba(29,158,117,0.06);border:1px solid rgba(29,158,117,0.15);border-radius:10px;padding:14px 16px;min-width:100px;"><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#5DCAA5;margin-bottom:4px;">{FACTOR_NAMES.get(col, col)}{aqr_tag}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:18px;font-weight:600;color:{vc}">{v:.2f}</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#9FE1CB;margin-top:2px;">{"OK" if v < 5 else "MODERATE" if v < 10 else "HIGH"}</div></div>'
         vif_html += '</div>'
@@ -1987,7 +1987,7 @@ if current_mode == "Single Stock":
                 W, H = 800, 140
                 pts = " ".join(f"{int(i/(len(roll_betas)-1)*W) if len(roll_betas)>1 else W//2},{int(H-((b-mn)/rng)*H)}" for i, b in enumerate(roll_betas))
                 one_y = int(H - ((1.0 - mn) / rng) * H)
-                rolling_html = f'<div style="margin-top:12px;"><svg viewBox="0 0 {W} {H+30}" xmlns="http://www.w3.org/2000/svg" style="background:rgba(29,158,117,0.05);border:1px solid rgba(29,158,117,0.15);border-radius:10px;width:100%;margin-bottom:8px;"><line x1="0" y1="{one_y}" x2="{W}" y2="{one_y}" stroke="rgba(29,158,117,0.25)" stroke-width="1" stroke-dasharray="4,4"/><polyline points="{pts}" fill="none" stroke="#34d399" stroke-width="2"/><text x="6" y="{H+20}" fill="#1D9E75" font-family="JetBrains Mono,monospace" font-size="10">{roll_dates[0]}</text><text x="{W-6}" y="{H+20}" fill="#1D9E75" text-anchor="end" font-family="JetBrains Mono,monospace" font-size="10">{roll_dates[-1]}</text><text x="{W//2}" y="18" fill="#5DCAA5" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10">Current β = {roll_betas[-1]:.3f}</text></svg></div>'
+                rolling_html = f'<div style="margin-top:12px;"><svg viewBox="0 0 {W} {H+30}" xmlns="http://www.w3.org/2000/svg" style="background:rgba(29,158,117,0.05);border:1px solid rgba(29,158,117,0.15);border-radius:10px;width:100%;margin-bottom:8px;"><line x1="0" y1="{one_y}" x2="{W}" y2="{one_y}" stroke="rgba(29,158,117,0.25)" stroke-width="1" stroke-dasharray="4,4"/><polyline points="{pts}" fill="none" stroke="#4a7c6f" stroke-width="2"/><text x="6" y="{H+20}" fill="#1D9E75" font-family="JetBrains Mono,monospace" font-size="10">{roll_dates[0]}</text><text x="{W-6}" y="{H+20}" fill="#1D9E75" text-anchor="end" font-family="JetBrains Mono,monospace" font-size="10">{roll_dates[-1]}</text><text x="{W//2}" y="18" fill="#5DCAA5" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10">Current β = {roll_betas[-1]:.3f}</text></svg></div>'
 
         with tab1: st.markdown(ci_html,   unsafe_allow_html=True)
         with tab2: st.markdown(diag_html, unsafe_allow_html=True)
