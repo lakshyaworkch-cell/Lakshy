@@ -440,6 +440,26 @@ h1, h2, h3 {{ font-family: 'JetBrains Mono', monospace !important; letter-spacin
 </style>
 """, unsafe_allow_html=True)
 
+/* ── NUCLEAR TOGGLE FIX ── */
+[data-testid="collapsedControl"],
+[data-testid="collapsedControl"] *,
+section[data-testid="stSidebarCollapsedControl"],
+section[data-testid="stSidebarCollapsedControl"] * {{
+    background: transparent !important;
+    --background-color: transparent !important;
+}}
+[data-testid="collapsedControl"] svg *,
+section[data-testid="stSidebarCollapsedControl"] svg * {{
+    fill: #34d399 !important;
+    stroke: none !important;
+    color: #34d399 !important;
+}}
+button[data-testid="baseButton-header"] svg *,
+button[data-testid="baseButton-header"] svg path {{
+    fill: #34d399 !important;
+    stroke: none !important;
+}}
+
 
 # ─────────────────────────────────────────────
 #  Helpers
